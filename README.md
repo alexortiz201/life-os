@@ -180,6 +180,31 @@ Allowing runtime validation and generative compilation into themes.
 
 ---
 
+# Life-OS (Single Project, Modular)
+
+This repo is **one package** with **TypeScript project references** to enforce clean boundaries.
+It mirrors a future monorepo split, so each subfolder under `src/` can be moved to its own package later.
+
+## Build
+```bash
+pnpm i
+pnpm build
+pnpm demo
+```
+
+## Layout
+- `src/types` — shared interfaces
+- `src/dna` — ontology + templates
+- `src/rna` — compilers
+- `src/theme-default` — optional theme
+- `src/orchestrator` — orchestrator API (exports `buildExpression`)
+- `src/cli` — minimal CLI (compiled to `dist/cli`)
+
+### Later extraction
+Copy any `src/<module>` into a new repo, keep its `tsconfig.json`, and update imports to the new package name.
+
+
+
 ## 🪶 License
 
 MIT © 2025 — Designed by **Alex Ortiz**
