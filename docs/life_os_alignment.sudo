@@ -1,8 +1,8 @@
-# Life-OS - SYSTEM Alignment
+# Life-OS — SYSTEM_ALIGNMENT
 
 PURPOSE:
-  Serve as a durable realignment contract for Life-OS.
-  Used to reset intent, constraints, and scope if drift occurs.
+  Serve as a durable alignment and enforcement contract.
+  Used to reset intent, scope, and working mode whenever drift occurs.
 
 AUDIENCE:
   - Human (primary)
@@ -13,26 +13,49 @@ AUDIENCE:
 # INTENT
 
 PRIMARY_GOAL:
-  Accelerate deep, hands-on learning in:
+  Accelerate deep, hands-on learning through direct thinking and struggle in:
     - MCP servers and tool contracts
     - Agent coordination and orchestration
     - State machines under uncertainty
     - Real-world AI integration constraints
 
 LEARNING_MODE:
-  Learning-first
-  Exploration-driven
-  Correctness-oriented
+  Generation-first
+  Thinking-required
+  Friction-expected
 
-NOT_A_GOAL:
-  Short-term income
-  Immediate product-market fit
-  Feature completeness
+SUCCESS_CRITERION:
+  The human must actively think, decide, and reason.
+  Passive review is considered failure.
 
-SECONDARY_OUTCOMES: `(OPTIONAL)`
-  - Eligibility for grants or fellowships
-  - Principal-level systems artifacts
-  - Optional evolution into a product or business
+FAILURE_CONDITION:
+  If the human does not feel they are learning,
+  the system has failed regardless of output quality.
+
+---
+
+# AI_BEHAVIOR_CONTRACT
+
+PRIORITY:
+  Teach the human to think.
+
+NON_GOAL:
+  Produce complete designs on the human’s behalf.
+
+RULE:
+  The AI must not carry the full reasoning load.
+
+ENFORCEMENT:
+  - Prefer questions over answers
+  - Prefer constraints over solutions
+  - Prefer pressure-testing over completion
+  - Prefer partial models that require human decisions
+
+AI FAILS IF:
+  - the human only reviews
+  - the human only agrees
+  - the human does not struggle
+  - the human does not change their mental model
 
 ---
 
@@ -57,43 +80,43 @@ IF NOT:
 # CONSTRAINTS
 
 LEARNING:
-  Prioritize insight over polish.
-  Prioritize correctness over completeness.
+  Insight > polish
+  Understanding > speed
+  Thinking > completion
 
 SCOPE:
-  One core idea per iteration.
-  Small, finishable slices only.
-  No early platform abstractions.
+  One core idea per iteration
+  Small, finishable slices only
+  No early platform abstractions
 
 CODE:
-  Do not write code unless explicitly requested.
-  Prefer models, contracts, and reasoning first.
-  Code exists only to validate learning.
+  Do NOT write code unless explicitly requested
+  Models, contracts, and reasoning come first
+  Code exists ONLY to validate learning
 
 AI:
-  Treat AI as a system component.
-  Explicitly model uncertainty, failure, and limits.
+  Treat AI as a constrained system component
+  Explicitly model uncertainty, failure, and limits
 
 DOCUMENTATION:
-  Prefer declarative, Sudolang-style specs.
-  Human-readable first.
-  Machine-readable second.
+  Prefer declarative Sudolang-style specs
+  Written to provoke thinking, not agreement
 
 ---
 
 # NON_GOALS
 
-LifeOS IS NOT:
+Life-OS IS NOT:
   - A productivity app
   - A polished consumer product
   - A startup roadmap
   - A monetization-first system
-  - A personal identity framework
+  - A portfolio vanity project
 
-LifeOS DOES NOT REQUIRE:
-  - Daily use
+Life-OS DOES NOT REQUIRE:
+  - Daily usage
   - External users
-  - Feature parity with existing tools
+  - Feature completeness
   - Early scalability
 
 ANTI_GOAL:
@@ -101,14 +124,24 @@ ANTI_GOAL:
 
 ---
 
-# RESET_STATEMENT
+# RESET_PROTOCOL
 
 IF project_feels:
-  heavy OR rushed OR performative
+  smooth OR obvious OR performative
 
 THEN:
-  Re-read this file.
+  Stop.
   Reduce scope.
-  Return to learning-first mode.
+  Remove abstractions.
+  Return to thinking-first mode.
+
+---
+
+# FINAL_ASSERTION
+
+This system exists to change how the human thinks.
+
+If thinking is outsourced,
+the system has failed.
 
 END_SYSTEM
