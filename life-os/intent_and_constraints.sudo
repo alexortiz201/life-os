@@ -1,0 +1,168 @@
+# Life-OS - Intent & Constraints
+
+PURPOSE:
+  Build a complex AI-first system end-to-end
+  to develop deep, transferable systems expertise.
+
+GOAL:
+  Become someone who can design, build, debug,
+  and evolve AI-powered systems with confidence,
+  clarity, and correctness under ambiguity.
+
+SUCCESS is measured by:
+  - depth of understanding
+  - ability to explain systems clearly
+  - ability to build systems that do not collapse under uncertainty
+  - number of meaningful concepts touched
+  - external validation (grants, trust, references, adoption)
+
+---
+
+# PRIMARY INTENT
+
+Life-OS exists to:
+  - teach system design through real construction
+  - force tradeoff awareness at every layer
+  - expose real AI integration constraints
+  - build intuition that cannot be gained through tutorials alone
+
+The system is designed as:
+  - a learning accelerator
+  - a systems-thinking gym
+  - a long-lived experiment in applied AI architecture
+
+Learning is the first-order objective.
+The product is secondary.
+
+---
+
+# WHAT LIFE-OS IS NOT
+
+Life-OS is NOT:
+  - a “build everything cool” playground
+  - a speed-focused prototype
+  - a shallow portfolio project
+  - a feature-first app
+  - a shortcut to external validation
+
+Life-OS does NOT optimize for:
+  - rapid shipping without understanding
+  - novelty without purpose
+  - skipping tradeoffs
+  - hiding complexity behind abstractions
+
+---
+
+# CORE DESIGN RULE
+
+EVERY new concept MUST earn its place.
+
+A feature MAY be added ONLY IF it teaches:
+  - MCP mechanics
+  - agent coordination
+  - state management under uncertainty
+  - real AI integration constraints
+  - failure modes and recovery paths
+
+IF a feature does NOT teach something concrete
+that cannot be learned more directly elsewhere
+THEN it does not belong yet.
+
+---
+
+# LEARNING PHILOSOPHY
+
+ASSUME:
+  - mastery comes from repeated system exposure
+  - understanding precedes optimization
+  - correctness precedes cleverness
+
+PREFER:
+  - explicit workflows over magic
+  - observable state over hidden state
+  - boring, inspectable solutions
+  - systems that fail loudly and informatively
+
+AVOID:
+  - abstracting away things you don’t yet understand
+  - copying patterns without knowing why they exist
+  - premature optimization
+  - treating AI as a black box
+
+---
+
+# SCOPE BOUNDARIES
+
+Life-OS WILL:
+  - span frontend to data layer
+  - include AI pipelines end-to-end
+  - surface ambiguity instead of hiding it
+  - evolve slowly and deliberately
+
+Life-OS WILL NOT:
+  - aim for feature completeness early
+  - chase market fit prematurely
+  - attempt to cover all domains at once
+
+---
+
+# TIME & ENERGY CONSTRAINTS
+
+ASSUME:
+  - effort will vary day to day
+  - progress may happen in bursts
+  - interviews and job search run in parallel
+
+DESIGN MUST:
+  - allow meaningful progress in short sessions
+  - support deep dives when time allows
+  - preserve context across interruptions
+
+Consistency matters more than speed.
+
+---
+
+# DOMAIN AWARENESS (NON-BINDING)
+
+Life-OS MAY touch the following domains
+WHEN it serves learning goals naturally:
+
+  - Frontend Design
+  - System / Distributed Design
+  - Algorithms & Data Structures (conceptual)
+  - TypeScript + React
+  - LeetCode (pattern reinforcement only)
+  - LLM Integrations
+  - RAG Systems
+  - Agentic Systems
+  - MCP / Tooling Infrastructure
+  - Blockchain
+  - WASM
+
+This list is NOT a checklist.
+Coverage is opportunistic, not forced.
+
+---
+
+# KNOWLEDGE TRANSFER GOAL
+
+The ultimate test of success:
+
+  - You can explain any part of Life-OS
+    to an engineer, employer, or client
+    calmly, clearly, and precisely.
+
+  - You can teach the system to your son
+    and accelerate his understanding
+    faster than you learned it yourself.
+
+---
+
+# FINAL CONSTRAINT
+
+When in doubt:
+  choose learning over shipping
+  choose clarity over speed
+  choose systems over features
+
+END

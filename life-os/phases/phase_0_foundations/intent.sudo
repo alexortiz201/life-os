@@ -1,0 +1,119 @@
+# Phase 0 — Foundations
+
+PURPOSE:
+  Establish the intellectual and structural foundation
+  for Life-OS before any irreversible implementation begins.
+
+GOAL:
+  Reset assumptions.
+  Lock intent.
+  Define constraints.
+  Create a stable base for all future phases.
+
+---
+
+# WHY THIS PHASE EXISTS
+
+Life-OS is a long-lived system.
+Early ambiguity compounds if not addressed explicitly.
+
+This phase exists to:
+  - clarify intent before action
+  - prevent accidental scope creep
+  - align learning goals with system design
+  - reduce cognitive load in later phases
+
+No code written here should be considered permanent.
+
+---
+
+# PRIMARY QUESTIONS
+
+This phase answers:
+
+  - What problem is Life-OS actually solving?
+  - What kind of learning is this system meant to produce?
+  - What tradeoffs are explicitly accepted?
+  - What constraints are non-negotiable?
+
+Any question not answered here
+is deferred intentionally.
+
+---
+
+# CONSTRAINTS ESTABLISHED
+
+ASSUME:
+  - learning is the primary output
+  - correctness matters more than speed
+  - understanding precedes optimization
+
+REQUIRE:
+  - explicit intent before implementation
+  - visible tradeoffs
+  - inspectable system boundaries
+
+PROHIBIT:
+  - feature-driven development
+  - hiding complexity behind abstractions
+  - premature optimization
+  - building without a learning objective
+
+---
+
+# SCOPE OF WORK
+
+INCLUDE:
+  - defining how phases are structured
+  - defining what constitutes progress
+  - defining how decisions are documented
+  - defining how learning is preserved
+
+EXCLUDE:
+  - implementation details
+  - performance optimization
+  - tooling choices unless unavoidable
+
+---
+
+# SUCCESS CRITERIA
+
+This phase is complete WHEN:
+
+  - Life-OS can be explained clearly
+    without referencing code
+
+  - future phases can be added
+    without redefining intent
+
+  - learning goals are explicit
+    and enforceable
+
+  - decisions made later
+    can be traced back to this foundation
+
+---
+
+# OUTPUTS
+
+EXPECTED ARTIFACTS:
+  - clear intent files per phase
+  - consistent Sudolang structure
+  - shared mental model for future work
+
+These artifacts are treated as contracts,
+not suggestions.
+
+---
+
+# FINAL NOTE
+
+This phase optimizes for:
+  clarity over momentum
+  alignment over activity
+  foundations over features
+
+Every future phase assumes
+this work was done correctly.
+
+END

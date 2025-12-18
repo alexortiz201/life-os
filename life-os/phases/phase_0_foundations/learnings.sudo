@@ -1,0 +1,117 @@
+# Phase 0 — Learnings
+
+PURPOSE:
+  Capture what is now understood
+  as a direct result of completing Phase 0.
+
+SCOPE:
+  These learnings inform all future phases.
+  They are not hypothetical.
+
+---
+
+# LEARNING: INTENT MUST PRECEDE IMPLEMENTATION
+
+OBSERVATION:
+  Without explicit intent,
+  systems drift toward convenience and habit.
+
+INSIGHT:
+  Writing intent first
+  reduces accidental complexity later.
+
+IMPACT:
+  Design decisions are easier to justify
+  and easier to revisit.
+
+---
+
+# LEARNING: STRUCTURE REDUCES COGNITIVE LOAD
+
+OBSERVATION:
+  Ambiguous structure forces constant re-orientation.
+
+INSIGHT:
+  Phases, files, and contracts
+  allow work to resume after interruptions.
+
+IMPACT:
+  Progress becomes possible in short sessions
+  without losing coherence.
+
+---
+
+# LEARNING: LEARNING ITSELF NEEDS CONSTRAINTS
+
+OBSERVATION:
+  “Learning everything” leads to shallow coverage.
+
+INSIGHT:
+  Forcing each concept to earn its place
+  increases depth and retention.
+
+IMPACT:
+  Fewer concepts are introduced,
+  but each one compounds.
+
+---
+
+# LEARNING: DOCUMENTATION CAN BE AN EXECUTABLE ARTIFACT
+
+OBSERVATION:
+  Free-form notes decay quickly.
+
+INSIGHT:
+  Structured language (Sudolang)
+  preserves intent without premature code.
+
+IMPACT:
+  Decisions remain inspectable
+  and can be reasoned about later.
+
+---
+
+# LEARNING: SNAPSHOTS ENABLE TRUST
+
+OBSERVATION:
+  Systems without stable reference points
+  are hard to reason about historically.
+
+INSIGHT:
+  Immutable snapshots preserve understanding,
+  not just code.
+
+IMPACT:
+  Past states become assets,
+  not liabilities.
+
+---
+
+# LEARNING: FOUNDATIONS ARE A FORCE MULTIPLIER
+
+OBSERVATION:
+  Skipping foundations feels fast
+  but creates downstream friction.
+
+INSIGHT:
+  Time spent clarifying foundations
+  pays back repeatedly.
+
+IMPACT:
+  Future phases start clearer
+  and require fewer corrections.
+
+---
+
+# SUMMARY
+
+After Phase 0:
+  - intent is explicit
+  - constraints are enforceable
+  - structure is predictable
+  - learning is deliberate
+
+This phase changed HOW the system will be built,
+not WHAT the system does.
+
+END

@@ -1,0 +1,272 @@
+# Life-OS Roadmap
+
+PURPOSE:
+  Provide a clear, evolving path for building Life-OS
+  while maximizing learning signal and systems mastery.
+
+RULE:
+  This roadmap is directional, not fixed.
+  Reordering is allowed when learning value improves.
+
+CHECKBOXES indicate:
+  - a learning milestone
+  - not feature completeness
+  - not production readiness
+
+---
+
+# PHASE_0: FOUNDATIONS & RESET
+
+GOAL:
+  Establish shared language, structure, and constraints
+  before writing meaningful code.
+
+DELIVERABLES:
+  [ ] Life-OS Intent & Constraints finalized
+  [ ] Sudolang conventions locked
+  [ ] Core repositories defined (DNA / RNA / Expression)
+  [ ] Clear definition of what constitutes a “learning win”
+
+EXIT_CRITERIA:
+  You can explain Life-OS at a high level
+  without referencing implementation details.
+
+---
+
+# PHASE_1: LIFE-OS DNA  // SEMANTIC GENOME
+
+GOAL:
+  Define meaning and structure without behavior.
+
+FOCUS:
+  Ontology design
+  Stable identifiers
+  Semantic contracts
+
+DELIVERABLES:
+  [ ] Define core entities (Goal, Project, Task, Phase, XP)
+  [ ] Define relationships between entities
+  [ ] Define lifecycle states per entity
+  [ ] Define invariants (what must never happen)
+  [ ] Encode DNA purely as data (no logic)
+
+LEARNING_SIGNAL:
+  Ontology design
+  Schema evolution
+  Invariant-driven modeling
+
+EXIT_CRITERIA:
+  You can modify the ontology
+  without breaking downstream reasoning.
+
+---
+
+# PHASE_2: LIFE-OS RNA  // TRANSLATION LAYER
+
+GOAL:
+  Translate static meaning into dynamic behavior.
+
+FOCUS:
+  Transformation pipelines
+  Deterministic outputs
+  Explicit workflows
+
+DELIVERABLES:
+  [ ] Read DNA definitions programmatically
+  [ ] Build first transformer (DNA → structured plan)
+  [ ] Introduce versioning for transformations
+  [ ] Surface intermediate representations
+  [ ] Make transformations inspectable
+
+LEARNING_SIGNAL:
+  Compiler-like thinking
+  Pipeline design
+  Traceability
+
+EXIT_CRITERIA:
+  You can point to every transformation step
+  and explain why it exists.
+
+---
+
+# PHASE_3: EXPRESSION  // HUMAN INTERFACE
+
+GOAL:
+  Make the system observable and usable.
+
+FOCUS:
+  Readability
+  State clarity
+  Feedback loops
+
+DELIVERABLES:
+  [ ] Generate markdown dashboards
+  [ ] Generate at least one visual UI
+  [ ] Clearly display system state
+  [ ] Show progression over time
+  [ ] Preserve auditability
+
+LEARNING_SIGNAL:
+  Frontend-system boundaries
+  State representation
+  UX under uncertainty
+
+EXIT_CRITERIA:
+  A human can understand system state
+  without reading code.
+
+---
+
+# PHASE_4: MCP INTEGRATION
+
+GOAL:
+  Introduce real AI tooling boundaries.
+
+FOCUS:
+  Tool interfaces
+  Protocol constraints
+  Failure handling
+
+DELIVERABLES:
+  [ ] Define MCP tool contracts
+  [ ] Register Life-OS tools
+  [ ] Handle tool failures explicitly
+  [ ] Observe tool latency and errors
+  [ ] Log tool decisions
+
+LEARNING_SIGNAL:
+  AI-system integration
+  Tool reliability
+  Interface design
+
+EXIT_CRITERIA:
+  You trust the system even when tools fail.
+
+---
+
+# PHASE_5: AGENTIC SYSTEMS
+
+GOAL:
+  Move from single-step reasoning to planning.
+
+FOCUS:
+  Agent roles
+  Coordination
+  State over time
+
+DELIVERABLES:
+  [ ] Define at least one agent role
+  [ ] Define agent state machine
+  [ ] Implement planning → execution loop
+  [ ] Handle partial completion
+  [ ] Add recovery paths
+
+LEARNING_SIGNAL:
+  Planning under uncertainty
+  Long-lived state
+  Agent boundaries
+
+EXIT_CRITERIA:
+  You can reason about agent behavior
+  without running the system.
+
+---
+
+# PHASE_6: RAG SYSTEMS
+
+GOAL:
+  Introduce memory, grounding, and retrieval.
+
+FOCUS:
+  Knowledge freshness
+  Retrieval quality
+  Hallucination control
+
+DELIVERABLES:
+  [ ] Define ingestion pipeline
+  [ ] Implement chunking strategy
+  [ ] Add retrieval layer
+  [ ] Ground agent outputs
+  [ ] Observe failure modes
+
+LEARNING_SIGNAL:
+  Data pipelines
+  Retrieval tradeoffs
+  AI correctness limits
+
+EXIT_CRITERIA:
+  You know exactly when the system is guessing.
+
+---
+
+# PHASE_7: HARDENING & FAILURE
+
+GOAL:
+  Make the system honest under stress.
+
+FOCUS:
+  Failure modes
+  Observability
+  Recovery
+
+DELIVERABLES:
+  [ ] Inject failures intentionally
+  [ ] Observe system behavior
+  [ ] Improve diagnostics
+  [ ] Document known failure modes
+  [ ] Add guardrails
+
+LEARNING_SIGNAL:
+  Production thinking
+  Resilience design
+  Operational clarity
+
+EXIT_CRITERIA:
+  Failures teach instead of confuse.
+
+---
+
+# PHASE_8: OPTIONAL EXPLORATION
+
+GOAL:
+  Expand only when justified.
+
+POSSIBLE_AREAS:
+  - Blockchain (identity, trust)
+  - WASM (sandboxed execution)
+  - Advanced algorithms (when needed)
+  - Performance optimization
+
+RULE:
+  Exploration must tie back to:
+    - Life-OS goals
+    - learning signal
+    - system clarity
+
+---
+
+# CONTINUOUS TRACKS (ALWAYS ON)
+
+PARALLEL_PRACTICE:
+  - Interview prep
+  - Behavioral story refinement
+  - Systems explanation practice
+
+MEASURE_PROGRESS_BY:
+  - clarity of explanation
+  - ability to modify safely
+  - confidence under ambiguity
+
+---
+
+FINAL NOTE:
+
+This roadmap is successful
+if you become someone who can:
+
+  - design systems calmly
+  - debug ambiguity
+  - explain tradeoffs clearly
+  - teach others faster than you learned
+
+END

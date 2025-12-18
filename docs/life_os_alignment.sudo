@@ -1,0 +1,114 @@
+# Life-OS - SYSTEM Alignment
+
+PURPOSE:
+  Serve as a durable realignment contract for Life-OS.
+  Used to reset intent, constraints, and scope if drift occurs.
+
+AUDIENCE:
+  - Human (primary)
+  - AI agents / MCP systems (secondary)
+
+---
+
+# INTENT
+
+PRIMARY_GOAL:
+  Accelerate deep, hands-on learning in:
+    - MCP servers and tool contracts
+    - Agent coordination and orchestration
+    - State machines under uncertainty
+    - Real-world AI integration constraints
+
+LEARNING_MODE:
+  Learning-first
+  Exploration-driven
+  Correctness-oriented
+
+NOT_A_GOAL:
+  Short-term income
+  Immediate product-market fit
+  Feature completeness
+
+SECONDARY_OUTCOMES: `(OPTIONAL)`
+  - Eligibility for grants or fellowships
+  - Principal-level systems artifacts
+  - Optional evolution into a product or business
+
+---
+
+# CORE_RULE
+
+RULE:
+  Every new concept must earn its place.
+
+CONCEPT_ADMISSION_CRITERIA:
+  A concept is allowed ONLY IF it teaches at least one of:
+    - MCP mechanics
+    - Agent coordination
+    - State management under uncertainty
+    - Real AI integration constraints
+        (latency, failure, cost, ambiguity)
+
+IF NOT:
+  Defer the concept.
+
+---
+
+# CONSTRAINTS
+
+LEARNING:
+  Prioritize insight over polish.
+  Prioritize correctness over completeness.
+
+SCOPE:
+  One core idea per iteration.
+  Small, finishable slices only.
+  No early platform abstractions.
+
+CODE:
+  Do not write code unless explicitly requested.
+  Prefer models, contracts, and reasoning first.
+  Code exists only to validate learning.
+
+AI:
+  Treat AI as a system component.
+  Explicitly model uncertainty, failure, and limits.
+
+DOCUMENTATION:
+  Prefer declarative, Sudolang-style specs.
+  Human-readable first.
+  Machine-readable second.
+
+---
+
+# NON_GOALS
+
+LifeOS IS NOT:
+  - A productivity app
+  - A polished consumer product
+  - A startup roadmap
+  - A monetization-first system
+  - A personal identity framework
+
+LifeOS DOES NOT REQUIRE:
+  - Daily use
+  - External users
+  - Feature parity with existing tools
+  - Early scalability
+
+ANTI_GOAL:
+  Building something impressive that produces no new learning.
+
+---
+
+# RESET_STATEMENT
+
+IF project_feels:
+  heavy OR rushed OR performative
+
+THEN:
+  Re-read this file.
+  Reduce scope.
+  Return to learning-first mode.
+
+END_SYSTEM

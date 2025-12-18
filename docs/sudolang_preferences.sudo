@@ -1,0 +1,221 @@
+# Sudolang Styling Preferences
+
+PURPOSE:
+  Define how Sudolang documents should be written
+  to maximize scanability, consistency, and intent clarity
+  for both humans and AI.
+
+GOAL:
+  Make structure obvious without visual noise.
+  Let syntax carry meaning, not styling tricks.
+
+---
+
+# CORE_CONVENTIONS
+
+- Colons (:) define structure and intent.
+- Indentation defines scope and containment.
+- Underscores (_) join multi-word labels ONLY when:
+    - the label is ALL CAPS
+    - the label precedes a colon
+- Backticks (``) constrain or qualify a phrase.
+- Headings (#) mark major section boundaries only.
+
+---
+
+# HEADINGS
+
+USE headings ONLY for:
+  - major sections
+  - contracts
+  - indexes
+  - mode boundaries
+
+AVOID headings for:
+  - routine structure
+  - steps
+  - labels
+
+EXAMPLES:
+  # STORY_INDEX
+  # REVIEW_ROTATION_STRATEGY
+
+---
+
+# LABELS
+
+LABELS MUST:
+  - be ALL CAPS
+  - end with a colon
+  - use underscores if multi-word
+
+PREFERRED:
+  PURPOSE:
+  SCOPE:
+  USAGE_RULES:
+  STORY_INDEX:
+  PER_STORY_FILE_TEMPLATE:
+
+AVOID:
+  Purpose:
+  Usage Rules:
+  Story Index:
+
+STRUCTURE comes from:
+  - capitalization
+  - colons
+  - indentation
+
+NOT from headings.
+
+---
+
+# CONDITIONALS_AND_RULES
+
+EXPRESS conditionals as labels,
+not as prose sentences.
+
+PREFERRED:
+  WHEN: `user requests behavioral practice`
+  THEN:
+    EXPECT:
+      - explicit story selection
+
+  IF no module is provided THEN
+    proceed without it
+
+AVOID:
+  When the user requests behavioral practice, then...
+
+BACKTICKS (``) MUST be used to:
+  - constrain meaning
+  - quote conditions
+  - mark literals
+  - specify exact triggers
+
+---
+
+# UNDERSCORES_VS_SPACES
+
+USE SPACES for:
+  - titles
+  - human-facing names
+  - quoted phrases
+
+EXAMPLE:
+  "Experiment Interference / Composition Fix"
+
+USE UNDERSCORES for:
+  - identifiers
+  - stable references
+  - machine-facing keys
+  - ALL-CAPS multi-word labels preceding a colon
+
+EXAMPLE:
+  STORY_1:
+  USAGE_RULES:
+  PER_STORY_FILE_TEMPLATE:
+  REVIEW_ROTATION_STRATEGY:
+
+---
+
+# STORY_IDENTIFIERS
+
+STORY identifiers MUST:
+  - be ALL CAPS
+  - use underscores
+  - be stable
+  - be referenceable
+
+EXAMPLE:
+  STORY_1: "Experiment Interference / Composition Fix"
+
+STORY titles MUST:
+  - be quoted
+  - use natural language
+  - never use underscores
+
+---
+
+# STEPS
+
+STEPS MUST:
+  - use plain-text labels
+  - rely on numbering + colon
+  - NOT be headings
+
+PREFERRED:
+  STEP 1:
+  STEP 2:
+
+AVOID:
+  ## STEP 1
+  ## STEP 2
+
+STRUCTURE comes from:
+  - numbering
+  - indentation
+  - consistent phrasing
+
+---
+
+# INDENTATION
+
+INDENTATION is semantic.
+
+RULES:
+  - two spaces per level
+  - deeper indentation implies containment
+  - hierarchy comes from indentation, not punctuation
+
+AVOID deep nesting unless it adds meaning.
+
+---
+
+# SEPARATORS
+
+USE `---` ONLY to separate major sections.
+
+DO NOT use separators for:
+  - visual decoration
+  - minor transitions
+
+PREFER whitespace.
+
+---
+
+# QUOTES_AND_LITERALS
+
+USE quotes ("") for:
+  - human-facing titles
+  - phrases meant to be spoken verbatim
+
+USE backticks (``) for:
+  - conditions
+  - constraints
+  - exact triggers
+  - literal values
+
+---
+
+# WHAT_TO_AVOID
+
+- Overusing headings
+- Encoding meaning via color alone
+- Using ALL CAPS for emphasis instead of structure
+- Writing Sudolang like Markdown or code
+- Adding symbols to compensate for weak structure
+
+---
+
+# MENTAL_MODEL
+
+WRITE Sudolang as if:
+  - a tired human must scan it quickly
+  - an AI must infer structure without guessing
+  - the document may be consumed out of order
+
+IF something needs highlighting,
+THEN the structure is probably unclear.
+
+END

@@ -1,0 +1,21 @@
+# PHASE CONTRACT
+
+ASSUME:
+  each phase is standalone
+  future phases do not exist yet
+
+REQUIRE:
+  intent.sudo
+  decisions.sudo
+  learnings.sudo
+
+RULE:
+  every file answers ONE question only
+
+PROHIBIT:
+  - future-looking assumptions
+  - references to later phases
+  - hidden decisions
+
+GOAL:
+  enable later synthesis without reinterpretation

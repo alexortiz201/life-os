@@ -1,0 +1,144 @@
+# Phase 0 — Decisions
+
+PURPOSE:
+  Record irreversible decisions that define
+  how Life-OS will be built and evolved.
+
+SCOPE:
+  Decisions in this file apply to all future phases
+  unless explicitly revised.
+
+---
+
+# DECISION: LEARNING-FIRST DEVELOPMENT
+
+CHOICE:
+  Optimize Life-OS for learning signal,
+  not speed, features, or polish.
+
+RATIONALE:
+  Shallow progress compounds confusion.
+  Deep understanding compounds capability.
+
+IMPLICATIONS:
+  - slower visible progress
+  - more documentation
+  - fewer shortcuts
+  - higher long-term leverage
+
+---
+
+# DECISION: PHASED, SELF-CONTAINED STRUCTURE
+
+CHOICE:
+  Develop Life-OS in explicit, standalone phases.
+
+RATIONALE:
+  Phases reduce cognitive load
+  and preserve context across time gaps.
+
+IMPLICATIONS:
+  - each phase must stand alone
+  - future phases cannot assume prior knowledge
+  - synthesis is deferred, not implicit
+
+---
+
+# DECISION: SUDOLANG AS SYSTEM CONTRACT
+
+CHOICE:
+  Use Sudolang for intent, constraints, and decisions.
+
+RATIONALE:
+  Natural language is ambiguous.
+  Code is premature.
+  Sudolang enforces structure without over-specification.
+
+IMPLICATIONS:
+  - all intent files are machine-readable
+  - structure is explicit
+  - documentation becomes executable reasoning
+
+---
+
+# DECISION: SNAPSHOT-BASED EVOLUTION
+
+CHOICE:
+  Preserve system state via immutable snapshots.
+
+MECHANISM:
+  - Git tags per completed phase
+  - no history rewriting
+
+RATIONALE:
+  Understanding requires stable reference points.
+
+IMPLICATIONS:
+  - past decisions remain inspectable
+  - regressions are explainable
+  - learning milestones are auditable
+
+---
+
+# DECISION: EXPLICIT TRADEOFF RECORDING
+
+CHOICE:
+  Record tradeoffs at the time they are made.
+
+RATIONALE:
+  Forgotten tradeoffs become hidden constraints.
+
+IMPLICATIONS:
+  - decisions files grow slowly
+  - ambiguity is reduced
+  - future refactors have context
+
+---
+
+# DECISION: SYSTEMS OVER FEATURES
+
+CHOICE:
+  Prioritize system structure over user-facing features.
+
+RATIONALE:
+  Features change.
+  Systems persist.
+
+IMPLICATIONS:
+  - early output may appear minimal
+  - learning value remains high
+  - refactors are cheaper
+
+---
+
+# DECISION: NO PREMATURE ABSTRACTION
+
+CHOICE:
+  Avoid abstractions until the underlying problem
+  is fully understood.
+
+RATIONALE:
+  Abstractions hide ignorance.
+
+IMPLICATIONS:
+  - more verbose early designs
+  - clearer failure modes
+  - better intuition later
+
+---
+
+# REVISION POLICY
+
+DECISIONS MAY be revisited ONLY IF:
+  - new constraints emerge
+  - learning objectives change
+  - evidence contradicts assumptions
+
+ALL revisions MUST:
+  - be documented explicitly
+  - include rationale
+  - reference original decision
+
+---
+
+END
