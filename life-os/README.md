@@ -23,6 +23,7 @@ Software is the medium.
 Life-OS is developed in explicit phases, each with clear intent, decisions,
 and documented learnings.
 
+```
 life-os/
 ├── README.md
 ├── intent_and_constraints.sudo
@@ -33,6 +34,7 @@ life-os/
 │   │   ├── decisions.sudo
 │   │   └── learnings.sudo
 │   └── …
+```
 
 ---
 
