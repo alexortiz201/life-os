@@ -1,0 +1,129 @@
+# Phase 1 Learnings — DNA Foundations
+
+PURPOSE:
+  Capture what became clear while defining Life-OS DNA.
+  Record decisions, non-decisions, and constraints
+  before behavior (RNA) or UI (Expression).
+
+SCOPE:
+  Phase 1 only.
+  Ontology, states, and invariants.
+  No execution logic.
+
+---
+
+# WHAT_WORKED
+
+ENTITY_FIRST_MODELING:
+  Defining entities before workflows
+  prevented premature solutioning.
+
+INVARIANTS_OVER_FEATURES:
+  Asking "what must never be violated"
+  clarified system boundaries faster than adding features.
+
+SEPARATION_OF_CONCERNS:
+  Explicit DNA vs RNA vs Expression
+  reduced ambiguity about where logic belongs.
+
+AGENT_AS_CONSTRAINED_ACTOR:
+  Treating agents as permissioned actors
+  avoided unsafe automation assumptions early.
+
+---
+
+# KEY_DECISIONS
+
+CATEGORIES_AS_TOP_LEVEL_AXIS:
+  Categories exist above visions.
+  Visions align to categories, not replace them.
+
+VISION_FLEXIBILITY:
+  Visions may span multiple categories.
+  Categories do not enforce exclusivity.
+
+MINIMAL_CORE_ENTITIES:
+  XP, schedules, notifications, and themes
+  are derived or metadata, not core entities.
+
+MEMORY_NOTE_ARTIFACT_CHAIN:
+  MEMORY = raw input
+  NOTE = human synthesis
+  ARTIFACT = stable output
+  This progression anchors all learning and output.
+
+PHASE_AS_TRUTH_ENFORCER:
+  Phases exist to force synthesis.
+  Completion requires intent, decisions, and learnings.
+
+---
+
+# WHAT_WAS_EXPLICITLY_DEFERRED
+
+NO_EXECUTION_LOGIC:
+  No workflows, agents, or transforms in DNA.
+
+NO_STORAGE_DECISIONS:
+  No databases, schemas, or persistence models.
+
+NO_UI_ASSUMPTIONS:
+  No dashboards, layouts, or interaction models.
+
+NO_RAG_ASSUMPTIONS:
+  Retrieval, embeddings, and grounding
+  belong to RNA and later phases.
+
+NO_AUTOMATION_PROMISES:
+  Agents may propose actions,
+  not commit changes without user approval.
+
+---
+
+# CONSTRAINTS_DISCOVERED
+
+SAFE_AGENT_ACTIONS_REQUIRE:
+  - clear ownership
+  - explicit permissions
+  - full attribution
+  - invariant preservation
+
+PROGRESS_MUST_BE_EVIDENCED:
+  DONE states imply artifacts or notes exist.
+  No silent completion.
+
+SYSTEM_HONESTY_DEPENDS_ON:
+  provenance tracking
+  explicit state transitions
+  immutable history for artifacts
+
+---
+
+# MENTAL_MODEL_LOCKED_IN
+
+THINK_IN_THIS_ORDER:
+  1. Entity
+  2. Ownership
+  3. State
+  4. Invariant
+  5. Allowed transition
+
+AVOID_THIS_ORDER:
+  1. Feature
+  2. UI
+  3. Automation
+  4. Fix invariants later
+
+---
+
+# READINESS_CHECK
+
+PHASE_1_IS_COMPLETE_WHEN:
+  - entities are defined
+  - states are explicit
+  - invariants are enforceable
+  - no behavior is assumed
+
+STATUS:
+  READY_TO_MOVE_TO_RNA
+
+END

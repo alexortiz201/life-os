@@ -1,0 +1,446 @@
+# Life-OS DNA — Entity Definitions
+
+PURPOSE:
+  Define the core entities of Life-OS.
+  Make meaning stable before behavior (RNA) or UI (Expression).
+
+RULE:
+  Keep core entities minimal.
+  Prefer metadata and relationships over new entity types.
+
+---
+
+# CORE_ENTITY_LIST
+
+CORE_ENTITIES:
+  - USER
+  - AGENT
+  - CATEGORY
+  - VISION
+  - GOAL
+  - PROJECT
+  - TASK
+  - PHASE
+  - MEMORY
+  - NOTE
+  - ARTIFACT
+
+NON_CORE_ENTITIES: `(DERIVED_OR_CONFIG)`
+  - XP
+  - THEME
+  - SCHEDULE
+  - NOTIFICATION
+
+RULE:
+  Non-core items may appear later as:
+    - metadata fields
+    - derived views
+    - configuration artifacts
+
+---
+
+# ENTITY_DEFINITION_TEMPLATE
+
+ENTITY:
+  NAME:
+  PURPOSE:
+  OWNS:
+  OWNED_BY:
+  RELATIONSHIPS:
+  STATES:
+  INVARIANTS:
+  METADATA:
+  EXAMPLES:
+
+---
+
+# USER
+
+ENTITY:
+  NAME: USER
+  PURPOSE:
+    Root owner of intent, progress, and data.
+  OWNS:
+    - CATEGORY
+    - VISION
+    - GOAL
+    - PROJECT
+    - TASK
+    - PHASE
+    - MEMORY
+    - NOTE
+    - ARTIFACT
+    - AGENT
+  OWNED_BY:
+    - NONE
+  RELATIONSHIPS:
+    - USER has many entities
+    - USER grants permissions to AGENT
+  STATES:
+    - ACTIVE
+    - INACTIVE
+  INVARIANTS:
+    - Every entity must have an owning USER
+  METADATA:
+    - created_at
+    - updated_at
+  EXAMPLES:
+    - "Alex"
+
+---
+
+# AGENT
+
+ENTITY:
+  NAME: AGENT
+  PURPOSE:
+    A constrained actor that proposes or executes work
+    within explicit permissions and workflows.
+  OWNS:
+    - ARTIFACT `(agent-generated)`
+    - NOTE `(agent-generated)`
+  OWNED_BY:
+    - USER
+  RELATIONSHIPS:
+    - AGENT acts on USER-owned entities with permission
+    - AGENT produces outputs that must be attributable
+  STATES:
+    - DISABLED
+    - IDLE
+    - PLANNING
+    - EXECUTING
+    - BLOCKED
+  INVARIANTS:
+    - AGENT may not act outside granted scope
+    - AGENT actions must be attributable and logged
+    - AGENT must not bypass invariants of target entities
+  METADATA:
+    - persona
+    - allowed_actions
+    - allowed_entities
+    - created_at
+    - updated_at
+  EXAMPLES:
+    - "Planner Agent"
+    - "Reflection Agent"
+
+---
+
+# CATEGORY
+
+ENTITY:
+  NAME: CATEGORY
+  PURPOSE:
+    A user-selected (or system-suggested) domain of life
+    used to organize intent and progress.
+  OWNS:
+    - NONE
+  OWNED_BY:
+    - USER
+  RELATIONSHIPS:
+    - CATEGORY may be referenced by many VISION
+    - CATEGORY may exist with zero VISION `(selected but unused)`
+  STATES:
+    - DRAFT
+    - ACTIVE
+    - ARCHIVED
+  INVARIANTS:
+    - CATEGORY title must be unique per USER `(optional)`
+  METADATA:
+    - title
+    - description
+    - created_at
+    - updated_at
+    - created_by `(USER|SYSTEM)`
+  EXAMPLES:
+    - "Health"
+    - "Wealth"
+    - "Love"
+    - "Evolution"
+    - "Engineering"
+    - "Robotics"
+
+---
+
+# VISION
+
+ENTITY:
+  NAME: VISION
+  PURPOSE:
+    A high-level direction that guides goal selection.
+    Visions may span multiple categories.
+  OWNS:
+    - GOAL
+  OWNED_BY:
+    - USER
+  RELATIONSHIPS:
+    - VISION belongs_to many CATEGORY
+    - VISION contains many GOAL
+  STATES:
+    - DRAFT
+    - ACTIVE
+    - ARCHIVED
+  INVARIANTS:
+    - VISION must belong_to at least one CATEGORY
+  METADATA:
+    - title
+    - description
+    - category_ids
+    - created_at
+    - updated_at
+  EXAMPLES:
+    - "Become a principal engineer with deep AI systems mastery"
+    - "Improve my vitals across the board"
+
+---
+
+# GOAL
+
+ENTITY:
+  NAME: GOAL
+  PURPOSE:
+    A measurable or directional outcome under a VISION.
+  OWNS:
+    - PROJECT
+  OWNED_BY:
+    - USER
+  RELATIONSHIPS:
+    - GOAL belongs_to one VISION
+    - GOAL contains many PROJECT
+  STATES:
+    - DRAFT
+    - ACTIVE
+    - PAUSED
+    - DONE
+    - ARCHIVED
+  INVARIANTS:
+    - GOAL must belong_to a VISION
+    - DONE implies completion evidence exists `(NOTE|ARTIFACT)`
+  METADATA:
+    - title
+    - description
+    - target_date `(optional)`
+    - created_at
+    - updated_at
+  EXAMPLES:
+    - "Ship Life-OS Phase 1 DNA"
+
+---
+
+# PROJECT
+
+ENTITY:
+  NAME: PROJECT
+  PURPOSE:
+    A bounded initiative in service of a GOAL.
+  OWNS:
+    - TASK
+    - PHASE `(optional)`
+  OWNED_BY:
+    - USER
+  RELATIONSHIPS:
+    - PROJECT belongs_to one GOAL
+    - PROJECT contains many TASK
+  STATES:
+    - DRAFT
+    - ACTIVE
+    - BLOCKED
+    - DONE
+    - ARCHIVED
+  INVARIANTS:
+    - PROJECT must belong_to a GOAL
+    - DONE implies required TASK are DONE `(or explicitly waived)`
+  METADATA:
+    - title
+    - description
+    - created_at
+    - updated_at
+  EXAMPLES:
+    - "Life-OS DNA"
+
+---
+
+# TASK
+
+ENTITY:
+  NAME: TASK
+  PURPOSE:
+    The smallest actionable unit of work.
+  OWNS:
+    - NONE
+  OWNED_BY:
+    - USER
+  RELATIONSHIPS:
+    - TASK belongs_to one PROJECT
+    - TASK may reference MEMORY / NOTE / ARTIFACT
+  STATES:
+    - BACKLOG
+    - READY
+    - ACTIVE
+    - DONE
+    - CANCELED
+  INVARIANTS:
+    - TASK must belong_to a PROJECT
+    - DONE implies done_at exists
+  METADATA:
+    - title
+    - description
+    - priority `(optional)`
+    - cadence `(optional)`
+    - created_by `(USER|AGENT)`
+    - origin `(USER_INPUT|AGENT_OUTPUT|SYSTEM_RULE)`
+    - created_at
+    - updated_at
+    - done_at `(optional)`
+  EXAMPLES:
+    - "Define invariants for MEMORY"
+    - "Daily journal entry"
+    - "Create weekly summary"
+
+---
+
+# PHASE
+
+ENTITY:
+  NAME: PHASE
+  PURPOSE:
+    A structured stage of progress used to group work,
+    enforce sequencing, and support synthesis.
+  OWNS:
+    - TASK `(as scope)`
+    - ARTIFACT `(phase outputs)`
+  OWNED_BY:
+    - USER
+  RELATIONSHIPS:
+    - PHASE may belong_to PROJECT
+    - PHASE has many TASK
+  STATES:
+    - PLANNED
+    - ACTIVE
+    - COMPLETE
+  INVARIANTS:
+    - PHASE COMPLETE implies intent/decisions/learnings artifacts exist
+  METADATA:
+    - name
+    - description
+    - created_at
+    - updated_at
+  EXAMPLES:
+    - "Phase 0 — Foundations"
+
+---
+
+# MEMORY
+
+ENTITY:
+  NAME: MEMORY
+  PURPOSE:
+    Raw captured input or observation.
+    Truthy but not necessarily correct or curated.
+  OWNS:
+    - NONE
+  OWNED_BY:
+    - USER
+  RELATIONSHIPS:
+    - MEMORY may be referenced by NOTE or ARTIFACT
+  STATES:
+    - CAPTURED
+    - TRIAGED
+    - ARCHIVED
+  INVARIANTS:
+    - MEMORY must retain provenance `(source + timestamp)`
+  METADATA:
+    - source_type
+    - source_uri `(optional)`
+    - captured_at
+    - created_at
+  EXAMPLES:
+    - "Journal entry"
+    - "Meeting transcript"
+    - "Idea dump"
+
+---
+
+# NOTE
+
+ENTITY:
+  NAME: NOTE
+  PURPOSE:
+    Human-curated interpretation or synthesis.
+    Editable and reflective.
+  OWNS:
+    - NONE
+  OWNED_BY:
+    - USER
+  RELATIONSHIPS:
+    - NOTE may cite MEMORY
+    - NOTE may produce ARTIFACT
+  STATES:
+    - DRAFT
+    - PUBLISHED
+    - ARCHIVED
+  INVARIANTS:
+    - NOTE must track sources when making claims `(optional)`
+  METADATA:
+    - title
+    - created_at
+    - updated_at
+  EXAMPLES:
+    - "Insights from Phase 0"
+
+---
+
+# ARTIFACT
+
+ENTITY:
+  NAME: ARTIFACT
+  PURPOSE:
+    Stable output intended to be used, referenced, or executed.
+  OWNS:
+    - NONE
+  OWNED_BY:
+    - USER
+  RELATIONSHIPS:
+    - ARTIFACT may be derived_from NOTE and/or MEMORY
+    - ARTIFACT may be produced_by AGENT or USER
+  STATES:
+    - DRAFT
+    - ACTIVE
+    - SUPERSEDED
+    - ARCHIVED
+  INVARIANTS:
+    - ARTIFACT must record provenance `(creator + sources)`
+    - SUPERSEDED implies replacement reference exists
+  METADATA:
+    - artifact_type
+    - created_by `(USER|AGENT)`
+    - source_ids `(optional)`
+    - created_at
+    - updated_at
+  EXAMPLES:
+    - "Daily plan"
+    - "Roadmap"
+    - "Dashboard"
+    - "Grant draft"
+
+---
+
+# DERIVED_OR_METADATA_NOTES
+
+XP:
+  - derived from entity transitions
+  - not a core entity in Phase 1
+
+THEME:
+  - a rendering configuration `(Expression)`
+  - stored as ARTIFACT if needed
+
+SCHEDULE:
+  - derived view over TASK + time
+  - stored as ARTIFACT if needed
+
+NOTIFICATION:
+  - derived from rules over entity states
+  - stored as ARTIFACT if needed
+
+END

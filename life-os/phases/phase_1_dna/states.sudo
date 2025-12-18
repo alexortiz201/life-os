@@ -1,0 +1,122 @@
+# Phase 1 — DNA States
+
+PURPOSE:
+  Define the allowed states for each core entity.
+  States are minimal and correctness-driven.
+
+SCOPE:
+  Only defines valid states, not transitions or workflows.
+  Transitions belong to RNA.
+
+RULE:
+  Add states only when they prevent invalid meaning
+  or support downstream workflows.
+
+---
+
+# USER
+
+STATES:
+  - ACTIVE
+  - INACTIVE
+
+---
+
+# AGENT
+
+STATES:
+  - DISABLED
+  - IDLE
+  - PLANNING
+  - EXECUTING
+  - BLOCKED
+
+---
+
+# CATEGORY
+
+STATES:
+  - DRAFT
+  - ACTIVE
+  - ARCHIVED
+
+---
+
+# VISION
+
+STATES:
+  - DRAFT
+  - ACTIVE
+  - ARCHIVED
+
+---
+
+# GOAL
+
+STATES:
+  - DRAFT
+  - ACTIVE
+  - PAUSED
+  - DONE
+  - ARCHIVED
+
+---
+
+# PROJECT
+
+STATES:
+  - DRAFT
+  - ACTIVE
+  - BLOCKED
+  - DONE
+  - ARCHIVED
+
+---
+
+# TASK
+
+STATES:
+  - BACKLOG
+  - READY
+  - ACTIVE
+  - DONE
+  - CANCELED
+
+---
+
+# PHASE
+
+STATES:
+  - PLANNED
+  - ACTIVE
+  - COMPLETE
+
+---
+
+# MEMORY
+
+STATES:
+  - CAPTURED
+  - TRIAGED
+  - ARCHIVED
+
+---
+
+# NOTE
+
+STATES:
+  - DRAFT
+  - PUBLISHED
+  - ARCHIVED
+
+---
+
+# ARTIFACT
+
+STATES:
+  - DRAFT
+  - ACTIVE
+  - SUPERSEDED
+  - ARCHIVED
+
+END

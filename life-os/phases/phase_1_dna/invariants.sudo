@@ -1,0 +1,112 @@
+# Phase 1 — DNA Invariants
+
+PURPOSE:
+  Define cross-entity invariants that keep Life-OS honest.
+  These invariants must hold regardless of RNA behavior or Expression UI.
+
+SCOPE:
+  Global invariants across entities:
+    USER, AGENT, CATEGORY, VISION, GOAL, PROJECT, TASK, PHASE, MEMORY, NOTE, ARTIFACT
+
+RULE:
+  Invariants are written as:
+    - MUST / MUST_NOT
+    - unambiguous
+    - testable in principle
+
+---
+
+# OWNERSHIP_AND_IDENTITY
+
+INVARIANTS:
+  - EVERY entity MUST have exactly one owning USER
+  - ENTITY identifiers MUST be stable across state changes
+  - DELETED is not a state in DNA v0 `(use ARCHIVED where needed)`
+
+---
+
+# RELATIONSHIP_STRUCTURE
+
+INVARIANTS:
+  - VISION MUST reference at least one CATEGORY
+  - GOAL MUST belong_to exactly one VISION
+  - PROJECT MUST belong_to exactly one GOAL
+  - TASK MUST belong_to exactly one PROJECT
+  - PHASE MAY belong_to one PROJECT `(optional relationship)`
+
+NOTES:
+  - CATEGORY MAY exist with zero VISION
+  - VISION MAY span many CATEGORY
+
+---
+
+# STATE_INTEGRITY
+
+INVARIANTS:
+  - ENTITY state MUST be one of its declared STATES list
+  - STATE transitions MUST_NOT skip required evidence checks `(defined below)`
+  - ARCHIVED entities MUST_NOT be treated as active inputs for planning `(RNA responsibility, but invariant declared here)`
+
+---
+
+# PROVENANCE_AND_ATTRIBUTION
+
+INVARIANTS:
+  - MEMORY MUST retain provenance `(source_type + captured_at)`
+  - ARTIFACT MUST record provenance `(created_by + created_at)`
+  - AGENT-produced NOTE/ARTIFACT MUST be attributable to:
+      - a specific AGENT
+      - a specific USER owner
+  - ARTIFACT SHOULD reference sources when derived `(NOTE/MEMORY ids)` `(optional but preferred)`
+
+---
+
+# PROGRESS_AND_EVIDENCE
+
+INVARIANTS:
+  - TASK state DONE MUST imply done_at exists
+  - GOAL state DONE MUST imply completion evidence exists `(NOTE|ARTIFACT)`
+  - PROJECT state DONE MUST imply:
+      - all required TASK are DONE
+      - OR explicit waiver is recorded `(ARTIFACT)` `(optional, later)`
+  - PHASE state COMPLETE MUST imply:
+      - phase outputs exist `(ARTIFACT)`
+      - and include intent/decisions/learnings artifacts `(for repo phases)`
+
+---
+
+# AGENT_SAFETY_BOUNDARIES
+
+INVARIANTS:
+  - AGENT MUST_NOT act outside granted scope
+  - AGENT MUST_NOT bypass entity invariants
+  - AGENT actions MUST be logged and attributable `(RNA/ops detail later)`
+  - AGENT MUST_NOT silently mutate ARTIFACT without:
+      - preserving provenance
+      - maintaining a trail of changes `(later: versioning)`
+
+---
+
+# CATEGORY_CONSISTENCY
+
+INVARIANTS:
+  - CATEGORY title SHOULD be unique per USER `(optional)`
+  - VISION categories MUST be references `(category_ids)`
+  - GOAL/PROJECT/TASK categories are derived from VISION via relationships in DNA v0
+
+---
+
+# OPTIONAL_LATER_INVARIANTS  // NOT ENFORCED IN DNA v0
+
+FUTURE:
+  - ARTIFACT SUPERSEDED MUST reference replacement
+  - NOTE claims MUST cite MEMORY sources
+  - TASK cadence MUST follow a defined schedule grammar
+  - NOTIFICATION generation MUST be idempotent
+
+RULE:
+  Optional invariants move into core only after:
+    - RNA needs them to be correct
+    - or Expression needs them to be explainable
+
+END

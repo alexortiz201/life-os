@@ -1,0 +1,106 @@
+# Phase 1 — Life-OS DNA (Decisions)
+
+PURPOSE:
+  Record the irreversible or high-impact choices
+  that define the DNA layer.
+
+SCOPE:
+  Applies to Phase 1 and constrains future phases
+  unless explicitly revised.
+
+---
+
+# DECISION: DNA_IS_DATA_ONLY
+
+CHOICE:
+  DNA is encoded as data and contracts only.
+
+RULE:
+  no behavior
+  no pipelines
+  no prompts
+  no orchestration
+
+---
+
+# DECISION: SMALL_CORE_ENTITY_SET
+
+CHOICE:
+  Keep the core entity set minimal (target 10–15).
+
+RULE:
+  prefer adding metadata to existing entities
+  over adding new entity types.
+
+---
+
+# DECISION: IDENTIFIERS_ARE_STABLE
+
+CHOICE:
+  Every entity has a stable, unique identifier.
+
+RULE:
+  identifiers do not encode mutable meaning
+  identifiers do not change across state transitions
+
+---
+
+# DECISION: INVARIANTS_ARE_FIRST_CLASS
+
+CHOICE:
+  Invariants are explicitly defined and versioned.
+
+RULE:
+  if an invariant cannot be expressed clearly,
+  the entity design is incomplete.
+
+---
+
+# DECISION: STATE_MODELS_ARE_MINIMAL
+
+CHOICE:
+  State machines are minimal and correctness-driven.
+
+RULE:
+  add states only when they prevent invalid meaning
+  or support downstream workflows
+
+---
+
+# DECISION: SCHEMA_EVOLUTION_IS_EXPLICIT
+
+CHOICE:
+  DNA supports evolution through versioned schema changes.
+
+RULE:
+  changes are additive when possible
+  breaking changes require migration notes
+
+---
+
+# DECISION: RAG_AND_AGENTS_ATTACH_TO_DNA_LATER
+
+CHOICE:
+  RAG and agent behavior are downstream capabilities,
+  not part of DNA.
+
+RULE:
+  DNA defines what can be grounded to
+  and what actions are allowed,
+  but not how those actions are executed.
+
+---
+
+# REVISION_POLICY
+
+MAY_REVISE decisions ONLY IF:
+  - the ontology cannot support required workflows
+  - a core invariant becomes unworkable
+  - real usage reveals missing semantics
+
+ALL revisions MUST:
+  - name the original decision
+  - state why it failed
+  - record the new constraint
+
+END

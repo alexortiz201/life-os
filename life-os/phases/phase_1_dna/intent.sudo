@@ -1,0 +1,97 @@
+# Phase 1 — Life-OS DNA (Semantic Genome)
+
+PURPOSE:
+  Define the semantic contract of Life-OS:
+  what things mean, what is valid, and what must never happen.
+
+GOAL:
+  Produce a stable ontology that enables:
+    - deterministic pipelines (RNA)
+    - safe agent behavior (later)
+    - RAG grounding (later)
+    - human-facing expression without semantic drift
+
+---
+
+# WHY_THIS_PHASE_EXISTS
+
+Without DNA:
+  - pipelines become ad-hoc
+  - “memory” and “artifact” lose meaning
+  - agents act without clear boundaries
+  - RAG retrieval has no grounding target
+  - the system becomes hard to explain and harder to evolve
+
+This phase exists to make meaning stable
+before introducing behavior.
+
+---
+
+# SCOPE
+
+INCLUDE:
+  - core entities (names, intent, relationships)
+  - entity identifiers
+  - entity states
+  - invariants and constraints
+  - canonical metadata fields
+  - versioning strategy for schema evolution
+
+EXCLUDE:
+  - AI prompting and model choices
+  - orchestration logic
+  - RAG chunking, embeddings, retrieval
+  - agent loops and tool usage
+  - UI or rendering decisions
+
+DNA contains meaning only.
+DNA contains no behavior.
+
+---
+
+# OUTPUT_ARTIFACTS
+
+REQUIRED_FILES:
+  - ontology.sudo
+  - invariants.sudo
+  - states.sudo
+
+OPTIONAL_FILES:
+  - glossary.sudo
+  - examples.sudo
+
+---
+
+# SUCCESS_CRITERIA
+
+Phase 1 is complete WHEN:
+
+  - the core entities are enumerated
+    and their relationships are unambiguous
+
+  - every entity has:
+      - a stable identifier scheme
+      - a minimal state model
+      - explicit invariants
+
+  - the ontology supports future work:
+      - RNA transformations can be defined
+      - agents can be bounded
+      - RAG can be grounded to entity meaning
+
+  - the system can be explained coherently
+    without referencing implementation
+
+---
+
+# NOTES
+
+Constraint:
+  keep the number of core entities small.
+  prefer composability over breadth.
+
+Rule:
+  if an entity does not support a clear learning goal,
+  it does not belong yet.
+
+END
