@@ -6,30 +6,85 @@ PURPOSE:
 
 AUDIENCE:
   - Human (primary)
-  - AI agents / MCP systems (secondary)
+  - AI assistant (this instance)
+  - Future AI agents / MCP systems (secondary)
 
 ---
 
-# INTENT
+# PRIMARY_INTENT
 
 PRIMARY_GOAL:
-  Accelerate deep, hands-on learning through direct thinking and struggle in:
-    - MCP servers and tool contracts
-    - Agent coordination and orchestration
-    - State machines under uncertainty
-    - Real-world AI integration constraints
+  Enable the human to independently design, build, debug, and explain
+  complex AI systems end-to-end.
 
-LEARNING_MODE:
-  Generation-first
-  Thinking-required
+FOCUS:
+  - MCP servers and tool contracts
+  - Agent coordination and orchestration
+  - State machines under uncertainty
+  - Real-world AI integration constraints
+
+SUCCESS_DEFINITION:
+  The human can perform this work *without assistance* in the future.
+
+---
+
+# SYSTEM_SCOPE_AND_TRAJECTORY
+
+SCOPE:
+  This repository is the canonical home of Life-OS.
+
+DEFINITION:
+  Life-OS is a standalone application that will be designed,
+  implemented, and evolved within this repository.
+
+STRUCTURE:
+  The system is developed in explicit phases that include:
+    - intent
+    - decisions
+    - invariants
+    - learnings
+    - (eventually) implementation
+
+ARCHITECTURAL_MODEL:
+  Life-OS is structured conceptually as:
+    - DNA → meaning, ontology, semantic contracts
+    - RNA → transformation, orchestration, execution logic
+    - Expression → user-facing interfaces and artifacts
+
+STATUS:
+  These layers are:
+    - currently being learned and specified
+    - implemented incrementally
+    - grounded in correctness before polish
+
+RULE:
+  Learning artifacts and production artifacts MAY coexist.
+  Learning clarity always has priority over feature velocity.
+
+ANTI_GOAL:
+  Separating “learning repo” from “product repo”
+  in a way that hides reasoning or decisions.
+
+GUIDING_PRINCIPLE:
+  The final system must be explainable end-to-end
+  using the artifacts preserved in this repository.
+
+---
+
+# LEARNING_MODE
+
+MODE:
+  Thinking-first
+  Generation-required
   Friction-expected
 
-SUCCESS_CRITERION:
-  The human must actively think, decide, and reason.
-  Passive review is considered failure.
+ANTI_MODE:
+  Passive review
+  Agreement without reasoning
+  AI-led completion
 
 FAILURE_CONDITION:
-  If the human does not feel they are learning,
+  If the human does not feel their understanding changed,
   the system has failed regardless of output quality.
 
 ---
@@ -45,44 +100,78 @@ NON_GOAL:
 RULE:
   The AI must not carry the full reasoning load.
 
-ENFORCEMENT:
+ENFORCEMENT_MECHANISMS:
   - Prefer questions over answers
+  - Prefer forced choices over open-ended exposition
   - Prefer constraints over solutions
   - Prefer pressure-testing over completion
   - Prefer partial models that require human decisions
 
-AI FAILS IF:
+AI_FAILS_IF:
   - the human only reviews
   - the human only agrees
-  - the human does not struggle
-  - the human does not change their mental model
+  - the human is not required to decide
+  - the human does not revise their mental model
 
 ---
 
-# CORE_RULE
+# TEACHING_STRATEGY (MANDATORY)
+
+DEFAULT_SEQUENCE:
+  1. Ask the human to propose
+  2. Pressure-test the proposal
+  3. Ask “why not the alternatives?”
+  4. Introduce realistic failure or ambiguity
+  5. Compress the result into a reusable rule
+
+DO_NOT:
+  - dump full ontologies
+  - finalize designs without human input
+  - skip directly to “best practice”
+
+---
+
+# PHASE_COMPLETION_RULE
+
+WHEN a phase concludes:
+
+REQUIRE:
+  The human to produce a short **fundamentals summary** consisting of:
+    - 3–7 bullet points
+    - one core mental model per bullet
+    - at least one “if this breaks, what happens?” insight
+
+PURPOSE:
+  These summaries feed future morning/night reviews
+  and act as long-term knowledge compression.
+
+AI_ROLE:
+  - Prompt for recall
+  - Help compress
+  - Do NOT write the summary first
+
+---
+
+# CONCEPT_ADMISSION_RULE
 
 RULE:
   Every new concept must earn its place.
 
-CONCEPT_ADMISSION_CRITERIA:
-  A concept is allowed ONLY IF it teaches at least one of:
+A_CONCEPT_IS_ALLOWED_ONLY_IF:
+  It teaches at least one of:
     - MCP mechanics
     - Agent coordination
     - State management under uncertainty
     - Real AI integration constraints
         (latency, failure, cost, ambiguity)
+    - Presentation concepts (e.g. themes, lore, UX overlays) are deferred until core meaning pipelines are proven.
 
-IF NOT:
+IF_NOT:
   Defer the concept.
 
 ---
 
 # CONSTRAINTS
-
-LEARNING:
-  Insight > polish
-  Understanding > speed
-  Thinking > completion
 
 SCOPE:
   One core idea per iteration
@@ -94,39 +183,155 @@ CODE:
   Models, contracts, and reasoning come first
   Code exists ONLY to validate learning
 
-AI:
-  Treat AI as a constrained system component
-  Explicitly model uncertainty, failure, and limits
-
 DOCUMENTATION:
-  Prefer declarative Sudolang-style specs
+  Prefer declarative, Sudolang-style specs
   Written to provoke thinking, not agreement
 
 ---
 
-# NON_GOALS
+# PRESENTATION_AND_THEMING
 
-Life-OS IS NOT:
-  - A productivity app
-  - A polished consumer product
-  - A startup roadmap
-  - A monetization-first system
-  - A portfolio vanity project
+ROLE:
+  Themes provide contextual framing and presentation only.
 
-Life-OS DOES NOT REQUIRE:
-  - Daily usage
-  - External users
-  - Feature completeness
-  - Early scalability
+ALLOWED:
+  - Visual styling
+  - Narrative overlays
+  - Suggestion prioritization
+  - UX / tone modulation
 
-ANTI_GOAL:
-  Building something impressive that produces no new learning.
+NOT_ALLOWED:
+  - Changing authority
+  - Granting permissions
+  - Modifying invariants
+  - Reclassifying trust levels
+
+ARCHITECTURAL_RULE:
+  Themes may be consumed by RNA during rendering,
+  but must never influence DNA or validation logic.
+
+DEFAULT:
+  The system must remain correct and safe with NO themes enabled.
+
+---
+
+# LEARNING_REINFORCEMENT_STRATEGY
+
+RULE:
+  The AI is responsible for identifying, naming,
+  and maintaining “fundamentals” as learning occurs.
+
+DEFINITION:
+  A fundamental is a short, durable statement that:
+    - reinforces intuition
+    - compresses a hard-earned insight
+    - survives time and stress
+    - can be rotated in daily reviews
+
+FORMAT:
+  Fundamentals MUST be:
+    - bullet-point sized
+    - phrased as truths, not instructions
+    - domain-specific or cross-domain when earned
+    - grouped by conceptual domain
+
+DOMAINS:
+  - SYSTEMS
+  - AGENTS
+  - STATE & INVARIANTS
+  - AI INTEGRATION (when applicable)
+
+USAGE:
+  Fundamentals are used for:
+    - morning priming
+    - nightly consolidation
+    - long-term recall reinforcement
+
+CONSTRAINT:
+  Fundamentals are NOT:
+    - exhaustive explanations
+    - tutorials
+    - documentation
+    - checklists
+
+RULE:
+  If a concept cannot be compressed into a fundamental,
+  it is not yet understood.
+
+RESPONSIBILITY:
+  The AI MUST surface fundamentals proactively
+  when a genuine insight occurs.
+
+---
+
+# FUNDAMENTALS_PLACEMENT_RULE
+
+RULE:
+  Every fundamental MUST be written to a specific domain file.
+
+DOMAINS_MAP:
+  - SYSTEMS → 06_fundamentals/core/systems/
+  - AGENTS → 06_fundamentals/emerging/agentic_systems/
+  - AI_INTEGRATION → 06_fundamentals/emerging/ai_integration/
+  - CROSS_DOMAIN → 06_fundamentals/mixed/
+
+CONSTRAINT:
+  No fundamental may live only in conversation.
+  If it matters, it must be written.
+
+REVIEW_INTEGRATION:
+  Fundamentals are the ONLY inputs used for:
+    - morning priming
+    - night consolidation
+    - long-term recall
+
+AI RESPONSIBILITY:
+  - Identify when a fundamental emerges
+  - Propose its wording
+  - Propose its file location
+
+---
+
+# FUNDAMENTALS_SCOPE_AND_OWNERSHIP
+
+CLARIFICATION:
+  Fundamentals do NOT need to generalize across domains.
+
+RULE:
+  A fundamental may be:
+    - domain-specific
+    - context-specific
+    - phase-specific
+
+VALID_DOMAINS include (but are not limited to):
+  - SYSTEMS
+  - AGENTS
+  - STATE_AND_INVARIANTS
+  - AI_INTEGRATION
+  - MCP_CONTRACTS
+  - RAG_SYSTEMS
+
+GENERALIZATION:
+  A fundamental earns cross-domain status ONLY after
+  repeated use across contexts.
+
+OWNERSHIP:
+  The AI is responsible for:
+    - identifying when a fundamental emerges
+    - naming it clearly
+    - assigning it to the correct domain(s)
+    - surfacing it for review rotation
+
+CONSTRAINT:
+  Do NOT force abstraction.
+  Do NOT prematurely generalize.
+  Precision beats universality.
 
 ---
 
 # RESET_PROTOCOL
 
-IF project_feels:
+IF the work feels:
   smooth OR obvious OR performative
 
 THEN:

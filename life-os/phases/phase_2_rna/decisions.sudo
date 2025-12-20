@@ -1,0 +1,213 @@
+# PHASE_2_RNA — DECISIONS
+
+PURPOSE:
+  Capture irreversible design commitments about how action,
+  validation, and authority work in Life-OS.
+
+RULE:
+  Every decision here trades power for safety.
+  If a decision feels “obvious,” it must be justified.
+
+---
+
+# DECISION_1 — WHAT CAN INITIATE ACTION?
+
+QUESTION:
+  Who is allowed to initiate a PROPOSAL?
+
+OPTIONS:
+  A) USER only
+  B) AGENT only
+  C) USER and AGENT (distinct authority)
+  D) SYSTEM events (timers, state transitions)
+  E) Combination (must specify precedence)
+
+CHOICE:
+  [REQUIRED]
+
+RATIONALE:
+  Why this choice does NOT allow silent authority escalation.
+
+REJECTED_OPTIONS:
+  - [OPTION]: reason rejected
+
+INVARIANT_IMPLIED:
+  The system must be able to answer:
+    "Why was this action attempted at all?"
+
+---
+
+# DECISION_2 — WHERE VALIDATION LIVES
+
+QUESTION:
+  Where does proposal validation occur?
+
+OPTIONS:
+  A) Inside the AGENT
+  B) Inside a central VALIDATION_ENGINE
+  C) Distributed across entities
+  D) Human-in-the-loop always
+  E) Hybrid (must specify boundary)
+
+CHOICE:
+  [REQUIRED]
+
+RATIONALE:
+  Why validation cannot be bypassed.
+
+FAILURE_MODE_IF_WRONG:
+  What silently breaks if this assumption fails?
+
+---
+
+# DECISION_3 — WHAT A PROPOSAL IS ALLOWED TO TOUCH
+
+QUESTION:
+  What does TARGET_ENTITY mean precisely?
+
+OPTIONS:
+  A) A single entity instance
+  B) A collection defined by selector
+  C) A semantic class (e.g. MEMORY)
+  D) All of the above (must define constraints)
+
+CHOICE:
+  [REQUIRED]
+
+RATIONALE:
+  Why TARGET ≠ OUTPUT.
+
+INVARIANT_IMPLIED:
+  Targets describe meaning under consideration,
+  not artifacts being created.
+
+---
+
+# DECISION_4 — SCOPE VS AUTHORITY
+
+QUESTION:
+  What does TARGET_SCOPE actually constrain?
+
+OPTIONS:
+  A) Filesystem / storage paths
+  B) Entity namespaces
+  C) Execution side-effects
+  D) All of the above (layered)
+
+CHOICE:
+  [REQUIRED]
+
+RATIONALE:
+  Why scope limits *where* effects land,
+  not *what* is allowed.
+
+FAILURE_MODE_IF_CONFUSED:
+  Describe a concrete authority leak.
+
+---
+
+# DECISION_5 — REVERSIBILITY DEFINITION
+
+QUESTION:
+  What does it mean to "undo" an action?
+
+OPTIONS:
+  A) Delete created artifacts
+  B) Roll back state transitions
+  C) Revoke semantic authority
+  D) Invalidate downstream meaning
+  E) Combination (must specify ordering)
+
+CHOICE:
+  [REQUIRED]
+
+RATIONALE:
+  Why physical deletion alone is insufficient.
+
+INVARIANT_IMPLIED:
+  Downstream meaning must not remain trusted by accident.
+
+---
+
+# DECISION_6 — FAILURE BEHAVIOR
+
+QUESTION:
+  What happens when validation is inconclusive?
+
+OPTIONS:
+  A) Fail open (warn only)
+  B) Fail closed (block)
+  C) Partial approval
+  D) Escalate to human
+  E) Context-dependent (must define rules)
+
+CHOICE:
+  [REQUIRED]
+
+RATIONALE:
+  Why uncertainty must reduce power, not increase it.
+
+---
+
+# DECISION_7 — ATTRIBUTION
+
+QUESTION:
+  How is responsibility recorded?
+
+OPTIONS:
+  A) Actor only
+  B) Actor + source MEMORY
+  C) Actor + proposal snapshot
+  D) Full provenance chain
+
+CHOICE:
+  [REQUIRED]
+
+RATIONALE:
+  Why attribution must survive deletion.
+
+---
+
+# DECISION_8 — AGENT STOP CONDITIONS
+
+QUESTION:
+  When must an AGENT stop acting?
+
+OPTIONS:
+  A) On validation failure
+  B) On missing justification
+  C) On invariant violation
+  D) On ambiguity
+  E) All of the above
+
+CHOICE:
+  [REQUIRED]
+
+RATIONALE:
+  Why “trying anyway” is forbidden.
+
+---
+
+# META_DECISION — WHAT IS DEFERRED
+
+EXPLICITLY_DEFERRED:
+  - theming
+  - UI
+  - persistence details
+  - RAG
+  - multi-agent coordination
+
+RATIONALE:
+  Why deferring these protects correctness.
+
+---
+
+# PHASE_EXIT_CRITERIA
+
+THIS FILE IS COMPLETE WHEN:
+  - Every CHOICE is filled
+  - Every rejected option has a reason
+  - At least one decision felt uncomfortable
+  - You can explain how one bad choice here would corrupt meaning silently
+
+END

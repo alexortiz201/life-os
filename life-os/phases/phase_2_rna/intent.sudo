@@ -1,0 +1,170 @@
+# PHASE_2_RNA — INTENT
+
+PURPOSE:
+  Define how Life-OS turns meaning into safe action.
+  Formalize proposals, validation, and execution boundaries
+  before any code or storage decisions.
+
+SCOPE:
+  This phase defines:
+    - what it means to ACT
+    - how an AGENT proposes action
+    - how proposals are validated against invariants
+    - how execution is bounded, attributed, and reversible (semantically)
+
+  This phase does NOT define:
+    - UI
+    - database schema
+    - MCP implementation
+    - RAG
+    - multi-agent swarms
+    - theming / lore / presentation
+
+PRIMARY_OUTPUTS:
+  - proposal_contract
+  - validation_contract
+  - execution_model (bounded)
+  - core_workflows (paper-executed)
+  - phase_fundamentals (compressed truths)
+
+---
+
+# CORE_QUESTION
+
+QUESTION:
+  "How does something ACT in the system without violating meaning?"
+
+---
+
+# EXECUTION_MODEL (RNA)
+
+MODEL:
+  DNA defines:
+    - entities
+    - states
+    - invariants
+    - trust levels
+
+  RNA defines:
+    - proposals (intent to change meaning)
+    - validation (invariants enforcement)
+    - execution (bounded effects)
+    - attribution (who caused meaning to change)
+    - semantic_reversibility (revoking authority and downstream trust)
+
+RULE:
+  No meaning becomes actionable without passing validation.
+
+---
+
+# ACTION_UNIT
+
+ACTION_UNIT:
+  PROPOSAL
+
+RULE:
+  Agents propose.
+  The system validates.
+  The system commits or rejects.
+
+---
+
+# PROPOSAL_CONTRACT (DRAFT)
+
+FIELDS:
+  - INTENT:
+  - TARGET_ENTITY:
+  - TARGET_SELECTOR:
+  - ACTOR:
+  - TARGET_SCOPE:
+  - DEPENDENCIES:
+  - IMPACT:
+  - REVERSIBILITY_CLAIM:
+
+RULE:
+  TARGET describes what is acted upon.
+  OUTPUT describes what is created.
+  SCOPE describes where outputs may land.
+
+---
+
+# VALIDATION_CONTRACT (DRAFT)
+
+VALIDATION_MUST_CHECK:
+  - permissions (actor allowed)
+  - scope (write boundaries)
+  - invariant_safety (cannot violate meaning)
+  - trust_escalation_rules (what becomes actionable)
+  - provenance (attribution and sources)
+  - reversibility_semantics (downstream revocation plan)
+
+VALIDATION_OUTCOMES:
+  - APPROVE
+  - REJECT
+  - PARTIAL_APPROVE (requires explicit constraints)
+  - ESCALATE (needs human confirmation)
+
+RULE:
+  Fail_closed by default.
+
+---
+
+# SAFE_ACTING_DEFINITION
+
+SAFE_ACTING:
+  Acting safely means:
+    - not exceeding granted authority
+    - not creating trusted meaning by accident
+    - stopping when justification is missing
+    - leaving an audit trail that explains the action
+
+---
+
+# PHASE_SUCCESS_CRITERIA
+
+SUCCESS_IF:
+  The human can paper-execute the following workflows end-to-end
+  and explain why each step is safe:
+
+  WORKFLOWS:
+    - weekly_reflection synthesis
+    - denied_action example (blocked by invariants)
+    - partial_approval example (narrowed scope)
+    - undo_flow example (semantic revocation, not deletion)
+
+AND:
+  The human can answer:
+    - "why is this agent allowed to act?"
+    - "what exactly is it acting on?"
+    - "what invariant prevents silent corruption?"
+    - "what does undo mean here?"
+
+---
+
+# LEARNING_RULES
+
+RULE:
+  No code unless explicitly requested.
+
+RULE:
+  Each session must force the human to decide.
+  If the human only reviews, the phase is failing.
+
+RULE:
+  Each major insight becomes fundamentals (3–7 bullets),
+  with a 🍰 super_simple line.
+
+---
+
+# FOLLOW_UP (DEFERRED)
+
+DEFERRED_TOPICS:
+  - theming and lore overlays
+  - expression rendering
+  - external integrations (MCP, LLM APIs)
+  - long-term DNA/RNA/Expression repo splitting
+
+RULE:
+  These are downstream and must not alter authority or invariants.
+
+END
