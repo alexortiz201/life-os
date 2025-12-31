@@ -1,0 +1,112 @@
+# PHASE_2_RNA — LEARNINGS
+
+PURPOSE:
+  Capture irreversible mental shifts earned during Phase 2.
+  These are not explanations of the system,
+  but changes in how action, authority, and trust are understood.
+
+SCOPE:
+  - validation
+  - execution
+  - commit
+  - agents
+  - meaning → action boundaries
+
+---
+
+LEARNING_1:
+  STATEMENT:
+    Validation, execution, and commit are distinct problems,
+    not stages of the same problem.
+
+  WHAT_CHANGED:
+    I previously treated validation as a gate before execution.
+    I now understand validation as a trust check,
+    execution as effect production,
+    and commit as belief formation.
+
+  WHY_THIS_MATTERS:
+    Collapsing these creates silent corruption
+    where the system believes things it never safely earned.
+
+  TAGS:
+    - system_design
+    - trust
+    - validation_execution_commit
+
+---
+
+LEARNING_2:
+  STATEMENT:
+    Commit is the moment meaning becomes authoritative,
+    not the moment bytes are written.
+
+  WHAT_CHANGED:
+    I previously associated commit with storage or artifact creation.
+    I now understand commit as the system agreeing
+    to stand behind new meaning.
+
+  WHY_THIS_MATTERS:
+    Physical deletion cannot undo belief.
+    Authority must be revoked semantically.
+
+  TAGS:
+    - authority
+    - meaning
+    - reversibility
+
+---
+
+LEARNING_3:
+  STATEMENT:
+    Re-validation is not redundancy; it is protection against time.
+
+  WHAT_CHANGED:
+    I initially saw re-validation as wasted effort.
+    I now understand it as necessary because assumptions decay,
+    even in fast systems.
+
+  WHY_THIS_MATTERS:
+    Without re-validation, stale assumptions become truth.
+
+  TAGS:
+    - invariants
+    - time
+    - safety
+
+---
+
+LEARNING_4:
+  STATEMENT:
+    Agents must never be trusted actors.
+
+  WHAT_CHANGED:
+    I stopped thinking of agents as safe executors.
+    I now treat them as proposal generators only.
+
+  WHY_THIS_MATTERS:
+    Allowing agents to act directly
+    creates silent authority escalation.
+
+  TAGS:
+    - agents
+    - authority
+    - ai_safety
+
+---
+
+LEARNING_5:
+  STATEMENT:
+    Meaning becomes more dangerous as it becomes more trusted.
+
+  WHAT_CHANGED:
+    I now see trust as a gradient,
+    where each increase requires stronger invariants.
+
+  WHY_THIS_MATTERS:
+    Systems fail most dangerously near commit.
+
+  TAGS:
+    - trust_gradients
+    - invariants
+    - system_failure

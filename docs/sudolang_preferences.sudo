@@ -11,7 +11,7 @@ GOAL:
 
 ---
 
-# CORE_CONVENTIONS
+# CORE CONVENTIONS
 
 - Colons (:) define structure and intent.
 - Indentation defines scope and containment.
@@ -20,6 +20,9 @@ GOAL:
     - the label precedes a colon
 - Backticks (``) constrain or qualify a phrase.
 - Headings (#) mark major section boundaries only.
+- Every major section boundary MUST use:
+    ---
+    # SECTION TITLE
 
 ---
 
@@ -37,8 +40,8 @@ AVOID headings for:
   - labels
 
 EXAMPLES:
-  # STORY_INDEX
-  # REVIEW_ROTATION_STRATEGY
+  # STORY INDEX
+  # REVIEW ROTATION STRATEGY
 
 ---
 
@@ -70,7 +73,7 @@ NOT from headings.
 
 ---
 
-# CONDITIONALS_AND_RULES
+# CONDITIONALS AND RULES
 
 EXPRESS conditionals as labels,
 not as prose sentences.
@@ -95,12 +98,13 @@ BACKTICKS (``) MUST be used to:
 
 ---
 
-# UNDERSCORES_VS_SPACES
+# UNDERSCORES VS SPACES
 
 USE SPACES for:
   - titles
   - human-facing names
   - quoted phrases
+  - headings
 
 EXAMPLE:
   "Experiment Interference / Composition Fix"
@@ -119,7 +123,7 @@ EXAMPLE:
 
 ---
 
-# STORY_IDENTIFIERS
+# STORY IDENTIFIERS
 
 STORY identifiers MUST:
   - be ALL CAPS
@@ -145,12 +149,14 @@ STEPS MUST:
   - NOT be headings
 
 PREFERRED:
-  STEP 1:
-  STEP 2:
+  STEP_1:
+  STEP_2:
 
 AVOID:
   ## STEP 1
   ## STEP 2
+  STEP 1
+  STEP 2
 
 STRUCTURE comes from:
   - numbering
@@ -184,7 +190,7 @@ PREFER whitespace.
 
 ---
 
-# QUOTES_AND_LITERALS
+# QUOTES AND LITERALS
 
 USE quotes ("") for:
   - human-facing titles
@@ -198,7 +204,7 @@ USE backticks (``) for:
 
 ---
 
-# WHAT_TO_AVOID
+# WHAT TO AVOID
 
 - Overusing headings
 - Encoding meaning via color alone
@@ -208,7 +214,7 @@ USE backticks (``) for:
 
 ---
 
-# MENTAL_MODEL
+# MENTAL MODEL
 
 WRITE Sudolang as if:
   - a tired human must scan it quickly

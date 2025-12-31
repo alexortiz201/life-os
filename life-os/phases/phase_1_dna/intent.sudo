@@ -13,7 +13,7 @@ GOAL:
 
 ---
 
-# WHY_THIS_PHASE_EXISTS
+# WHY THIS PHASE EXISTS
 
 Without DNA:
   - pipelines become ad-hoc
@@ -49,7 +49,7 @@ DNA contains no behavior.
 
 ---
 
-# OUTPUT_ARTIFACTS
+# OUTPUT ARTIFACTS
 
 REQUIRED_FILES:
   - ontology.sudo
@@ -62,7 +62,7 @@ OPTIONAL_FILES:
 
 ---
 
-# SUCCESS_CRITERIA
+# SUCCESS CRITERIA
 
 Phase 1 is complete WHEN:
 

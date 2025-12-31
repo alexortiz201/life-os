@@ -1,0 +1,190 @@
+# VALIDATION RISK POLICY
+
+PURPOSE:
+  Define how validation outcomes are chosen
+  based on semantic risk, not convenience.
+
+GOAL:
+  Reduce silent authority escalation
+  while preserving bounded flexibility.
+
+RULE:
+  Validation outcomes must scale power DOWN
+  as uncertainty or impact increases.
+
+---
+
+# VALIDATION OUTCOMES
+
+OUTCOMES:
+  - APPROVE
+  - PARTIAL_APPROVE
+  - ESCALATE
+  - REJECT
+
+DEFAULT:
+  REJECT (fail-closed)
+
+---
+
+# RISK MODEL
+
+RISK is evaluated across three dimensions:
+  - IMPACT
+  - REVERSIBILITY
+  - DEPENDENCIES
+
+RISK_LEVELS:
+  - LOW
+  - MEDIUM
+  - HIGH
+
+RULE:
+  Highest detected risk dominates outcome.
+
+---
+
+# IMPACT EVALUATION
+
+IMPACT describes how meaning changes.
+
+LOW_IMPACT:
+  - reads MEMORY only
+  - creates NOTE without elevating authority
+  - no modification of trusted ARTIFACTS
+
+MEDIUM_IMPACT:
+  - creates new ARTIFACT
+  - modifies existing ARTIFACT content
+  - synthesizes trusted meaning from raw inputs
+
+HIGH_IMPACT:
+  - modifies permissions or scope
+  - replaces or supersedes existing ARTIFACT
+  - affects downstream decision pipelines
+
+---
+
+# REVERSIBILITY EVALUATION
+
+REVERSIBILITY describes how meaning can be undone.
+
+LOW_REVERSIBILITY:
+  - authority can be revoked cleanly
+  - no downstream meaning relies on result
+
+MEDIUM_REVERSIBILITY:
+  - downstream meaning exists
+  - invalidation required but bounded
+
+HIGH_REVERSIBILITY_COST:
+  - downstream meaning is widespread
+  - external systems or humans may have acted
+  - revocation is partial or advisory only
+
+RULE:
+  Physical deletion is NOT reversibility.
+
+---
+
+# DEPENDENCY EVALUATION
+
+DEPENDENCIES describe what must be true
+for the action to be safe.
+
+LOW_DEPENDENCY:
+  - existing permissions already granted
+  - no new scope introduced
+
+MEDIUM_DEPENDENCY:
+  - relies on contextual assumptions
+  - relies on recent but mutable state
+
+HIGH_DEPENDENCY:
+  - requires new permission grant
+  - depends on human judgment
+  - depends on external system state
+
+---
+
+# OUTCOME SELECTION RULES
+
+WHEN:
+  RISK_LEVEL == LOW
+
+THEN:
+  OUTCOME:
+    APPROVE
+
+---
+
+WHEN:
+  RISK_LEVEL == MEDIUM
+
+THEN:
+  OUTCOME:
+    PARTIAL_APPROVE
+
+PARTIAL_APPROVE_MEANS:
+  - narrowed scope
+  - reduced output authority
+  - explicit constraints added
+  - revalidation required before commit
+
+---
+
+WHEN:
+  RISK_LEVEL == HIGH
+
+THEN:
+  OUTCOME:
+    ESCALATE
+
+ESCALATE_MEANS:
+  - execution is paused
+  - no authority is granted
+  - human confirmation required
+
+---
+
+WHEN:
+  justification is missing OR
+  invariants cannot be proven safe
+
+THEN:
+  OUTCOME:
+    REJECT
+
+---
+
+# ESCALATION CONSTRAINTS
+
+RULE:
+  ESCALATE must NOT become a bypass.
+
+REQUIRED:
+  - explicit reviewer identity
+  - explicit approval artifact
+  - bounded approval scope
+  - expiry window on approval
+  - audit record
+
+FORBIDDEN:
+  - implicit approval
+  - reused approvals
+  - open-ended authority
+
+---
+
+# INVARIANTS
+
+INVARIANT:
+  Uncertainty must reduce power, not increase it.
+
+INVARIANT:
+  No trusted meaning is created by default.
+
+INVARIANT:
+  Validation must be explainable after the fact.
+
+END
