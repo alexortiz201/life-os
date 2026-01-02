@@ -1,0 +1,163 @@
+# RE VALIDATION CONTRACT — SPEC
+
+PURPOSE:
+  Define how the system confirms that execution results
+  are still justified before meaning becomes trusted.
+
+ROLE:
+  Re Validation protects against time, drift,
+  and stale assumptions between execution and commit.
+
+SCOPE:
+  This contract governs ONLY re validation.
+  It does NOT define execution or commit behavior.
+
+---
+
+# STAGE DEFINITION
+
+STAGE:
+  NAME: RE VALIDATION
+  POSITION: Fifth stage in RNA execution pipeline
+
+RULE:
+  Re Validation exists because the world can change.
+
+---
+
+# INPUTS
+
+INPUT:
+  PROPOSAL_RECORD
+  VALIDATION_DECISION
+  EXECUTION_PLAN
+  EXECUTION_RESULT
+  EXECUTION_EFFECTS_LOG
+
+CONTEXT_INPUTS:
+  - fresh system state snapshot
+  - current permissions
+  - current invariants
+  - current scopes
+
+RULE:
+  Inputs MUST reflect current reality,
+  not assumptions from earlier stages.
+
+---
+
+# OUTPUTS
+
+OUTPUT:
+  REVALIDATION_DECISION
+
+REVALIDATION_DECISION_MUST_CONTAIN:
+  - decision_id
+  - decision_type
+  - justification
+  - constraints (if partial)
+  - timestamp
+  - referenced invariants
+  - actor attribution (system)
+
+OUTCOMES:
+  - APPROVE COMMIT
+  - REJECT COMMIT
+  - PARTIAL COMMIT
+  - ESCALATE COMMIT
+
+---
+
+# RESPONSIBILITIES
+
+THIS_STAGE_MUST:
+  - re check all relevant invariants
+  - re confirm permissions and scope
+  - verify execution matches the plan
+  - verify effects are still allowable
+  - detect meaning drift
+
+THIS_STAGE_MUST_NOT:
+  - execute new actions
+  - modify execution results
+  - escalate trust
+  - commit meaning
+  - infer intent
+
+RULE:
+  Re Validation judges reality, not intent.
+
+---
+
+# FAILURE BEHAVIOR
+
+FAILURE_ALLOWED_ONLY_IF:
+  - invariant violation detected
+  - permissions revoked or changed
+  - scope invalidated
+  - mismatch between plan and execution
+  - critical context drift
+
+FAILURE_MODE:
+  FAIL CLOSED
+
+FAILURE_MEANS:
+  - commit is blocked
+  - execution results remain provisional
+  - no belief is created
+
+---
+
+# STAGE INVARIANTS
+
+INVARIANT_1:
+  No commit without re validation.
+
+INVARIANT_2:
+  Re Validation is pure and side effect free.
+
+INVARIANT_3:
+  Context is authoritative over past assumptions.
+
+---
+
+# TRUST MODEL
+
+TRUST_LEVEL:
+  UNTRUSTED
+
+RULE:
+  Passing execution does not imply commit eligibility.
+
+---
+
+# HANDOFF CONTRACT
+
+HANDOFF_TO:
+  COMMIT STAGE
+
+HANDOFF_GUARANTEES:
+  - decision is explicit
+  - justification is recorded
+  - constraints are unambiguous
+
+RULE:
+  Commit may not reinterpret re validation.
+
+---
+
+# ONE LINE SPINE
+
+STATEMENT:
+  "Re Validation asks whether execution
+   still deserves to become truth."
+
+---
+
+# SUPER SIMPLE
+
+SUMMARY:
+  Check again.
+  Reality might have changed.
+
+END

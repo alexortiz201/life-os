@@ -1,0 +1,37 @@
+# weekly_reflection.partial_approval.workflow.rationale.sudo
+
+PURPOSE:
+  Explain why partial approval is necessary and how it protects meaning.
+
+---
+
+# RATIONALE
+
+WHY PARTIAL APPROVAL EXISTS:
+  Full rejection wastes safe intent.
+  Full approval grants too much power.
+  Partial approval preserves momentum while preventing authority leaks.
+
+WHY CONSTRAINTS MUST BE EXPLICIT:
+  Implicit constraints become loopholes.
+  If the system cannot enforce it, it is not a constraint.
+
+WHY PLANNING MUST OBEY CONSTRAINTS:
+  Planning is where hidden scope creep sneaks in.
+  If planning can widen power, validation is meaningless.
+
+WHY EXECUTION OUTPUTS STAY PROVISIONAL:
+  Execution can succeed under assumptions that later change.
+  Commit is the moment the system chooses belief.
+
+WHAT SILENTLY BREAKS IF WRONG:
+  - broad selectors pull unintended MEMORY, creating misleading notes
+  - outputs land in the wrong place, bypassing governance boundaries
+  - provisional notes become “truth” without commit, corrupting downstream systems
+
+🍰 SUPER SIMPLE:
+  Partial approval is how the system says:
+  "I trust your goal,
+   not your requested power."
+
+END

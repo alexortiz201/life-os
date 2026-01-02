@@ -1,0 +1,178 @@
+# EXECUTION CONTRACT — SPEC
+
+PURPOSE:
+  Define how an approved and planned action
+  produces real effects without creating trusted meaning.
+
+ROLE:
+  Execution performs effects provisionally,
+  without belief, authority escalation, or commitment.
+
+SCOPE:
+  This contract governs ONLY execution.
+  It does NOT define validation, planning, re-validation, or commit behavior.
+
+---
+
+# STAGE DEFINITION
+
+STAGE:
+  NAME: EXECUTION
+  POSITION: Fourth stage in RNA execution pipeline
+
+RULE:
+  Execution may change the world.
+  Execution must not change belief.
+
+---
+
+# INPUTS
+
+INPUT:
+  PROPOSAL_RECORD
+  VALIDATION_DECISION
+  EXECUTION_PLAN
+
+CONTEXT_INPUTS:
+  - runtime system state
+  - dependency availability
+  - scope enforcement context
+
+RULE:
+  Execution MUST follow the execution plan exactly.
+  No inference, expansion, or reinterpretation is allowed.
+
+---
+
+# OUTPUTS
+
+OUTPUT:
+  EXECUTION_RESULT
+  EXECUTION_EFFECTS_LOG
+
+EXECUTION_RESULT_MUST_CONTAIN:
+  - execution_id
+  - plan_id reference
+  - success / failure status
+  - encountered errors
+  - runtime timestamps
+  - actor attribution
+
+EXECUTION_EFFECTS_LOG_MUST_CONTAIN:
+  - ordered list of effects
+  - effect type
+  - affected entities
+  - scope boundaries
+  - provisional artifacts created
+  - checksums / fingerprints where applicable
+
+RULE:
+  Every effect MUST be recorded.
+  No silent effects are allowed.
+
+---
+
+# RESPONSIBILITIES
+
+THIS_STAGE_MUST:
+  - execute steps exactly as planned
+  - enforce scope boundaries at runtime
+  - halt on invariant violation
+  - log every effect before completion
+  - treat all outputs as provisional
+
+THIS_STAGE_MUST_NOT:
+  - validate permissions
+  - re-plan steps
+  - infer missing intent
+  - escalate trust
+  - commit meaning
+  - suppress failures
+  - “try anyway”
+
+RULE:
+  Execution is mechanical, not interpretive.
+
+---
+
+# FAILURE BEHAVIOR
+
+FAILURE_ALLOWED_ONLY_IF:
+  - invariant violation occurs
+  - runtime dependency is unavailable
+  - scope boundary is breached
+  - execution step fails
+
+FAILURE_MODE:
+  FAIL_FAST
+
+FAILURE_MEANS:
+  - execution halts immediately
+  - partial effects remain provisional
+  - failure is fully logged
+  - no commit may occur
+
+RULE:
+  Partial execution is safer than silent completion.
+
+---
+
+# STAGE INVARIANTS
+
+INVARIANT_1:
+  Execution produces no trusted meaning.
+
+INVARIANT_2:
+  Execution effects are fully logged.
+
+INVARIANT_3:
+  Execution cannot exceed planned scope.
+
+INVARIANT_4:
+  Execution must be haltable at any step.
+
+---
+
+# TRUST MODEL
+
+TRUST_LEVEL:
+  PROVISIONAL
+
+RULE:
+  Execution outputs are untrusted
+  until explicitly committed.
+
+---
+
+# HANDOFF CONTRACT
+
+HANDOFF_TO:
+  RE-VALIDATION_STAGE
+
+HANDOFF_GUARANTEES:
+  - complete effects log exists
+  - execution outcome is explicit
+  - no belief has been created
+
+RULE:
+  Re-validation judges execution in context.
+  Execution must not anticipate commitment.
+
+---
+
+# ONE LINE SPINE
+
+STATEMENT:
+  "Execution makes things happen,
+   without deciding what they mean."
+
+---
+
+# SUPER SIMPLE
+
+SUMMARY:
+  Do the work.
+  Log everything.
+  Believe nothing.
+
+END

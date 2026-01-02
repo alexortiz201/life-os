@@ -1,0 +1,81 @@
+# COMMIT CONTRACT — EDUCATION
+
+PURPOSE:
+  Teach why belief must be rare,
+  explicit, and irreversible.
+
+---
+
+# CACHE WARM
+
+WHAT_LAYER:
+  RNA
+
+UNIVERSAL_PROBLEM:
+  Preventing accidental truth creation.
+
+RECALL_HOOKS:
+  MNEMONICS:
+    - "Belief is expensive"
+    - "Truth is chosen"
+    - "Trust once"
+
+  INVARIANT_REMINDERS:
+    - Commit is final
+    - Trust changes behavior
+    - Undo is semantic, not physical
+
+  QUESTIONS:
+    - What does the system now believe?
+    - What will downstream systems assume?
+    - Can this belief be revoked safely?
+
+CONTEXT_SPECIFICITY:
+  SYSTEMS
+  AGENTS
+  AI INTEGRATION
+
+FAILURE_MODE:
+  Silent corruption
+  False authority
+  Unrevocable belief
+
+---
+
+# MENTAL MODEL
+
+MODEL:
+  Commit is a verdict.
+
+ANALOGY:
+  Publishing a ledger entry.
+  Finalizing a transaction.
+  Making a public statement.
+
+---
+
+# WHY COMMIT IS DANGEROUS
+
+INSIGHT:
+  Once trusted, meaning propagates.
+
+CONCLUSION:
+  Commit must be rare and explicit.
+
+---
+
+# COMMON MISCONCEPTIONS
+
+MISCONCEPTION:
+  "Commit is just persistence."
+
+CORRECTION:
+  Commit changes how the system reasons.
+
+MISCONCEPTION:
+  "Artifacts equal truth."
+
+CORRECTION:
+  Artifacts become truth only after commit.
+
+END

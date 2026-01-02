@@ -1,0 +1,220 @@
+# PROPOSAL INTAKE CONTRACT
+
+PURPOSE:
+  Define the first and safest boundary where intent
+  enters the Life-OS execution system.
+
+ROLE:
+  Convert raw intent into a stable, immutable proposal record
+  without granting authority, meaning, or side effects.
+
+SCOPE:
+  This contract governs ONLY proposal intake.
+  It does NOT define validation, execution, or commit behavior.
+
+---
+
+# CACHE WARM
+
+WHAT_LAYER:
+  RNA
+
+UNIVERSAL_PROBLEM:
+  Accepting intent safely without accidentally granting power.
+
+RECALL_HOOKS:
+  MNEMONICS:
+    - "Intake ≠ Decide"
+    - "Record, don’t reason"
+    - "Shape before safety"
+
+  INVARIANT_REMINDERS:
+    - No side effects before validation
+    - No authority before commit
+    - Nothing trusted by accident
+
+  QUESTIONS:
+    - What guarantees must exist before validation can run?
+    - What breaks if intake tries to be helpful?
+    - Can this stage be replayed safely?
+
+CONTEXT_SPECIFICITY:
+  SYSTEMS
+  AGENTS
+  AI_INTEGRATION
+
+FAILURE_MODE:
+  Silent authority escalation
+  Irreversible meaning creation
+  Corrupted downstream validation
+
+---
+
+# STAGE DEFINITION
+
+STAGE:
+  NAME: PROPOSAL_INTAKE
+  POSITION: First stage in RNA execution pipeline
+
+RULE:
+  Proposal Intake is a gate, not a judge.
+
+---
+
+# INPUTS
+
+INPUT:
+  RAW_PROPOSAL:
+    - INTENT
+    - ACTOR
+    - TARGET_ENTITY
+    - TARGET_SELECTOR (optional)
+    - TARGET_SCOPE
+    - DEPENDENCIES
+    - IMPACT
+    - REVERSIBILITY_CLAIM
+
+  CONTEXT_INPUTS:
+    - referenced MEMORY (read-only)
+    - system timestamp
+    - actor identity metadata
+
+RULE:
+  Inputs may be malformed, unsafe, or unjustified.
+  This stage does not reject on semantic grounds.
+
+---
+
+# OUTPUTS
+
+OUTPUT:
+  PROPOSAL_RECORD
+
+PROPOSAL_RECORD_MUST_CONTAIN:
+  - proposal_id (stable, unique)
+  - normalized_fields
+  - canonical_field_ordering
+  - fingerprint (hash or checksum)
+  - actor_attribution
+  - intake_timestamp
+  - preserved_raw_payload
+
+GUARANTEE:
+  Identical inputs MUST produce identical fingerprints.
+
+---
+
+# RESPONSIBILITIES
+
+THIS_STAGE_MUST:
+  - normalize proposal structure
+  - assign a stable identifier
+  - compute a fingerprint
+  - preserve raw intent verbatim
+  - enforce immutability after creation
+
+THIS_STAGE_MUST_NOT:
+  - validate permissions
+  - evaluate invariants
+  - infer intent
+  - generate execution plans
+  - create artifacts
+  - mutate system state
+  - escalate or block proposals
+
+RULE:
+  Proposal Intake prepares proposals for validation.
+  It must never decide if they are allowed.
+
+---
+
+# FAILURE BEHAVIOR
+
+FAILURE_ALLOWED_ONLY_IF:
+  - proposal cannot be structurally normalized
+  - required fields are missing
+  - fingerprint computation fails
+
+FAILURE_MODE:
+  HARD_STOP
+
+FAILURE_MEANS:
+  No proposal enters the system.
+  No downstream stage may run.
+
+RULE:
+  Structural failure is safer than semantic guessing.
+
+---
+
+# STAGE INVARIANTS
+
+INVARIANT_1:
+  No side effects occur during intake.
+
+INVARIANT_2:
+  Intake is deterministic and replayable.
+
+INVARIANT_3:
+  No authority is granted or implied.
+
+INVARIANT_4:
+  Intake must never "try anyway".
+
+---
+
+# TRUST MODEL
+
+TRUST_LEVEL:
+  UNTRUSTED
+
+RULE:
+  A well-formed proposal is not a valid proposal.
+
+---
+
+# AUDITABILITY
+
+AUDIT_REQUIREMENT:
+  The system MUST be able to answer:
+    - Who proposed this?
+    - Exactly what was proposed?
+    - What context existed at intake time?
+
+RULE:
+  Attribution must survive deletion of downstream artifacts.
+
+---
+
+# HANDOFF CONTRACT
+
+HANDOFF_TO:
+  VALIDATION_STAGE
+
+HANDOFF_GUARANTEES:
+  - proposal shape is stable
+  - fingerprint is immutable
+  - validation may reason about meaning safely
+
+RULE:
+  Validation may reject.
+  Intake must never pre-reject.
+
+---
+
+# ONE LINE SPINE
+
+STATEMENT:
+  "Proposal Intake turns raw intent into a stable fact,
+   without deciding what it means."
+
+---
+
+# SUPER SIMPLE
+
+SUMMARY:
+  Write it down.
+  Lock it.
+  Don't judge it.
+
+END

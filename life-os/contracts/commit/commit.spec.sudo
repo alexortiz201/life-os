@@ -1,0 +1,149 @@
+# COMMIT CONTRACT — SPEC
+
+PURPOSE:
+  Define the only moment where
+  new meaning becomes trusted by the system.
+
+ROLE:
+  Commit transforms provisional effects
+  into authoritative system belief.
+
+SCOPE:
+  This contract governs ONLY commit.
+  It does NOT define execution or validation.
+
+---
+
+# STAGE DEFINITION
+
+STAGE:
+  NAME: COMMIT
+  POSITION: Final stage in RNA execution pipeline
+
+RULE:
+  Commit is the only trust boundary.
+
+---
+
+# INPUTS
+
+INPUT:
+  PROPOSAL_RECORD
+  REVALIDATION_DECISION
+  EXECUTION_RESULT
+  EXECUTION_EFFECTS_LOG
+
+RULE:
+  Commit may only act on
+  explicitly approved effects.
+
+---
+
+# OUTPUTS
+
+OUTPUT:
+  COMMIT_RECORD
+  TRUST_UPDATES
+
+COMMIT_RECORD_MUST_CONTAIN:
+  - commit_id
+  - proposal_id
+  - approved effects
+  - rejected effects
+  - justification
+  - timestamp
+  - actor attribution (system)
+
+TRUST_UPDATES_MUST:
+  - promote provisional artifacts
+  - update meaning level state
+  - mark new authority boundaries
+
+---
+
+# RESPONSIBILITIES
+
+THIS_STAGE_MUST:
+  - commit only approved effects
+  - escalate trust explicitly
+  - update system meaning atomically
+  - record irreversible decisions
+
+THIS_STAGE_MUST_NOT:
+  - execute new actions
+  - reinterpret validation
+  - bypass constraints
+  - create meaning outside justification
+
+RULE:
+  Commit is decisive and final.
+
+---
+
+# FAILURE BEHAVIOR
+
+FAILURE_ALLOWED_ONLY_IF:
+  - preconditions are unmet
+  - inconsistency detected
+  - atomicity cannot be guaranteed
+
+FAILURE_MODE:
+  HARD STOP
+
+FAILURE_MEANS:
+  - no trust is escalated
+  - provisional state remains intact
+
+---
+
+# STAGE INVARIANTS
+
+INVARIANT_1:
+  Commit is atomic at the meaning level.
+
+INVARIANT_2:
+  Commit is irreversible.
+
+INVARIANT_3:
+  Commit creates system belief.
+
+---
+
+# TRUST MODEL
+
+TRUST_LEVEL:
+  TRUSTED
+
+RULE:
+  After commit, the system must act
+  as if the committed meaning is true.
+
+---
+
+# AUDITABILITY
+
+AUDIT_REQUIREMENT:
+  The system MUST be able to answer:
+    - what became trusted?
+    - why was it allowed?
+    - who approved it?
+    - how can trust be revoked?
+
+---
+
+# ONE LINE SPINE
+
+STATEMENT:
+  "Commit is where the system agrees
+   to believe what happened."
+
+---
+
+# SUPER SIMPLE
+
+SUMMARY:
+  Decide.
+  Believe.
+  Stand behind it.
+
+END

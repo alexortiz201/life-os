@@ -1,0 +1,212 @@
+# AGENT AUTHORITY CONTRACT — SPEC
+
+PURPOSE:
+  Define how an AGENT is allowed to act without creating silent authority.
+  Make delegation explicit, bounded, attributable, and revocable.
+
+SCOPE:
+  This contract defines:
+    - how AGENT authority is granted and bounded
+    - what an AGENT may initiate (PROPOSALS)
+    - required stop conditions
+    - required attribution and auditability
+    - how authority expires and is revoked
+
+  This contract does NOT define:
+    - validation logic internals
+    - execution mechanics
+    - storage or database schema
+    - UI flows
+
+---
+
+# CORE PRINCIPLES
+
+RULE:
+  Agents propose.
+  The system validates.
+  The system commits or rejects.
+
+RULE:
+  An AGENT cannot grant itself authority.
+
+RULE:
+  Authority is scoped by meaning, not convenience.
+
+---
+
+# AUTHORITY GRANT
+
+AUTHORITY_GRANT:
+  NAME: AGENT_AUTHORITY_GRANT
+
+REQUIRED_FIELDS:
+  - GRANT_ID
+  - USER_ID
+  - AGENT_ID
+  - GRANTOR: `USER or SYSTEM`
+  - GRANT_REASON
+  - CREATED_AT
+  - EXPIRES_AT (required)
+  - STATUS
+
+STATUS:
+  - ACTIVE
+  - SUSPENDED
+  - REVOKED
+  - EXPIRED
+
+RULE:
+  No ACTIVE grant may be indefinite.
+
+---
+
+# AUTHORITY BOUNDS
+
+AUTHORITY_BOUNDS:
+  ALLOWED_ACTIONS:
+    - PROPOSE
+
+  FORBIDDEN_ACTIONS:
+    - VALIDATE
+    - EXECUTE
+    - COMMIT
+    - GRANT_AUTHORITY
+    - OVERRIDE_INVARIANTS
+
+  ALLOWED_TARGET_ENTITIES:
+    - MEMORY
+    - NOTE
+    - ARTIFACT
+    - TASK
+    - PROJECT
+    - GOAL
+    - PHASE
+
+  ALLOWED_SCOPES:
+    - NOTE_SPACE
+    - ARTIFACT_SPACE
+    - MEMORY_READ_SPACE
+
+  ALLOWED_SELECTORS:
+    - time_window (optional)
+    - category (optional)
+    - tag (optional)
+
+  MAX_IMPACT:
+    - bounded_effects_required: `true`
+
+RULE:
+  Bounds MUST be explicit.
+  Absence of a bound means not allowed.
+
+---
+
+# PROPOSAL REQUIREMENTS FOR AGENTS
+
+AGENT_PROPOSAL_REQUIREMENTS:
+  REQUIRED_FIELDS:
+    - INTENT
+    - ACTOR
+    - TARGET_ENTITY
+    - TARGET_SELECTOR (optional)
+    - TARGET_SCOPE
+    - DEPENDENCIES
+    - IMPACT
+    - REVERSIBILITY_CLAIM
+
+RULE:
+  ACTOR must include AGENT_ID and must reference GRANT_ID.
+
+RULE:
+  AGENT proposals must be attributable to a specific grant.
+
+---
+
+# STOP CONDITIONS
+
+AGENT_MUST_STOP_IF:
+  - required permission is missing
+  - justification becomes stale
+  - target scope is ambiguous
+  - selector is under-specified for safety
+  - invariants are unknown or unavailable
+  - validation outcome is REJECT or ESCALATE
+  - runtime context contradicts the proposal claims
+
+RULE:
+  "Try anyway" is forbidden.
+
+---
+
+# ESCALATION REQUIREMENTS
+
+ESCALATION_REQUIRED_IF:
+  - action would create or modify trusted meaning
+  - action touches sensitive scopes
+  - impact is not reversible semantically
+  - dependencies include elevated permissions not present in grant
+  - proposal risk exceeds configured policy
+
+RULE:
+  Escalation is an outcome of validation, not an agent choice.
+
+---
+
+# REVOCATION AND EXPIRY
+
+REVOCATION:
+  REVOKE_GRANT:
+    EFFECT:
+      - GRANT_STATUS becomes REVOKED
+      - all future proposals referencing GRANT_ID must be rejected
+      - in-flight proposals must fail closed at next boundary
+
+EXPIRY:
+  EXPIRE_GRANT:
+    EFFECT:
+      - GRANT_STATUS becomes EXPIRED
+      - future proposals must be rejected
+
+RULE:
+  Revocation and expiry are meaning-level changes and must be auditable.
+
+---
+
+# AUDITABILITY
+
+AUDIT_LOG_MUST_RECORD:
+  - GRANT_ID
+  - AGENT_ID
+  - USER_ID
+  - PROPOSAL_IDS initiated under the grant
+  - timestamps for create, suspend, revoke, expire
+  - reason for each state transition
+
+RULE:
+  The system must always answer:
+    - why was this agent allowed to propose?
+    - what exactly was it allowed to touch?
+    - when did that permission end?
+    - who granted it?
+
+---
+
+# INVARIANTS
+
+INVARIANT_1:
+  No AGENT action is valid without an ACTIVE grant.
+
+INVARIANT_2:
+  No proposal is valid without ACTOR attribution to GRANT_ID.
+
+INVARIANT_3:
+  Grants are time-bounded.
+
+INVARIANT_4:
+  Grants cannot expand themselves.
+
+INVARIANT_5:
+  Revoked or expired grants halt authority immediately at next boundary.
+
+END

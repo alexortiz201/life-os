@@ -1,0 +1,168 @@
+# PLANNING CONTRACT — SPEC
+
+PURPOSE:
+  Define how an approved proposal is transformed
+  into an explicit, bounded execution plan.
+
+ROLE:
+  Planning converts permission into a concrete sequence of steps
+  without executing, mutating state, or escalating trust.
+
+SCOPE:
+  This contract governs ONLY planning.
+  It does NOT define validation, execution, or commit behavior.
+
+---
+
+# STAGE DEFINITION
+
+STAGE:
+  NAME: PLANNING
+  POSITION: Third stage in RNA execution pipeline
+
+RULE:
+  Planning describes how an action would occur,
+  not whether it should occur or that it did occur.
+
+---
+
+# INPUTS
+
+INPUT:
+  PROPOSAL_RECORD
+  VALIDATION_DECISION (APPROVE or PARTIAL_APPROVE)
+
+CONTEXT_INPUTS:
+  - validation constraints
+  - scope boundaries
+  - dependency availability
+  - system capabilities snapshot
+
+RULE:
+  Planning must honor all validation constraints verbatim.
+  Planning may not relax or reinterpret them.
+
+---
+
+# OUTPUTS
+
+OUTPUT:
+  EXECUTION_PLAN
+
+EXECUTION_PLAN_MUST_CONTAIN:
+  - plan_id
+  - ordered execution steps
+  - required dependencies per step
+  - expected side effects per step
+  - scope boundaries per step
+  - rollback / compensation notes (if applicable)
+  - plan fingerprint
+  - attribution metadata
+  - creation timestamp
+
+RULE:
+  The plan must be explicit enough
+  that execution does not need to infer intent.
+
+---
+
+# RESPONSIBILITIES
+
+THIS_STAGE_MUST:
+  - translate intent into explicit steps
+  - bind steps to validated scope
+  - surface missing dependencies
+  - surface ambiguity explicitly
+  - produce a deterministic plan artifact
+
+THIS_STAGE_MUST_NOT:
+  - execute any step
+  - mutate system state
+  - create trusted artifacts
+  - escalate authority
+  - reinterpret validation outcomes
+  - “fill in” missing intent
+
+RULE:
+  Planning is descriptive, not creative.
+
+---
+
+# FAILURE BEHAVIOR
+
+FAILURE_ALLOWED_ONLY_IF:
+  - no safe execution sequence exists
+  - required dependencies are unavailable
+  - validation constraints cannot be honored
+  - intent is underspecified for execution
+
+FAILURE_MODE:
+  FAIL_CLOSED
+
+FAILURE_MEANS:
+  - no execution occurs
+  - proposal does not advance
+  - explicit failure reason is recorded
+
+---
+
+# STAGE INVARIANTS
+
+INVARIANT_1:
+  Planning produces no side effects.
+
+INVARIANT_2:
+  Planning does not change meaning or trust.
+
+INVARIANT_3:
+  Every execution step must be attributable to proposal intent.
+
+INVARIANT_4:
+  Identical inputs produce identical plans.
+
+---
+
+# TRUST MODEL
+
+TRUST_LEVEL:
+  UNTRUSTED
+
+RULE:
+  A plan is not permission.
+  A plan is not execution.
+  A plan is not belief.
+
+---
+
+# HANDOFF CONTRACT
+
+HANDOFF_TO:
+  EXECUTION_STAGE
+
+HANDOFF_GUARANTEES:
+  - execution does not need to infer intent
+  - scope and constraints are explicit
+  - plan can be audited independently
+
+RULE:
+  Execution may fail,
+  but must never reinterpret the plan.
+
+---
+
+# ONE LINE SPINE
+
+STATEMENT:
+  "Planning turns permission into instructions,
+   without changing the world."
+
+---
+
+# SUPER SIMPLE
+
+SUMMARY:
+  Spell it out.
+  Don’t do it.
+  Don’t believe it.
+
+END

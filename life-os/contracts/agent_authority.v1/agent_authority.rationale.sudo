@@ -1,0 +1,90 @@
+# agent_authority_contract.rationale.sudo
+# AGENT AUTHORITY CONTRACT — RATIONALE
+
+PURPOSE:
+  Capture why these constraints exist
+  and what breaks if we loosen them.
+
+---
+
+# WHY THIS CONTRACT EXISTS
+
+PROBLEM:
+  Agents are persuasive.
+  Without explicit authority boundaries, "helpful" becomes corruption.
+
+GOAL:
+  Make it impossible for an agent to:
+    - create trusted meaning by accident
+    - expand its own permissions
+    - act indefinitely without re-authorization
+
+---
+
+# KEY CHOICES AND TRADEOFFS
+
+CHOICE:
+  Agents may only PROPOSE.
+
+TRADEOFF:
+  - slower than autonomous execution
+  + prevents silent trust escalation
+
+CHOICE:
+  Grants must EXPIRE.
+
+TRADEOFF:
+  - adds renewal overhead
+  + prevents forgotten long-lived authority
+
+CHOICE:
+  Bounds must be explicit.
+
+TRADEOFF:
+  - more configuration
+  + prevents ambiguous "maybe allowed" interpretations
+
+CHOICE:
+  Stop conditions are strict.
+
+TRADEOFF:
+  - more halts and escalations
+  + eliminates "try anyway" failure cascades
+
+---
+
+# FAILURE MODES IF WRONG
+
+IF agents can execute:
+  - validation becomes optional in practice
+  - execution produces belief implicitly
+  - undo becomes physical deletion instead of semantic revocation
+
+IF grants do not expire:
+  - stale permission becomes permanent
+  - attacks and mistakes have unlimited time
+
+IF bounds are implicit:
+  - scope creep becomes automatic
+  - the system cannot prove why an action was allowed
+
+IF audit is incomplete:
+  - the system loses accountability
+  - trust cannot be revoked safely
+
+---
+
+# CONNECTION TO PIPELINE
+
+LINK:
+  The pipeline is safe only if:
+    - PROPOSAL is attributable to a grant
+    - VALIDATION can fail closed
+    - COMMIT is the only trust boundary
+
+STATEMENT:
+  Authority is a prerequisite for proposing.
+  Validation is a prerequisite for execution.
+  Re-validation is a prerequisite for commit.
+
+END

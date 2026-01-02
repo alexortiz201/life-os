@@ -1,0 +1,44 @@
+# AGENTS — ROLES AND CAPABILITIES
+
+PURPOSE:
+  Define the canonical set of agent roles used by Life-OS.
+  Make responsibilities, allowed actions, stop conditions, and escalation triggers explicit.
+
+SCOPE:
+  This file defines:
+    - role definitions
+    - authority boundaries (conceptual)
+    - required inputs and allowed outputs
+    - stop conditions and escalation triggers
+
+  This file does NOT define:
+    - per-role implementation
+    - tool wiring (MCP, APIs)
+    - storage layout
+    - UI behavior
+
+RULE:
+  Roles describe capability intent.
+  Contracts and permissions decide what can actually happen.
+
+---
+
+# ROLE FORMAT
+
+ROLE_FIELDS:
+  ROLE_NAME:
+  PURPOSE:
+  PRIMARY_RESPONSIBILITIES:
+  ALLOWED_OUTPUTS:
+  FORBIDDEN_ACTIONS:
+  STOP_CONDITIONS:
+  ESCALATION_TRIGGERS:
+  REQUIRED_INPUTS:
+  OPTIONAL_INPUTS:
+  TAGS:
+
+RULE:
+  Any role may propose.
+  No role may commit meaning unless explicitly authorized by COMMIT contracts.
+
+END

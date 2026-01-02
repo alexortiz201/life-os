@@ -1,0 +1,31 @@
+# weekly_reflection.undo_revocation.workflow.rationale.sudo
+
+PURPOSE:
+  Explain rationale for revocation-based undo.
+
+---
+
+# RATIONALE
+
+WHY UNDO MUST BE SEMANTIC:
+  Physical deletion affects storage.
+  Undo must affect belief and authority.
+
+WHY DOWNSTREAM INVALIDATION IS REQUIRED:
+  Downstream artifacts were created under trust assumptions.
+  If those assumptions are revoked, outputs must be re-justified or marked unsafe.
+
+WHY UNDO IS NOT ROLLBACK:
+  History still happened.
+  The system changes what it stands behind going forward.
+
+WHAT SILENTLY BREAKS IF WRONG:
+  - dashboards and plans remain trusted and drive behavior
+  - agents continue to cite revoked notes as sources
+  - future decisions rest on corrupted foundations
+
+🍰 SUPER SIMPLE:
+  Trust is the thing you must undo.
+  Everything else is just storage.
+
+END

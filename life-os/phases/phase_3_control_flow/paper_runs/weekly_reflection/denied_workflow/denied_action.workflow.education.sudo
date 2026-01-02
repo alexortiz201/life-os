@@ -1,0 +1,73 @@
+# denied_action.workflow.education.sudo
+
+PURPOSE:
+  Teach why denial workflows matter and what they prove.
+
+---
+
+# CACHE_WARM
+
+WHAT_LAYER:
+  RNA
+
+UNIVERSAL_PROBLEM:
+  Preventing unsafe intent from producing effects or trusted meaning.
+
+RECALL_HOOKS:
+  MNEMONICS:
+    - "Validate before effects"
+    - "Scope is authority"
+    - "Deny early, log always"
+
+  INVARIANT_REMINDERS:
+    - No side effects before APPROVE
+    - Fail-closed reduces power under uncertainty
+    - Audit must exist even for rejected actions
+
+  QUESTIONS:
+    - What would have happened if this wrote successfully?
+    - Where would meaning have been created accidentally?
+    - Could we prove after the fact that it was blocked?
+
+CONTEXT_SPECIFICITY:
+  AGENTS
+  SYSTEMS
+  AI_INTEGRATION
+
+FAILURE_MODE:
+  Silent corruption:
+    rejected work still creates outputs
+  Authority leak:
+    scope treated as “where to put files” instead of “what is allowed”
+  Accountability loss:
+    no durable record of attempts
+
+---
+
+# TEACHING NOTES
+
+KEY IDEA:
+  Denial is not a failure of the system.
+  Denial is the system proving it can protect meaning.
+
+WHAT THIS WORKFLOW TEACHES:
+  - Proposal intake is a recorder, not a judge.
+  - Validation is the first semantic gate.
+  - Scope is not convenience — it is an authority boundary.
+  - A rejected attempt must still be attributable and inspectable.
+
+COMMON CONFUSION:
+  "If it got rejected, why store anything?"
+ANSWER:
+  Because you need:
+    - debugging
+    - accountability
+    - learning
+    - abuse detection
+    - auditability
+
+🍰 SUPER_SIMPLE:
+  The system should remember the attempt,
+  but refuse to do the thing.
+
+END

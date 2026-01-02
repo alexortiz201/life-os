@@ -1,0 +1,128 @@
+# WEEKLY REFLECTION WORKFLOW — AUDIT
+
+PURPOSE:
+  Confirm every artifact produced in the workflow
+  matches its governing contract.
+
+---
+
+# ARTIFACT CHECKLIST
+
+ARTIFACT_1:
+  TYPE: PROPOSAL_RECORD
+  PRODUCED_AT: STAGE_1
+  CONTRACT: proposal_intake_contract.spec
+
+CHECKS:
+  - immutable
+  - fingerprinted
+  - attributable
+  - no side effects
+
+STATUS:
+  PASS
+
+---
+
+ARTIFACT_2:
+  TYPE: VALIDATION_DECISION_RECORD
+  PRODUCED_AT: STAGE_2
+  CONTRACT: validation_contract.spec
+
+CHECKS:
+  - no execution occurred
+  - decision explicit
+  - invariants referenced
+
+STATUS:
+  PASS
+
+---
+
+ARTIFACT_3:
+  TYPE: EXECUTION_PLAN_RECORD
+  PRODUCED_AT: STAGE_3
+  CONTRACT: planning_contract.spec
+
+CHECKS:
+  - honors validation constraints
+  - no effects produced
+
+STATUS:
+  PASS
+
+---
+
+ARTIFACT_4:
+  TYPE: EXECUTION_EFFECTS_LOG
+  PRODUCED_AT: STAGE_4
+  CONTRACT: execution_contract.spec
+
+CHECKS:
+  - effects logged
+  - effects provisional
+  - no trust escalation
+
+STATUS:
+  PASS
+
+---
+
+ARTIFACT_5:
+  TYPE: REVALIDATION_DECISION_RECORD
+  PRODUCED_AT: STAGE_5
+  CONTRACT: revalidation_contract.spec
+
+CHECKS:
+  - fresh context used
+  - execution verified
+  - commit explicitly gated
+
+STATUS:
+  PASS
+
+---
+
+ARTIFACT_6:
+  TYPE: COMMIT_RECORD
+  PRODUCED_AT: STAGE_6
+  CONTRACT: commit_contract.spec
+
+CHECKS:
+  - atomic meaning update
+  - trust explicitly escalated
+  - irreversible decision recorded
+
+STATUS:
+  PASS
+
+---
+
+# GLOBAL INVARIANT CHECK
+
+INVARIANT:
+  No trusted meaning without commit
+
+RESULT:
+  HELD
+
+INVARIANT:
+  Agents never commit
+
+RESULT:
+  HELD
+
+INVARIANT:
+  Execution is provisional
+
+RESULT:
+  HELD
+
+---
+
+# AUDIT CONCLUSION
+
+RESULT:
+  WORKFLOW IS CONTRACT-CORRECT
+
+END

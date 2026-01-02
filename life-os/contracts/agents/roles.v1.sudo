@@ -1,0 +1,117 @@
+# AGENT ROLES — V1
+
+PURPOSE:
+  Provide the canonical, minimal index of available AGENT roles.
+  Used for discovery, routing, and authorization checks.
+
+RULE:
+  This file lists availability and stable identifiers only.
+  Role definitions and constraints live in `roles.catalog.spec.sudo`.
+
+---
+
+# VERSION
+
+CATALOG_VERSION:
+  V1
+
+SOURCE_OF_TRUTH:
+  `roles.catalog.spec.sudo`
+
+---
+
+# ROLE TYPES
+
+AGENT ROLES TYPES:
+  TEACHER_AGENT:
+    DOMAIN:
+      - TEACHING
+    OUTPUT_CLASSES:
+      - TEACHING_PLAN
+      - FUNDAMENTAL
+      - REPORT
+    TRUST_DEFAULT:
+      - PROVISIONAL
+    NOTES:
+      - teaching outputs never imply commit
+
+  SCRIBE_AGENT:
+    DOMAIN:
+      - NORMALIZATION
+      - PROVENANCE
+    OUTPUT_CLASSES:
+      - JOURNAL_ENTRY
+      - NOTE
+      - REPORT
+    TRUST_DEFAULT:
+      - UNTRUSTED
+    NOTES:
+      - normalization only
+      - no interpretation beyond shaping
+
+  HISTORIAN_AGENT:
+    DOMAIN:
+      - AUDIT
+      - HISTORY
+    OUTPUT_CLASSES:
+      - AUDIT_LOG
+      - REPORT
+      - ANALYSIS_REPORT
+    TRUST_DEFAULT:
+      - PROVISIONAL
+    NOTES:
+      - detects drift
+      - preserves provenance chains
+
+  PSYCHOLOGY_AGENT:
+    DOMAIN:
+      - BEHAVIOR_ANALYSIS
+    OUTPUT_CLASSES:
+      - ANALYSIS_REPORT
+      - REPORT
+    TRUST_DEFAULT:
+      - PROVISIONAL
+    NOTES:
+      - reports only
+      - never treated as truth by default
+
+  LIBRARIAN_AGENT:
+    DOMAIN:
+      - RESOURCE_GATHERING
+      - ORCHESTRATION_SUPPORT
+    OUTPUT_CLASSES:
+      - RESOURCE_PACKET
+      - REPORT
+    TRUST_DEFAULT:
+      - UNTRUSTED
+    NOTES:
+      - assembles only
+      - no interpretation
+
+  ENGINE_GOVERNOR_AGENT:
+    DOMAIN:
+      - GOVERNANCE
+      - VERSIONING
+    OUTPUT_CLASSES:
+      - REPORT
+      - PROPOSED_DIFF
+      - ROLLBACK_PLAN
+    TRUST_DEFAULT:
+      - PROVISIONAL
+    NOTES:
+      - human approval required until governance relaxes it
+
+---
+
+# CROSS REFERENCES
+
+ROLE_DEFINITIONS_FILE:
+  `roles.catalog.spec.sudo`
+
+ARTIFACT_TYPES_FILE:
+  `artifacts.v1.sudo`
+
+ARTIFACT_DEFINITIONS_FILE:
+  `artifacts_catalog.v1.spec.sudo`
+
+END

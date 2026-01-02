@@ -1,0 +1,156 @@
+# weekly_reflection.undo_revocation.workflow.spec.sudo
+
+PURPOSE:
+  Specify an undo workflow where the system revokes trusted meaning
+  and invalidates downstream dependencies after a commit.
+
+SCOPE:
+  This workflow covers:
+    - selecting a committed change to undo
+    - validating that undo is allowed
+    - executing revocation actions
+    - committing the revocation as new meaning
+
+---
+
+# WORKFLOW
+
+NAME:
+  weekly_reflection_undo_semantic_revocation
+
+GOAL:
+  Prove undo means:
+    revoke trust + invalidate downstream meaning,
+  not merely delete bytes.
+
+---
+
+# INPUT (WHAT IS BEING UNDONE)
+
+UNDO_TARGET:
+  COMMIT_ID: `commit_weekly_reflection_2025_12_29`
+
+ASSOCIATED_OBJECTS:
+  - NOTE_ID: `weekly_reflection_2025_12_29`
+  - DOWNSTREAM_REFERENCES:
+      - ARTIFACT_ID: `weekly_plan_2025_12_30` (derived from NOTE)
+      - TAG: `uses_weekly_reflection_2025_12_29`
+
+---
+
+# PROPOSAL (RAW)
+
+INTENT:
+  `Revoke trust in NOTE weekly_reflection and invalidate downstream meaning`
+
+ACTOR:
+  `User`
+
+TARGET_ENTITY:
+  COMMIT_RECORD
+
+TARGET_SELECTOR:
+  commit_id: `commit_weekly_reflection_2025_12_29`
+
+TARGET_SCOPE:
+  `MEANING_REGISTRY`
+
+OUTPUT_SCOPE:
+  `MEANING_REGISTRY`
+
+DEPENDENCIES:
+  - read_access: COMMIT_RECORD
+  - write_access: MEANING_REGISTRY
+  - ability_to_mark_invalid: referenced ARTIFACTS
+
+IMPACT:
+  - mark NOTE as REVOKED
+  - mark COMMIT as SUPERSEDED_BY new undo commit
+  - mark downstream artifacts as INVALIDATED (requires review or regeneration)
+  - append revocation reason
+
+REVERSIBILITY_CLAIM:
+  - undo of undo is possible only via new commit
+  - prior meaning remains non-trusted unless explicitly re-committed
+
+---
+
+# STAGE WALKTHROUGH
+
+STAGE_1:
+  NAME: PROPOSAL INTAKE
+  OUTPUT:
+    - PROPOSAL_RECORD
+  STAGE_LEVEL_INVARIANTS:
+    - no semantic judgment
+    - deterministic fingerprint
+    - no side effects beyond record
+
+STAGE_2:
+  NAME: VALIDATION
+  OUTPUT:
+    - VALIDATION_DECISION (APPROVE or ESCALATE)
+  VALIDATION_MUST_CHECK:
+    - actor has authority to revoke this meaning
+    - target exists and is committed
+    - downstream impact is enumerated or bounded
+    - revocation does not violate invariant "trusted by accident"
+  STAGE_LEVEL_INVARIANTS:
+    - fail closed if downstream set is unknown and unbounded
+    - escalation allowed if impact is high
+
+STAGE_3:
+  NAME: PLANNING
+  OUTPUT:
+    - EXECUTION_PLAN
+  PLAN_MUST_INCLUDE:
+    - revocation operations list
+    - invalidation propagation list
+    - user-visible summary of consequences
+  STAGE_LEVEL_INVARIANTS:
+    - plan must be explicit about what becomes untrusted
+
+STAGE_4:
+  NAME: EXECUTION
+  OUTPUT:
+    - PROVISIONAL_REVOCATION_UPDATES
+    - EXECUTION_EFFECTS_LOG
+  SIDE_EFFECTS_ALLOWED:
+    - provisional registry updates only
+  STAGE_LEVEL_INVARIANTS:
+    - no trusted revocation until commit
+    - all invalidations recorded
+
+STAGE_5:
+  NAME: RE-VALIDATION
+  OUTPUT:
+    - REVALIDATION_DECISION
+  MUST_CHECK:
+    - undo target still matches fingerprint / commit_id
+    - no new dependencies appeared outside planned set
+  STAGE_LEVEL_INVARIANTS:
+    - fail closed if effect set differs from plan
+
+STAGE_6:
+  NAME: COMMIT
+  OUTPUT:
+    - UNDO_COMMIT_RECORD
+    - TRUST_UPDATES
+  COMMIT_MEANS:
+    - the system now believes the prior meaning is revoked
+    - downstream meaning is no longer trusted
+  STAGE_LEVEL_INVARIANTS:
+    - revocation changes belief, not history
+    - system preserves traceability to the original commit
+
+---
+
+# SUCCESS CONDITION
+
+SUCCESS_IF:
+  - the NOTE and its commit are no longer trusted
+  - downstream artifacts are invalidated (not silently left trusted)
+  - audit trail links original commit → undo commit
+  - deletion is optional and never the definition of undo
+
+END

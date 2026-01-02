@@ -1,0 +1,278 @@
+# Life-OS Roadmap
+
+PURPOSE:
+  Provide a clear, evolving path for building Life-OS
+  while maximizing learning signal, mastery, and transfer.
+
+RULE:
+  This roadmap is directional, not fixed.
+  Reordering is allowed when learning value improves.
+
+CHECKBOXES indicate:
+  - learning milestones
+  - not feature completeness
+  - not production readiness
+
+---
+
+# PHASE_0: FOUNDATIONS & RESET
+
+GOAL:
+  Establish shared language, constraints, and a learning-first posture.
+
+DELIVERABLES:
+  [x] Life-OS intent & alignment locked
+  [x] Sudolang conventions finalized
+  [x] Teaching / cache-warm protocol defined
+  [x] Learning vs product explicitly unified
+  [x] Definition of “mastery” made explicit
+
+EXIT_CRITERIA:
+  You can explain:
+    - what Life-OS optimizes for
+    - why safety precedes capability
+    - why learning artifacts are first-class
+
+---
+
+# PHASE_1: LIFE-OS DNA — SEMANTIC GENOME
+
+GOAL:
+  Define meaning, trust, and invariants independent of execution.
+
+FOCUS:
+  Ontology
+  Authority
+  Invariants
+  Meaning lifecycle
+
+DELIVERABLES:
+  [x] Meaning vs storage separated
+  [x] Trust levels defined (MEMORY → NOTE → ARTIFACT)
+  [x] Invariants articulated in prose
+  [x] Authority escalation rules identified
+  [x] DNA/RNA/Expression mental model stabilized
+
+EXIT_CRITERIA:
+  You can change meaning definitions
+  without touching execution logic.
+
+---
+
+# PHASE_2: LIFE-OS RNA — SAFE ACTION & GOVERNANCE
+
+GOAL:
+  Define how meaning turns into action safely.
+
+FOCUS:
+  Proposals
+  Validation
+  Execution
+  Re-validation
+  Commit
+
+DELIVERABLES:
+  [x] Proposal intake contract
+  [x] Validation contract
+  [x] Planning contract
+  [x] Execution contract
+  [x] Re-validation contract
+  [x] Commit contract
+  [x] RNA pipeline spec
+  [x] Weekly reflection paper-executed
+  [x] Phase 2 fundamentals extracted
+
+EXIT_CRITERIA:
+  You can explain:
+    - why execution ≠ belief
+    - why re-validation exists
+    - how silent corruption happens
+
+---
+
+# PHASE_3: RNA — CONCRETE CONTROL FLOW (CURRENT)
+
+GOAL:
+  Implement a minimal, correct execution kernel
+  that enforces RNA contracts.
+
+FOCUS:
+  Determinism
+  Stage isolation
+  Type safety
+  Runtime enforcement
+
+DELIVERABLES:
+  [ ] In-memory pipeline implementation (TypeScript)
+  [ ] Zod schemas for all stage artifacts
+  [ ] Stage-level invariant enforcement
+  [ ] Full audit trail wiring
+  [ ] One workflow fully runnable (weekly reflection)
+
+NON-GOALS:
+  - persistence
+  - performance
+  - UI polish
+  - agent swarms
+
+EXIT_CRITERIA:
+  You can trace intent → commit in code
+  and point to where every invariant is enforced.
+
+---
+
+# PHASE_4: EXPRESSION — OBSERVABILITY FIRST
+
+GOAL:
+  Make the system legible before making it powerful.
+
+FOCUS:
+  Transparency
+  Explanation
+  Debuggability
+
+INITIAL_POSTURE:
+  Expression is READ-ONLY.
+
+DELIVERABLES:
+  [ ] Proposal viewer
+  [ ] Decision viewer
+  [ ] Execution trace viewer
+  [ ] Commit history
+  [ ] Provenance graphs
+
+NOTE:
+  Expression becomes participatory ONLY after
+  RNA safety is proven.
+
+EXIT_CRITERIA:
+  A human understands system state
+  without reading code or guessing.
+
+---
+
+# PHASE_5: EXTENSIBILITY — THEMES FIRST
+
+GOAL:
+  Allow extension without authority leakage.
+
+FOCUS:
+  Theming
+  Presentation plugins
+  Non-authoritative extensibility
+
+DELIVERABLES:
+  [ ] Theme plugin interface
+  [ ] Theme isolation guarantees
+  [ ] Proof that themes cannot alter authority
+  [ ] Safe rendering hooks
+
+RULE:
+  Themes may influence presentation only.
+  Never validation, execution, or commit.
+
+EXIT_CRITERIA:
+  Third-party extensions cannot corrupt meaning.
+
+---
+
+# PHASE_6: MCP & TOOL INTEGRATION
+
+GOAL:
+  Integrate AI tools without surrendering control.
+
+FOCUS:
+  Tool contracts
+  Failure handling
+  Latency & cost awareness
+
+DELIVERABLES:
+  [ ] MCP server integration
+  [ ] Tool calls wrapped as proposals
+  [ ] Tool failures modeled explicitly
+  [ ] Tool outputs treated as untrusted input
+
+EXIT_CRITERIA:
+  Tool failures feel boring, not dangerous.
+
+---
+
+# PHASE_7: AGENTIC SYSTEMS
+
+GOAL:
+  Introduce long-lived reasoning safely.
+
+FOCUS:
+  Agent roles
+  Stop conditions
+  Planning loops
+
+DELIVERABLES:
+  [ ] Agent role definitions
+  [ ] Agent state machine
+  [ ] Planning → execution loop
+  [ ] Explicit stop conditions
+  [ ] Escalation triggers
+
+EXIT_CRITERIA:
+  You trust agents because you know when they stop.
+
+---
+
+# PHASE_8: MULTI-USER & HUMAN ESCALATION
+
+GOAL:
+  Support multiple users and expert intervention.
+
+FOCUS:
+  Attribution
+  Human authority
+  Expert escalation
+
+DELIVERABLES:
+  [ ] Multi-user identity model
+  [ ] Escalation routing rules
+  [ ] Expert role definitions
+  [ ] Human override semantics
+  [ ] Auditability across users
+
+EXIT_CRITERIA:
+  Authority is clear even with humans in the loop.
+
+---
+
+# PHASE_9: TEACHING & ADAPTIVE LEARNING
+
+GOAL:
+  Teach users how to think, not just what to do.
+
+FOCUS:
+  Learning transfer
+  Personalized guidance
+  Reflection quality
+
+DELIVERABLES:
+  [ ] Teaching engine scaffolding
+  [ ] Learning signal tracking
+  [ ] Adaptive prompting
+  [ ] Fundamentals review rotation
+  [ ] Explanation quality feedback
+
+EXIT_CRITERIA:
+  The system improves how users reason over time.
+
+---
+
+# CONTINUOUS TRACKS
+
+ALWAYS_ON:
+  - Fundamentals review (morning / night)
+  - Explanation practice
+  - System articulation
+
+MEASURE_PROGRESS_BY:
+  - clarity under pressure
+  - safe modification ability
+  - comfort with ambiguity
+
+END

@@ -1,0 +1,111 @@
+# VALIDATION CONTRACT — EDUCATION
+
+PURPOSE:
+  Teach how to think about validation as a system boundary,
+  not a correctness checker.
+
+---
+
+# CACHE WARM
+
+WHAT_LAYER:
+  RNA
+
+UNIVERSAL_PROBLEM:
+  Preventing unsafe or unauthorized actions
+  from entering execution pipelines.
+
+RECALL_HOOKS:
+  MNEMONICS:
+    - "Decide, don’t do"
+    - "Permission ≠ belief"
+    - "Approval is not truth"
+
+  INVARIANT_REMINDERS:
+    - Validation must be pure
+    - Validation must be explainable
+    - Validation must reduce power under uncertainty
+
+  QUESTIONS:
+    - What assumption is this checking?
+    - What authority would leak if this were skipped?
+    - What would silently corrupt if this guessed?
+
+CONTEXT_SPECIFICITY:
+  SYSTEMS
+  AGENTS
+  AI INTEGRATION
+
+FAILURE_MODE:
+  Silent permission escalation
+  Execution of unjustified actions
+  Invariants enforced too late
+
+---
+
+# MENTAL MODEL
+
+MODEL:
+  Validation is a filter, not a transformer.
+
+EXPLANATION:
+  Validation inspects meaning and authority
+  but does not change the world.
+
+ANALOGY:
+  A security checkpoint does not fly the plane.
+  It only decides who is allowed near it.
+
+---
+
+# COMMON MISCONCEPTIONS
+
+MISCONCEPTION:
+  "Validation should prepare execution."
+
+CORRECTION:
+  Validation must not plan or optimize.
+  Planning belongs to a later stage.
+
+MISCONCEPTION:
+  "If validation passes, execution is safe."
+
+CORRECTION:
+  Validation is time-bound.
+  Safety must be re-checked later.
+
+---
+
+# WHY THIS STAGE EXISTS
+
+REASON:
+  Execution is expensive and dangerous.
+  Validation is cheap and preventative.
+
+INSIGHT:
+  Catching errors before execution
+  prevents irreversible effects.
+
+---
+
+# FAILURE PATTERNS TO WATCH FOR
+
+PATTERN:
+  Validation performs side effects.
+
+RESULT:
+  Authority leaks before commit.
+
+PATTERN:
+  Validation guesses missing intent.
+
+RESULT:
+  The system lies on behalf of the actor.
+
+PATTERN:
+  Validation is skipped for "fast paths".
+
+RESULT:
+  Fast corruption instead of fast value.
+
+END

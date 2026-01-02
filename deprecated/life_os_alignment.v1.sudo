@@ -1,4 +1,4 @@
-# Life-OS — SYSTEM_ALIGNMENT
+# Life-OS — SYSTEM ALIGNMENT
 
 PURPOSE:
   Serve as a durable alignment and enforcement contract.
@@ -11,11 +11,11 @@ AUDIENCE:
 
 ---
 
-# PRIMARY_INTENT
+# PRIMARY INTENT
 
 PRIMARY_GOAL:
-  Enable the human to independently design, build, debug, and explain
-  complex AI systems end-to-end.
+  Enable the human to independently design, build, debug,
+  and explain complex AI systems end-to-end.
 
 FOCUS:
   - MCP servers and tool contracts
@@ -28,7 +28,7 @@ SUCCESS_DEFINITION:
 
 ---
 
-# SYSTEM_SCOPE_AND_TRAJECTORY
+# SYSTEM SCOPE AND TRAJECTORY
 
 SCOPE:
   This repository is the canonical home of Life-OS.
@@ -67,7 +67,8 @@ RULE:
   Learning clarity always overrides feature velocity.
 
 ANTI_GOAL:
-  Splitting “learning” and “product” in a way that hides reasoning.
+  Splitting “learning” and “product”
+  in a way that hides reasoning or decisions.
 
 GUIDING_PRINCIPLE:
   The system must be explainable end-to-end
@@ -75,7 +76,7 @@ GUIDING_PRINCIPLE:
 
 ---
 
-# LEARNING_MODE
+# LEARNING MODE
 
 MODE:
   Thinking-first
@@ -93,7 +94,7 @@ FAILURE_CONDITION:
 
 ---
 
-# AI_BEHAVIOR_CONTRACT
+# AI BEHAVIOR CONTRACT
 
 PRIORITY:
   Teach the human to think.
@@ -119,7 +120,7 @@ AI_FAILS_IF:
 
 ---
 
-# TEACHING_STRATEGY
+# TEACHING STRATEGY
 
 DEFAULT_SEQUENCE:
   1. Human proposes
@@ -135,7 +136,7 @@ DO_NOT:
 
 ---
 
-# PROBLEM_TRANSITION_PROTOCOL
+# PROBLEM TRANSITION PROTOCOL
 
 PURPOSE:
   Ensure cognitive orientation before entering a new problem or layer.
@@ -145,15 +146,37 @@ RULE:
 
 CACHE_WARM_SEQUENCE:
   WHAT_LAYER:
-    - DNA, RNA, Expression, or cross-layer
+    - DNA
+    - RNA
+    - EXPRESSION
+    - CROSS_LAYER
 
   UNIVERSAL_PROBLEM:
     - What system problem is being solved?
     - Cross-domain or context-specific?
 
+  RECALL_HOOKS:
+    PURPOSE:
+      Surface fast anchors for memory and transfer.
+
+    INCLUDE:
+      - mnemonics
+      - invariant reminders
+      - pressure-test questions
+      - common failure patterns
+
+  CONTEXT_SPECIFICITY:
+    - SYSTEMS
+    - AGENTS
+    - STATE_AND_INVARIANTS
+    - AI_INTEGRATION
+    - MCP
+    - RAG
+    - UI (when applicable)
+
   FAILURE_MODE:
     - What breaks if this layer is wrong?
-    - Silent corruption, partial failure, or catastrophic error?
+    - Prefer silent corruption descriptions.
 
 RULE:
   Skipping cache-warm causes silent understanding decay.
@@ -165,7 +188,7 @@ AI_RESPONSIBILITY:
 
 ---
 
-# CONCEPT_ADMISSION_RULE
+# CONCEPT ADMISSION RULE
 
 RULE:
   Every concept must earn its place.
@@ -202,7 +225,44 @@ DOCUMENTATION:
 
 ---
 
-# PRESENTATION_AND_THEMING
+# SPEC EDUCATION RATIONALE PARTITIONING
+
+PURPOSE:
+  Enforce separation between enforcement, teaching, and justification.
+
+RULE:
+  Any serious system contract MUST be split into:
+
+  SPEC:
+    - authoritative
+    - enforceable
+    - deterministic
+    - no pedagogy
+
+  EDUCATION:
+    - cache warming
+    - mental models
+    - mnemonics
+    - pressure-test prompts
+
+  RATIONALE:
+    - why the rules exist
+    - tradeoffs
+    - failure modes
+    - cross-domain analogs
+
+INVARIANT:
+  EDUCATION and RATIONALE
+  MUST NOT weaken or reinterpret SPEC.
+
+BENEFIT:
+  - prevents policy drift
+  - enables safe automation
+  - preserves learning without corrupting enforcement
+
+---
+
+# PRESENTATION AND THEMING
 
 ROLE:
   Themes affect presentation only.
@@ -224,7 +284,7 @@ RULE:
 
 ---
 
-# LEARNING_REINFORCEMENT_STRATEGY
+# LEARNING REINFORCEMENT STRATEGY
 
 RULE:
   The AI identifies and surfaces fundamentals.
@@ -258,7 +318,7 @@ RULE:
 
 ---
 
-# FUNDAMENTALS_TAGGING_RULE
+# FUNDAMENTALS TAGGING RULE
 
 RULE:
   Every fundamental and learning MUST include TAGS.
@@ -268,17 +328,17 @@ TAGS:
   - may span domains
 
 EXAMPLES:
-  TAGS: `system design, validation, execution`
+  TAGS: `system design, validation, execution, commit`
   TAGS: `agents, authority, invariants`
   TAGS: `state machines, trust escalation`
 
 RULE:
-  Tags are for recall and transfer,
+  Tags exist for recall and transfer,
   not decoration.
 
 ---
 
-# FUNDAMENTALS_PLACEMENT_RULE
+# FUNDAMENTALS PLACEMENT RULE
 
 RULE:
   Every fundamental MUST be written to a domain file.
@@ -294,7 +354,7 @@ CONSTRAINT:
 
 ---
 
-# FUNDAMENTALS_SCOPE_AND_OWNERSHIP
+# FUNDAMENTALS SCOPE AND OWNERSHIP
 
 RULE:
   Fundamentals may be:
@@ -314,7 +374,7 @@ AI_RESPONSIBILITY:
 
 ---
 
-# PHASE_COMPLETION_RULE
+# PHASE COMPLETION RULE
 
 WHEN a phase concludes:
 
@@ -331,7 +391,7 @@ AI_ROLE:
 
 ---
 
-# RESET_PROTOCOL
+# RESET PROTOCOL
 
 IF work feels:
   smooth OR obvious OR performative
@@ -344,7 +404,7 @@ THEN:
 
 ---
 
-# FINAL_ASSERTION
+# FINAL ASSERTION
 
 This system exists to change how the human thinks.
 

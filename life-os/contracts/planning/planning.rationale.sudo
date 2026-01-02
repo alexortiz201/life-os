@@ -1,0 +1,109 @@
+# PLANNING CONTRACT — RATIONALE
+
+PURPOSE:
+  Capture why planning is a distinct, explicit,
+  and non-executing stage.
+
+---
+
+# DESIGN COMMITMENTS
+
+COMMITMENT_1:
+  Planning is separate from validation.
+
+RATIONALE:
+  Validation judges permission.
+  Planning translates permission into steps.
+
+---
+
+COMMITMENT_2:
+  Planning produces a durable artifact.
+
+RATIONALE:
+  Without a plan artifact,
+  execution cannot be audited or constrained.
+
+---
+
+COMMITMENT_3:
+  Planning absorbs ambiguity early.
+
+RATIONALE:
+  Ambiguity during execution
+  forces unsafe decisions under pressure.
+
+---
+
+COMMITMENT_4:
+  Planning is deterministic.
+
+RATIONALE:
+  Non-deterministic plans
+  make failures unreproducible.
+
+---
+
+# REJECTED ALTERNATIVES
+
+REJECTED:
+  "Planning inside execution"
+
+REASON:
+  Execution failures become indistinguishable
+  from planning mistakes.
+
+---
+
+REJECTED:
+  "Implicit plans inferred by executors"
+
+REASON:
+  Executors should not reason about intent.
+
+---
+
+REJECTED:
+  "Auto-correcting plans"
+
+REASON:
+  Guessing intent violates attribution
+  and reversibility.
+
+---
+
+# SYSTEM CONSEQUENCES
+
+IF PLANNING IS SKIPPED:
+  Execution becomes creative.
+
+IF PLANNING IS WEAK:
+  Execution leaks authority.
+
+IF PLANNING IS STRONG:
+  Execution becomes simple and safe.
+
+---
+
+# LONG-TERM PAYOFF
+
+BENEFIT:
+  Clear blame boundaries.
+
+BENEFIT:
+  Deterministic execution behavior.
+
+BENEFIT:
+  Safe agent participation.
+
+BENEFIT:
+  Easier rollback and auditing.
+
+---
+
+# FINAL ASSERTION
+
+STATEMENT:
+  Planning exists so execution never has to think.
+
+END

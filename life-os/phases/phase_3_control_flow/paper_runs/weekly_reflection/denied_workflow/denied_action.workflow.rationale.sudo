@@ -1,0 +1,40 @@
+# denied_action.workflow.rationale.sudo
+
+PURPOSE:
+  Explain the design rationale for rejecting scope-breaching proposals
+  and why the pipeline halts at validation.
+
+---
+
+# RATIONALE
+
+WHY THIS DENIAL IS IMPORTANT:
+  Scope breaches are authority breaches.
+  If an agent can write anywhere, it can create meaning anywhere.
+
+WHY VALIDATION MUST CATCH IT:
+  If scope checks happen later:
+    - execution might already have side effects
+    - reversibility becomes expensive or impossible
+    - the system teaches agents “try anyway”
+
+WHY OUTPUT_SCOPE IS THE TRIPWIRE:
+  TARGET describes what is acted upon (MEMORY).
+  OUTPUT_SCOPE describes where new meaning would land.
+  Denial here proves:
+    the system distinguishes "read scope" from "write scope".
+
+WHY FAIL-CLOSED:
+  Under uncertainty, granting power is the worst move.
+  Blocking is safer than guessing.
+
+WHAT SILENTLY BREAKS IF WRONG:
+  - notes appear in forbidden locations
+  - governance files get modified by agents
+  - audit becomes untrustworthy because “rejected” actions still changed the world
+
+🍰 SUPER_SIMPLE:
+  If you can write where you shouldn’t,
+  you can become the system.
+
+END

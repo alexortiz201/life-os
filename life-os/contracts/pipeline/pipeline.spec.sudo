@@ -1,0 +1,429 @@
+# RNA PIPELINE — SPEC
+
+PURPOSE:
+  Define the canonical RNA control flow from intent to committed meaning.
+  Make stage boundaries explicit before implementation.
+
+SCOPE:
+  This file defines:
+    - stage order
+    - stage responsibilities
+    - required artifacts per stage
+    - allowed side effects per stage
+    - halt conditions
+    - invariants across the pipeline
+
+  This file does NOT define:
+    - per-stage internal logic
+    - storage or database design
+    - UI
+    - agent design beyond ACTOR attribution
+
+---
+
+# CORE PRINCIPLES
+
+RULE:
+  Meaning becomes trusted ONLY through COMMIT.
+
+RULE:
+  Agents propose.
+  The system validates.
+  The system commits or rejects.
+
+---
+
+# PIPELINE OVERVIEW
+
+PIPELINE:
+  ID: RNA_EXECUTION_PIPELINE
+  GOAL: Turn proposed meaning into safe committed meaning
+
+STAGES IN ORDER:
+  1. PROPOSAL INTAKE
+  2. VALIDATION
+  3. PLANNING
+  4. EXECUTION
+  5. RE VALIDATION
+  6. COMMIT
+
+RULE:
+  No stage may assume the next stage will run.
+
+RULE:
+  Every stage MUST be independently safe to stop after.
+
+---
+
+# STAGE 1 — PROPOSAL INTAKE
+
+STAGE:
+  ID: PROPOSAL_INTAKE
+  NAME: PROPOSAL INTAKE
+
+INPUT:
+  - RAW_PROPOSAL
+  - REFERENCED_CONTEXT (optional)
+
+OUTPUT:
+  - PROPOSAL_RECORD
+
+SIDE EFFECTS ALLOWED:
+  - record creation ONLY
+
+SIDE EFFECTS FORBIDDEN:
+  - validation
+  - planning
+  - execution
+  - artifact creation
+  - world mutation
+  - trust escalation
+
+GUARANTEES:
+  - proposal is normalized
+  - proposal is immutable after intake
+  - proposal has stable id + fingerprint
+  - proposal is attributable
+
+HALT ON:
+  - structural invalidity
+  - missing required fields
+  - fingerprint failure
+
+STAGE_INVARIANTS:
+  - Intake never evaluates meaning or correctness.
+  - Intake output must be immutable once created.
+  - Intake must be replayable with identical results.
+
+---
+
+# STAGE 2 — VALIDATION
+
+STAGE:
+  ID: VALIDATION
+  NAME: VALIDATION
+
+INPUT:
+  - PROPOSAL_RECORD
+  - CURRENT_SYSTEM_CONTEXT_SNAPSHOT
+
+CONTEXT SNAPSHOT MUST INCLUDE:
+  - permissions state
+  - relevant entity states
+  - invariants version
+  - scope configuration
+  - timestamp
+  - external dependency versions used for validation (if applicable)
+
+OUTPUT:
+  - VALIDATION_DECISION
+
+SIDE EFFECTS ALLOWED:
+  - decision record creation ONLY
+
+SIDE EFFECTS FORBIDDEN:
+  - planning output
+  - execution output
+  - artifact creation
+  - world mutation
+  - trust escalation
+
+OUTCOMES:
+  - APPROVE
+  - REJECT
+  - PARTIAL_APPROVE
+  - ESCALATE
+
+RULE:
+  Fail closed by default.
+
+HALT ON:
+  - REJECT
+  - ESCALATE (if no escalation path available)
+
+STAGE_INVARIANTS:
+  - Validation produces decisions, never effects.
+  - Validation must not assume execution will occur.
+  - Validation must be safe to repeat with no external impact.
+
+---
+
+# STAGE 3 — PLANNING
+
+STAGE:
+  ID: PLANNING
+  NAME: PLANNING
+
+INPUT:
+  - PROPOSAL_RECORD
+  - VALIDATION_DECISION (APPROVE or PARTIAL_APPROVE)
+
+OUTPUT:
+  - EXECUTION_PLAN
+
+SIDE EFFECTS ALLOWED:
+  - plan record creation ONLY
+
+SIDE EFFECTS FORBIDDEN:
+  - execution
+  - world mutation
+  - artifact creation
+  - trust escalation
+
+RULE:
+  Planning MUST honor validation constraints.
+
+HALT ON:
+  - missing dependencies required for a safe plan
+  - inability to produce an explicit step sequence
+
+STAGE_INVARIANTS:
+  - Planning must respect all validation constraints.
+  - Planning produces intent-to-act, not action.
+  - Planning failure must not alter system state.
+
+---
+
+# STAGE 4 — EXECUTION
+
+STAGE:
+  ID: EXECUTION
+  NAME: EXECUTION
+
+INPUT:
+  - PROPOSAL_RECORD
+  - VALIDATION_DECISION
+  - EXECUTION_PLAN
+
+OUTPUT:
+  - EXECUTION_RESULT
+  - EXECUTION_EFFECTS_LOG
+  - PROVISIONAL_OUTPUTS (optional)
+
+SIDE EFFECTS ALLOWED:
+  - provisional effects ONLY
+  - effects must be attributable and logged
+
+SIDE EFFECTS FORBIDDEN:
+  - commit
+  - trust escalation
+  - silent meaning creation
+
+PROVISIONAL EFFECTS MEAN:
+  - effects may exist in the world or storage
+  - outputs are NOT trusted by the meaning layer
+  - any produced outputs MUST be marked PROVISIONAL
+  - nothing becomes authoritative or referenceable by default
+
+RULE:
+  Execution may change the world.
+  Execution must not change belief.
+
+RULE:
+  Execution outputs are provisional until commit.
+
+HALT ON:
+  - invariant violation
+  - execution failure
+  - missing runtime dependency
+  - detected scope breach
+
+STAGE_INVARIANTS:
+  - Execution effects are provisional until commit.
+  - Execution must log every effect explicitly.
+  - Execution must stop immediately on invariant breach.
+
+---
+
+# STAGE 5 — RE VALIDATION
+
+STAGE:
+  ID: REVALIDATION
+  NAME: RE VALIDATION
+
+INPUT:
+  - PROPOSAL_RECORD
+  - EXECUTION_PLAN
+  - EXECUTION_RESULT
+  - EXECUTION_EFFECTS_LOG
+  - CURRENT_SYSTEM_CONTEXT_SNAPSHOT (fresh)
+
+CONTEXT SNAPSHOT MUST INCLUDE:
+  - permissions state
+  - relevant entity states
+  - invariants version
+  - scope configuration
+  - timestamp
+  - external dependency versions used for commit safety (if applicable)
+
+OUTPUT:
+  - REVALIDATION_DECISION
+
+SIDE EFFECTS ALLOWED:
+  - decision record creation ONLY
+
+SIDE EFFECTS FORBIDDEN:
+  - additional execution
+  - commit
+  - trust escalation
+
+RULE:
+  Re validation exists because context may change between validation and commit.
+
+OUTCOMES:
+  - APPROVE_COMMIT
+  - REJECT_COMMIT
+  - ESCALATE_COMMIT
+  - PARTIAL_COMMIT
+
+HALT ON:
+  - REJECT_COMMIT
+  - ESCALATE_COMMIT (if no escalation path available)
+
+STAGE_INVARIANTS:
+  - Re-validation uses a fresh system snapshot.
+  - Re-validation may revoke previously granted approval.
+  - Re-validation must not depend on execution success alone.
+
+---
+
+# STAGE 6 — COMMIT
+
+STAGE:
+  ID: COMMIT
+  NAME: COMMIT
+
+INPUT:
+  - PROPOSAL_RECORD
+  - REVALIDATION_DECISION (APPROVE_COMMIT or PARTIAL_COMMIT)
+  - EXECUTION_RESULT
+  - EXECUTION_EFFECTS_LOG
+  - PROVISIONAL_OUTPUTS (optional)
+
+OUTPUT:
+  - COMMIT_RECORD
+  - TRUST_UPDATES
+  - PUBLISHED_OUTPUTS (optional)
+
+SIDE EFFECTS ALLOWED:
+  - meaning updates
+  - trust escalation of approved outputs
+  - publishing or promoting provisional outputs
+
+SIDE EFFECTS FORBIDDEN:
+  - new execution
+  - bypassing re validation
+  - committing anything not justified by recorded effects
+
+RULE:
+  Commit is the moment the system agrees to believe and act on new meaning.
+
+ATOMIC MEANS:
+  - either all approved trust updates apply
+  - or none apply
+  - no partial belief without an explicit PARTIAL_COMMIT record
+
+HALT ON:
+  - commit preconditions not satisfied
+  - inconsistency between effects log and commit intent
+
+STAGE_INVARIANTS:
+  - Commit is the only stage that creates trusted meaning.
+  - Commit must be atomic at the meaning level.
+  - Commit must match exactly what was executed and logged.
+
+---
+
+# PIPELINE INVARIANTS
+
+INVARIANT 1:
+  No trusted meaning exists without commit.
+
+INVARIANT 2:
+  No world side effects occur before validation approval.
+
+INVARIANT 3:
+  No planning or execution is allowed without an explicit decision artifact.
+
+INVARIANT 4:
+  Validation and re validation are pure
+  (no side effects beyond records).
+
+INVARIANT 5:
+  Execution is provisional
+  (effects logged, not trusted).
+
+INVARIANT 6:
+  Commit is the only trust boundary crossing.
+
+INVARIANT 7:
+  Every stage is attributable and auditable.
+
+INVARIANT 8:
+  Every record is linked
+  (no orphan artifacts).
+
+---
+
+# RECORD LINKAGE RULE
+
+RULE:
+  Every record produced in stages 1–6 MUST reference proposal_id.
+
+RULE:
+  Every downstream stage record MUST reference upstream ids:
+    - validation_decision_id
+    - plan_id
+    - execution_effects_log_id
+    - revalidation_decision_id
+    - commit_id
+
+RULE:
+  No orphan records are allowed.
+
+---
+
+# REQUIRED AUDIT TRAIL
+
+AUDIT_LOG_MUST_LINK:
+  - proposal_id
+  - decision_ids (validation + revalidation)
+  - plan_id
+  - execution_effects_log_id
+  - commit_id
+  - actor_attribution
+
+RULE:
+  The system must always answer:
+    - who caused this attempt?
+    - what exactly was attempted?
+    - what rules were in effect?
+    - what happened?
+    - what became trusted?
+    - how would trust be revoked?
+
+---
+
+# ESCALATION POLICY PLACEHOLDER
+
+RULE:
+  If any stage returns ESCALATE,
+  an explicit escalation path MUST exist,
+  or the pipeline MUST halt fail closed.
+
+NOTE:
+  Escalation paths are defined in:
+    - escalation_policy.spec.sudo (deferred or next contract)
+
+---
+
+# HALT RULE
+
+RULE:
+  On any halt:
+    - no downstream stage runs
+    - no trust escalates
+    - partial outputs remain provisional
+    - audit trail is preserved
+
+END

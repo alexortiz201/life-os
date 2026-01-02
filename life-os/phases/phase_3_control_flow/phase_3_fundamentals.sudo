@@ -1,0 +1,74 @@
+# FUNDAMENTALS — PHASE 3 (RNA CONTROL FLOW)
+
+TAGS:
+  systems
+  execution pipelines
+  validation
+  commit
+  trust boundaries
+
+---
+
+# SYSTEMS
+
+- Validation, planning, execution, and commit solve different problems.
+- Execution changes the world; commit changes belief.
+- Re validation exists because time invalidates assumptions.
+- Pipelines fail safely only when every stage can halt independently.
+
+🍰 SUPER SIMPLE:
+Acting is not believing.
+Belief must be earned again.
+
+---
+
+# STATE & INVARIANTS
+
+- Meaning becomes more dangerous as it becomes more trusted.
+- Every trust boundary requires a fresh check.
+- Provisional state is a safety buffer, not an optimization.
+- Atomic commit prevents partial truth.
+
+🍰 SUPER SIMPLE:
+Truth should be hard to reach.
+
+---
+
+# AGENTS
+
+- Agents never create trusted meaning.
+- Agents propose; systems decide.
+- Trying anyway is a violation, not persistence.
+- Attribution must survive deletion.
+
+🍰 SUPER SIMPLE:
+Suggestion is cheap.
+Belief is expensive.
+
+---
+
+# EXECUTION PIPELINES
+
+- No stage may assume the next stage will run.
+- Re validation protects against fast, silent corruption.
+- Commit is irreversible even if artifacts are deleted.
+- Auditability is a first class requirement.
+
+🍰 SUPER SIMPLE:
+Check.
+Try.
+Check again.
+Then believe.
+
+---
+
+# META
+
+- If re validation feels redundant, you are assuming time is frozen.
+- If commit feels obvious, you are underestimating trust.
+- Confusion here signals real system boundaries.
+
+🍰 SUPER SIMPLE:
+If it’s subtle, it’s important.
+
+END

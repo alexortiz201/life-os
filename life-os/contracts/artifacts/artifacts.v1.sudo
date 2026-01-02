@@ -1,0 +1,113 @@
+# ARTIFACTS — V1
+
+PURPOSE:
+  List the available artifact types referenced by system contracts.
+  This file is the short index of “what can exist”.
+
+RULE:
+  This file lists availability only.
+  Definitions live in `artifacts_catalog.v1.spec.sudo`.
+
+---
+
+ARTIFACT_TYPES:
+  - NOTE
+  - REPORT
+  - JOURNAL_ENTRY
+  - ANALYSIS_REPORT
+  - TEACHING_PLAN
+  - FUNDAMENTAL
+  - AUDIT_LOG
+  - EXECUTION_EFFECTS_LOG
+  - COMMIT_RECORD
+
+---
+
+PIPELINE_CRITICAL:
+  PURPOSE:
+    Artifacts required for safe RNA pipeline operation and auditability.
+
+  TYPES:
+    - PROPOSAL_RECORD
+    - VALIDATION_DECISION
+    - EXECUTION_PLAN
+    - EXECUTION_EFFECTS_LOG
+    - COMMIT_RECORD
+    - AUDIT_LOG
+
+RULE:
+  If a PIPELINE_CRITICAL artifact is missing,
+  the pipeline must halt fail-closed.
+
+---
+
+USER_FACING:
+  PURPOSE:
+    Artifacts intended to be read by humans as primary interaction surfaces.
+
+  TYPES:
+    - NOTE
+    - JOURNAL_ENTRY
+    - REPORT
+    - TEACHING_PLAN
+    - FUNDAMENTAL
+
+RULE:
+  USER_FACING does not imply trust.
+  Trust is defined by artifact class rules and promotion records.
+
+---
+
+AGENT_FACING:
+  PURPOSE:
+    Artifacts intended to be consumed by agents for reasoning, governance, or execution.
+
+  TYPES:
+    - ANALYSIS_REPORT
+    - AUDIT_LOG
+    - EXECUTION_EFFECTS_LOG
+    - COMMIT_RECORD
+
+RULE:
+  AGENT_FACING artifacts may inform proposals,
+  but cannot justify trust escalation without validation and commit.
+
+---
+
+DERIVATION_HINTS:
+  PURPOSE:
+    Lightweight map of which artifacts commonly derive from others.
+    This is NOT a permission map.
+
+  COMMON_DERIVATIONS:
+    NOTE:
+      FROM:
+        - JOURNAL_ENTRY
+        - REPORT
+        - COMMIT_RECORD
+    REPORT:
+      FROM:
+        - AUDIT_LOG
+        - COMMIT_RECORD
+        - JOURNAL_ENTRY
+    ANALYSIS_REPORT:
+      FROM:
+        - JOURNAL_ENTRY
+        - REPORT
+        - INTERACTION_HISTORY
+    TEACHING_PLAN:
+      FROM:
+        - ANALYSIS_REPORT
+        - FUNDAMENTAL
+        - ACTIVE_PHASE_CONTEXT
+    FUNDAMENTAL:
+      FROM:
+        - TEACHING_PLAN
+        - WORKFLOW_PAPER_RUNS
+        - LEARNINGS
+
+RULE:
+  A derivation hint is not provenance.
+  Provenance must be recorded explicitly per artifact definition.
+
+END

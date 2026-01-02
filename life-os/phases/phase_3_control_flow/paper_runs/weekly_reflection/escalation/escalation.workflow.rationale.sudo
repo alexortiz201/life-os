@@ -1,0 +1,33 @@
+# weekly_reflection.escalation.workflow.rationale.sudo
+
+PURPOSE:
+  Explain the design rationale for escalation.
+
+---
+
+# RATIONALE
+
+WHY ESCALATION IS REQUIRED:
+  Some proposals cannot be validated automatically without guessing user intent
+  or accepting unacceptable risk.
+
+WHY HUMAN DECISION MUST BE AN ARTIFACT:
+  Without a durable record:
+    - accountability disappears
+    - later audits become storytelling
+    - trust can drift silently
+
+WHY HUMAN DECISION DOES NOT BYPASS INVARIANTS:
+  Humans can authorize intent,
+  but the system must still enforce safety boundaries.
+
+WHAT SILENTLY BREAKS IF WRONG:
+  - agents start “asking forgiveness” by acting first
+  - sensitive memory is consumed or summarized without consent
+  - high-trust surfaces get polluted by unreviewed AI content
+
+🍰 SUPER SIMPLE:
+  Escalation prevents the system from guessing
+  when guessing would be dangerous.
+
+END

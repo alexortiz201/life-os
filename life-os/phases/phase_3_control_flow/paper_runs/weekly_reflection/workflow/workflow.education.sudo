@@ -1,0 +1,86 @@
+# WEEKLY_REFLECTION — WORKFLOW EDUCATION
+
+PURPOSE:
+  Teach how to read and pressure-test the weekly reflection workflow spec.
+  Provide recall hooks for the universal system problem this workflow represents.
+
+SCOPE:
+  Education only.
+  This file does NOT add rules beyond the spec.
+
+---
+
+# CACHE_WARM
+
+WHAT_LAYER:
+  RNA
+
+UNIVERSAL_PROBLEM:
+  Turn intent into action without letting “work performed” become “truth believed”.
+
+RECALL_HOOKS:
+  MNEMONICS:
+    - "Validate → Try → Re-check → Believe"
+    - "Effects are not meaning"
+    - "Commit creates belief"
+
+  INVARIANT_REMINDERS:
+    - No trust before commit
+    - Every trust boundary requires a check
+    - Outputs are provisional until proven safe
+
+  QUESTIONS:
+    - What is the TARGET (acted on) vs OUTPUT (created)?
+    - What can change between validation and commit?
+    - If we halt here, did meaning change?
+
+CONTEXT_SPECIFICITY:
+  AGENTS
+  AI_INTEGRATION
+  SYSTEMS
+
+FAILURE_MODE:
+  - Silent corruption: execution implies truth
+  - Stale authority: assumptions change mid-flight
+  - Trust leak: provisional outputs treated as committed
+
+---
+
+# HOW_TO_READ_THIS_WORKFLOW
+
+READING_ORDER:
+  1. Identify the TARGET_ENTITY + TARGET_SELECTOR
+  2. Track which artifacts are created at each stage
+  3. Ask: "Where does trust increase?"
+  4. Verify: "Trust increases only at COMMIT"
+  5. Verify: "Every earlier stage is safe to halt"
+
+KEY_DISTINCTION:
+  - NOTE may be written during EXECUTION
+  - but NOTE is not trusted until COMMIT
+
+INTERPRETATION:
+  - Weekly reflection is “meaning synthesis”
+  - The danger is treating “a generated summary” as “a system belief”
+  - The pipeline exists to prevent that jump
+
+---
+
+# WHAT_THIS_WORKFLOW_TEACHES
+
+TEACHES:
+  - TARGET is MEMORY (inputs), not NOTE/ARTIFACT (outputs)
+  - EXECUTION can write objects without granting authority
+  - RE-VALIDATION is required because permissions and context can change
+  - COMMIT is the only boundary where meaning becomes trusted
+
+---
+
+# SUPER_SIMPLE
+
+SUMMARY:
+  You can write drafts.
+  You can produce effects.
+  But nothing counts as truth until the system commits.
+
+END

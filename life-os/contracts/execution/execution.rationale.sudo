@@ -1,0 +1,105 @@
+# EXECUTION CONTRACT — RATIONALE
+
+PURPOSE:
+  Capture why execution is strictly separated
+  from belief, validation, and commit.
+
+---
+
+# DESIGN COMMITMENTS
+
+COMMITMENT_1:
+  Execution never escalates trust.
+
+RATIONALE:
+  Trust escalation is irreversible.
+  Execution must remain discardable.
+
+---
+
+COMMITMENT_2:
+  Execution is bound to a plan.
+
+RATIONALE:
+  Free-form execution is hidden authority.
+
+---
+
+COMMITMENT_3:
+  Execution logs everything.
+
+RATIONALE:
+  Without logs, failures become unknowable.
+
+---
+
+COMMITMENT_4:
+  Execution halts on violation.
+
+RATIONALE:
+  Continuing under violation compounds damage.
+
+---
+
+# REJECTED ALTERNATIVES
+
+REJECTED:
+  "Auto-commit on success"
+
+REASON:
+  Creates belief without re-validation.
+
+---
+
+REJECTED:
+  "Execution-driven validation"
+
+REASON:
+  Makes effects justify permission.
+
+---
+
+REJECTED:
+  "Best-effort execution"
+
+REASON:
+  Partial truth is worse than failure.
+
+---
+
+# SYSTEM CONSEQUENCES
+
+IF EXECUTION CREATES BELIEF:
+  The system lies to itself.
+
+IF EXECUTION IS UNLOGGED:
+  Errors cannot be reasoned about.
+
+IF EXECUTION IS STRICT:
+  Failures remain containable.
+
+---
+
+# LONG-TERM PAYOFF
+
+BENEFIT:
+  Safe retries.
+
+BENEFIT:
+  Clear rollback boundaries.
+
+BENEFIT:
+  Strong auditability.
+
+BENEFIT:
+  Reliable agent participation.
+
+---
+
+# FINAL ASSERTION
+
+STATEMENT:
+  Execution exists to act,
+  not to decide what is true.
+
+END

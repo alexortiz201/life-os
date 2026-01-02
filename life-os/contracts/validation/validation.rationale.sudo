@@ -1,0 +1,112 @@
+# VALIDATION CONTRACT — RATIONALE
+
+PURPOSE:
+  Record why validation is designed as a pure,
+  non-executing decision stage.
+
+---
+
+# DESIGN COMMITMENTS
+
+COMMITMENT_1:
+  Validation must not mutate state.
+
+RATIONALE:
+  Side effects before commitment
+  create irreversible authority escalation.
+
+---
+
+COMMITMENT_2:
+  Validation produces explicit decision artifacts.
+
+RATIONALE:
+  Decisions without records
+  cannot be audited, explained, or revoked.
+
+---
+
+COMMITMENT_3:
+  Validation is separated from planning.
+
+RATIONALE:
+  Planning introduces optimization pressure
+  that biases judgment.
+
+---
+
+COMMITMENT_4:
+  Validation is time-bound and re-checkable.
+
+RATIONALE:
+  System meaning may change
+  between validation and commit.
+
+---
+
+# REJECTED ALTERNATIVES
+
+REJECTED:
+  "Inline validation during execution"
+
+REASON:
+  Execution failure becomes indistinguishable
+  from invalid intent.
+
+---
+
+REJECTED:
+  "Validation that auto-corrects proposals"
+
+REASON:
+  Guessing intent creates meaning
+  the actor never claimed.
+
+---
+
+REJECTED:
+  "Validation that implies trust"
+
+REASON:
+  Trust escalation must be explicit
+  and reversible.
+
+---
+
+# SYSTEM CONSEQUENCES
+
+IF VALIDATION IS TOO WEAK:
+  Unsafe actions reach execution.
+
+IF VALIDATION IS TOO STRONG:
+  System becomes brittle and unusable.
+
+DESIGN BALANCE:
+  Validation blocks unsafe attempts
+  without deciding outcomes.
+
+---
+
+# LONG-TERM PAYOFF
+
+BENEFIT:
+  Clear separation of concerns.
+
+BENEFIT:
+  Easier auditing and debugging.
+
+BENEFIT:
+  Safe agent participation.
+
+BENEFIT:
+  Trust boundaries remain explicit.
+
+---
+
+# FINAL ASSERTION
+
+STATEMENT:
+  Validation exists to protect meaning,
+  not to make progress.
+
+END

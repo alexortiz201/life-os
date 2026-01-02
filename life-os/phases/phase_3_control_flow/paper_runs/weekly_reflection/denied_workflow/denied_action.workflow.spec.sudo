@@ -1,0 +1,153 @@
+# denied_action.workflow.spec.sudo
+
+PURPOSE:
+  Specify a denied-action workflow where a proposal is rejected
+  due to a scope breach before any side effects occur.
+
+SCOPE:
+  This workflow covers:
+    - proposal intake
+    - validation rejection
+    - halt behavior and required audit artifacts
+
+  This workflow does NOT cover:
+    - execution
+    - re-validation
+    - commit
+
+---
+
+# WORKFLOW
+
+NAME:
+  denied_weekly_reflection_scope_breach
+
+GOAL:
+  Prove the system fail-closed behavior:
+    - no effects before approval
+    - denial still produces a durable audit trail
+
+---
+
+# PROPOSAL (RAW)
+
+INTENT:
+  `Synthesize weekly reflection NOTE from last week's MEMORY`
+
+ACTOR:
+  `Scribe AGENT`
+
+TARGET_ENTITY:
+  MEMORY
+
+TARGET_SELECTOR:
+  time_window: `last_week`
+
+TARGET_SCOPE:
+  `MEMORY_SPACE`
+
+OUTPUT_SCOPE:
+  `GOVERNANCE_DIRECTORY`  // intentionally forbidden for this ACTOR
+
+DEPENDENCIES:
+  - read_access: MEMORY (time_window:`last_week`)
+  - write_access: GOVERNANCE_DIRECTORY
+
+IMPACT:
+  - create NOTE: `weekly_reflection`
+  - place NOTE in OUTPUT_SCOPE
+
+REVERSIBILITY_CLAIM:
+  - remove NOTE
+  - invalidate downstream references
+
+---
+
+# EXPECTED OUTCOME
+
+DENIAL_REASON:
+  Scope breach:
+    ACTOR lacks write permission to OUTPUT_SCOPE:`GOVERNANCE_DIRECTORY`
+
+EXPECTED_PIPELINE_HALT_STAGE:
+  VALIDATION
+
+---
+
+# STAGE WALKTHROUGH
+
+STAGE_1:
+  NAME: PROPOSAL INTAKE
+  INPUT:
+    - RAW_PROPOSAL
+  OUTPUT:
+    - PROPOSAL_RECORD
+  SIDE_EFFECTS_ALLOWED:
+    - record creation only
+  SIDE_EFFECTS_FORBIDDEN:
+    - validation decisions
+    - plans
+    - notes
+    - artifacts
+    - any mutation
+  STAGE_LEVEL_INVARIANTS:
+    - Intake is deterministic and replayable
+    - No authority is granted or implied
+    - No semantic judgment is performed
+
+STAGE_2:
+  NAME: VALIDATION
+  INPUT:
+    - PROPOSAL_RECORD
+    - CURRENT_SYSTEM_CONTEXT (snapshot)
+  OUTPUT:
+    - VALIDATION_DECISION: REJECT
+    - VALIDATION_REPORT (why)
+  SIDE_EFFECTS_ALLOWED:
+    - decision record only
+  SIDE_EFFECTS_FORBIDDEN:
+    - planning output
+    - execution output
+    - note creation
+    - artifact creation
+    - trust escalation
+  STAGE_LEVEL_INVARIANTS:
+    - Fail closed by default
+    - No side effects beyond decision artifacts
+    - Scope is enforced as an authority boundary
+
+STAGE_3+:
+  NAME: DOWNSTREAM
+  RULE:
+    Must NOT run because validation rejected.
+
+---
+
+# REQUIRED ARTIFACTS (AUDIT)
+
+MUST_EXIST_AFTER_DENIAL:
+  - PROPOSAL_RECORD
+  - VALIDATION_DECISION (REJECT)
+  - VALIDATION_REPORT (scope breach details)
+  - AUDIT_LINKS:
+      - proposal_id
+      - actor_attribution
+      - context_snapshot_id
+
+MUST_NOT_EXIST_AFTER_DENIAL:
+  - EXECUTION_PLAN
+  - EXECUTION_EFFECTS_LOG
+  - NOTE `weekly_reflection`
+  - COMMIT_RECORD
+
+---
+
+# HALT RULE
+
+ON_HALT:
+  - no downstream stages run
+  - no outputs are created
+  - no trust escalates
+  - audit trail is preserved
+
+END

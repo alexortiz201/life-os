@@ -1,0 +1,66 @@
+# weekly_reflection.partial_approval.workflow.education.sudo
+
+PURPOSE:
+  Teach what partial approval is and why it exists.
+
+---
+
+# CACHE WARM
+
+WHAT_LAYER:
+  RNA
+
+UNIVERSAL_PROBLEM:
+  Letting work proceed safely when the intent is valid
+  but the requested power is too broad.
+
+RECALL_HOOKS:
+  MNEMONICS:
+    - "Partial approve = narrower power"
+    - "Constraints are the product"
+    - "Allowed intent, reduced blast radius"
+
+  INVARIANT_REMINDERS:
+    - Partial approval must reduce authority
+    - Planning cannot widen constraints
+    - Execution is provisional until commit
+
+  QUESTIONS:
+    - What exactly is being narrowed?
+    - What would happen if we approved as-is?
+    - Are constraints enforceable by the system?
+
+CONTEXT_SPECIFICITY:
+  SYSTEMS
+  AGENTS
+  STATE_AND_INVARIANTS
+
+FAILURE_MODE:
+  Silent authority widening:
+    partial approval that is effectively full approval
+  Unenforceable constraints:
+    rules that exist only in text
+  Trust leak:
+    provisional output treated as committed
+
+---
+
+# TEACHING NOTES
+
+WHAT PARTIAL APPROVAL MEANS:
+  The system says YES to the intent,
+  but NO to the requested scope or power.
+
+WHERE IT SHOWS UP IN OTHER SYSTEMS:
+  - security policies:
+      allow action but only in a restricted sandbox
+  - databases:
+      allow transaction but only with narrower locks or limits
+  - payments:
+      authorize amount but require capture step to commit
+
+🍰 SUPER SIMPLE:
+  "You can do it,
+   but only in this small box."
+
+END

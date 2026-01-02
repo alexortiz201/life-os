@@ -1,0 +1,56 @@
+# weekly_reflection.escalation.workflow.education.sudo
+
+PURPOSE:
+  Teach why escalation exists and what it protects.
+
+---
+
+# CACHE WARM
+
+WHAT_LAYER:
+  RNA
+
+UNIVERSAL_PROBLEM:
+  Handling uncertainty safely when stakes exceed automatic authority.
+
+RECALL_HOOKS:
+  MNEMONICS:
+    - "When in doubt: stop and ask"
+    - "Escalate = permission gap"
+    - "Human approval is an artifact"
+
+  INVARIANT_REMINDERS:
+    - escalation pauses power
+    - human approval does not override invariants
+    - no approval artifact → no progress
+
+  QUESTIONS:
+    - what is unknown right now?
+    - what is the worst silent failure?
+    - what decision must a human own?
+
+CONTEXT_SPECIFICITY:
+  AGENTS
+  AI_INTEGRATION
+  STATE_AND_INVARIANTS
+
+FAILURE_MODE:
+  Silent high-impact action executed under ambiguity
+  Human intent assumed instead of confirmed
+  “Approval” happening only in chat, not in system records
+
+---
+
+# TEACHING NOTES
+
+ESCALATE IS NOT FAILURE:
+  It is the system refusing to guess.
+
+WHAT IT PRODUCES:
+  A decision artifact that the system can point to later.
+
+🍰 SUPER SIMPLE:
+  If it matters and we’re not sure,
+  a human must say yes.
+
+END

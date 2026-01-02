@@ -1,0 +1,250 @@
+# weekly_reflection.partial_approval.workflow.spec.sudo
+
+PURPOSE:
+  Specify a partial-approval workflow where the system narrows scope and constraints
+  so the action can proceed safely.
+
+SCOPE:
+  This workflow covers:
+    - proposal intake
+    - validation partial approval (constraints added)
+    - planning under constraints
+    - execution producing provisional outputs
+    - re-validation
+    - commit of approved meaning
+
+---
+
+# WORKFLOW
+
+NAME:
+  weekly_reflection_partial_approval
+
+GOAL:
+  Prove the system can say:
+    "Not like that, but like this"
+  without leaking authority or creating trusted meaning by accident.
+
+---
+
+# PROPOSAL (RAW)
+
+INTENT:
+  `Synthesize weekly reflection NOTE from last week's MEMORY`
+
+ACTOR:
+  `Scribe AGENT`
+
+TARGET_ENTITY:
+  MEMORY
+
+TARGET_SELECTOR:
+  time_window: `last_week`
+
+TARGET_SCOPE:
+  `MEMORY_SPACE`
+
+OUTPUT_SCOPE:
+  `NOTE_SPACE`
+
+DEPENDENCIES:
+  - read_access: MEMORY (time_window:`last_week`)
+  - write_access: NOTE_SPACE
+
+IMPACT:
+  - create NOTE: `weekly_reflection`
+  - place NOTE in OUTPUT_SCOPE
+
+REVERSIBILITY_CLAIM:
+  - remove NOTE
+  - invalidate downstream references
+
+---
+
+# VALIDATION EXPECTATION
+
+PARTIAL_APPROVAL_REASON:
+  The proposal is broadly allowed, but too unconstrained.
+
+PARTIAL_APPROVAL_CONSTRAINTS:
+  CONSTRAINT_1:
+    MEMORY_SELECTOR_REFINEMENT:
+      - time_window: `last_week`
+      - source_type: `journal`
+      - max_items: `50`
+
+  CONSTRAINT_2:
+    OUTPUT_SCOPE_ENFORCEMENT:
+      - OUTPUT_SCOPE MUST equal `NOTE_SPACE/weekly_reflections/`
+
+  CONSTRAINT_3:
+    NOTE_TRUST_LEVEL:
+      - output NOTE remains PROVISIONAL until commit
+
+EXPECTED_PIPELINE_CONTINUES:
+  Proceed with constraints attached to VALIDATION_DECISION.
+
+---
+
+# STAGE WALKTHROUGH
+
+STAGE_1:
+  NAME: PROPOSAL INTAKE
+  INPUT:
+    - RAW_PROPOSAL
+  OUTPUT:
+    - PROPOSAL_RECORD
+  SIDE_EFFECTS_ALLOWED:
+    - record creation only
+  SIDE_EFFECTS_FORBIDDEN:
+    - planning
+    - execution
+    - note creation
+    - trust escalation
+  STAGE_LEVEL_INVARIANTS:
+    - Intake is deterministic and replayable
+    - No authority is granted or implied
+    - No semantic judgment is performed
+
+STAGE_2:
+  NAME: VALIDATION
+  INPUT:
+    - PROPOSAL_RECORD
+    - CURRENT_SYSTEM_CONTEXT (snapshot)
+  OUTPUT:
+    - VALIDATION_DECISION: PARTIAL_APPROVE
+    - VALIDATION_CONSTRAINTS (attached)
+    - VALIDATION_REPORT (why constraints exist)
+  SIDE_EFFECTS_ALLOWED:
+    - decision record only
+  SIDE_EFFECTS_FORBIDDEN:
+    - execution
+    - trusted outputs
+    - mutation beyond records
+  STAGE_LEVEL_INVARIANTS:
+    - Fail closed by default
+    - Partial approval MUST narrow power
+    - Constraints are explicit and enforceable
+
+STAGE_3:
+  NAME: PLANNING
+  INPUT:
+    - PROPOSAL_RECORD
+    - VALIDATION_DECISION (PARTIAL_APPROVE)
+  OUTPUT:
+    - EXECUTION_PLAN
+  PLAN_MUST_INCLUDE:
+    - resolved selector using constraints
+    - explicit output path inside OUTPUT_SCOPE constraint
+    - explicit steps list
+    - runtime dependency list
+  SIDE_EFFECTS_ALLOWED:
+    - plan record only
+  SIDE_EFFECTS_FORBIDDEN:
+    - execution
+    - note creation
+    - trust escalation
+  STAGE_LEVEL_INVARIANTS:
+    - Planning cannot widen scope
+    - Planning must be fully explicit (no hidden steps)
+    - Plan must be safe to abort
+
+STAGE_4:
+  NAME: EXECUTION
+  INPUT:
+    - PROPOSAL_RECORD
+    - VALIDATION_DECISION
+    - EXECUTION_PLAN
+  OUTPUT:
+    - EXECUTION_RESULT
+    - EXECUTION_EFFECTS_LOG
+    - PROVISIONAL_NOTE (untrusted)
+  SIDE_EFFECTS_ALLOWED:
+    - provisional note creation only
+    - effects must be attributable and logged
+  SIDE_EFFECTS_FORBIDDEN:
+    - commit
+    - trust escalation
+    - publishing as trusted meaning
+  STAGE_LEVEL_INVARIANTS:
+    - Execution may change storage, not belief
+    - Outputs remain provisional until commit
+    - Scope breaches hard stop immediately
+
+STAGE_5:
+  NAME: RE-VALIDATION
+  INPUT:
+    - PROPOSAL_RECORD
+    - EXECUTION_PLAN
+    - EXECUTION_RESULT
+    - CURRENT_SYSTEM_CONTEXT (fresh snapshot)
+  OUTPUT:
+    - REVALIDATION_DECISION
+  OUTCOMES:
+    - APPROVE_COMMIT
+    - REJECT_COMMIT
+    - ESCALATE_COMMIT
+    - PARTIAL_COMMIT
+  SIDE_EFFECTS_ALLOWED:
+    - decision record only
+  SIDE_EFFECTS_FORBIDDEN:
+    - additional execution
+    - trust escalation
+  STAGE_LEVEL_INVARIANTS:
+    - Re-check permissions and scope at time of commit
+    - Re-check invariants with fresh context
+    - Fail closed if anything is stale or missing
+
+STAGE_6:
+  NAME: COMMIT
+  INPUT:
+    - PROPOSAL_RECORD
+    - REVALIDATION_DECISION (APPROVE_COMMIT or PARTIAL_COMMIT)
+    - EXECUTION_EFFECTS_LOG
+  OUTPUT:
+    - COMMIT_RECORD
+    - TRUST_UPDATES
+  SIDE_EFFECTS_ALLOWED:
+    - trust escalation for approved outputs
+    - publish/promote provisional note to trusted note
+  SIDE_EFFECTS_FORBIDDEN:
+    - new execution
+    - committing anything not in effects log
+  STAGE_LEVEL_INVARIANTS:
+    - Commit is the only trust boundary crossing
+    - Commit is atomic at meaning level
+    - Commit links exactly what became trusted and why
+
+---
+
+# REQUIRED ARTIFACTS (AUDIT)
+
+MUST_EXIST:
+  - PROPOSAL_RECORD
+  - VALIDATION_DECISION (PARTIAL_APPROVE)
+  - VALIDATION_CONSTRAINTS
+  - EXECUTION_PLAN
+  - EXECUTION_EFFECTS_LOG
+  - REVALIDATION_DECISION
+  - COMMIT_RECORD
+  - TRUST_UPDATES
+
+MUST_LINK:
+  - proposal_id
+  - actor_attribution
+  - decision_ids
+  - plan_id
+  - effects_log_id
+  - commit_id
+
+---
+
+# SUCCESS CONDITION
+
+SUCCESS_IF:
+  - the system narrowed power via constraints
+  - execution produced only provisional outputs
+  - commit is the only moment trust increased
+  - the final NOTE is trusted only after commit
+
+END

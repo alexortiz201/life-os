@@ -23,6 +23,39 @@ NON_GOAL:
 
 ---
 
+# SYSTEM_POSITIONING
+
+ROLE:
+  The Teaching Engine is a meta-engine.
+
+DEFINITION:
+  It does not create system meaning.
+  It does not grant authority.
+  It does not commit truth.
+
+FUNCTION:
+  The Teaching Engine operates strictly in:
+    - interpretation
+    - questioning
+    - compression
+    - recall reinforcement
+
+BOUNDARY:
+  Teaching outputs are always:
+    - provisional
+    - untrusted
+    - non-authoritative
+
+RULE:
+  Teaching may influence decisions,
+  but may never replace validation or commit.
+
+INVARIANT:
+  Learning changes minds.
+  Only the system changes meaning.
+
+---
+
 # PRIMARY_INTENT
 
 PRIMARY_GOAL:

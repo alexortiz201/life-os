@@ -1,0 +1,116 @@
+# EXECUTION CONTRACT — EDUCATION
+
+PURPOSE:
+  Teach how systems can act powerfully
+  without accidentally lying to themselves.
+
+---
+
+# CACHE WARM
+
+WHAT_LAYER:
+  RNA
+
+UNIVERSAL_PROBLEM:
+  Preventing action from becoming belief.
+
+RECALL_HOOKS:
+  MNEMONICS:
+    - "Act ≠ Believe"
+    - "Effects before truth"
+    - "Nothing counts yet"
+
+  INVARIANT_REMINDERS:
+    - Execution is provisional
+    - Logs are mandatory
+    - Trust happens later
+
+  QUESTIONS:
+    - What if this fails halfway?
+    - What if meaning changes mid-run?
+    - Can this be safely discarded?
+
+CONTEXT_SPECIFICITY:
+  SYSTEMS
+  AGENTS
+  AI INTEGRATION
+
+FAILURE_MODE:
+  Silent authority escalation
+  Belief created by side effects
+  Irreversible partial truth
+
+---
+
+# MENTAL MODEL
+
+MODEL:
+  Execution is a dry run with consequences.
+
+EXPLANATION:
+  Execution touches reality
+  but does not update the system’s understanding of reality.
+
+ANALOGY:
+  A transaction before commit.
+  A deployment before promotion.
+  A trial before verdict.
+
+---
+
+# WHY EXECUTION IS DANGEROUS
+
+REASON:
+  Execution changes the world.
+
+INSIGHT:
+  World changes are harder to undo than beliefs.
+
+CONCLUSION:
+  Belief must lag behind action.
+
+---
+
+# COMMON MISCONCEPTIONS
+
+MISCONCEPTION:
+  "If execution succeeded, it must be true."
+
+CORRECTION:
+  Success does not equal permission.
+
+MISCONCEPTION:
+  "Execution can fix mistakes dynamically."
+
+CORRECTION:
+  Execution must stop, not improvise.
+
+MISCONCEPTION:
+  "Logging is optional."
+
+CORRECTION:
+  Unlogged effects are silent corruption.
+
+---
+
+# FAILURE PATTERNS TO WATCH FOR
+
+PATTERN:
+  Execution retries silently.
+
+RESULT:
+  Duplicate or compounding effects.
+
+PATTERN:
+  Execution suppresses partial failure.
+
+RESULT:
+  System believes a lie later.
+
+PATTERN:
+  Execution adapts to context drift.
+
+RESULT:
+  Invariants erode invisibly.
+
+END

@@ -1,0 +1,115 @@
+# PLANNING CONTRACT — EDUCATION
+
+PURPOSE:
+  Teach how to separate “what is allowed”
+  from “how it would actually happen”.
+
+---
+
+# CACHE WARM
+
+WHAT_LAYER:
+  RNA
+
+UNIVERSAL_PROBLEM:
+  Preventing execution systems from improvising intent.
+
+RECALL_HOOKS:
+  MNEMONICS:
+    - "Plan ≠ Act"
+    - "Describe, don’t perform"
+    - "No inference at runtime"
+
+  INVARIANT_REMINDERS:
+    - Execution should be dumb
+    - Planning absorbs ambiguity
+    - Underspecified plans are unsafe
+
+  QUESTIONS:
+    - Could execution run without thinking?
+    - Is every step justified by intent?
+    - What breaks if this plan is wrong?
+
+CONTEXT_SPECIFICITY:
+  SYSTEMS
+  AGENTS
+  AI INTEGRATION
+
+FAILURE_MODE:
+  Execution guessing intent
+  Scope drift during execution
+  Authority escalation via convenience
+
+---
+
+# MENTAL MODEL
+
+MODEL:
+  Planning is pre-commit rehearsal.
+
+EXPLANATION:
+  Planning exists so execution
+  never has to decide what to do next.
+
+ANALOGY:
+  A flight plan is not flying.
+  It exists so pilots don’t improvise midair.
+
+---
+
+# WHY PLANNING IS SEPARATE
+
+REASON:
+  Execution is dangerous and irreversible.
+  Planning is safe and reversible.
+
+INSIGHT:
+  Every decision pushed earlier
+  reduces risk later.
+
+---
+
+# COMMON MISCONCEPTIONS
+
+MISCONCEPTION:
+  "Execution can plan as it goes."
+
+CORRECTION:
+  Runtime planning is hidden authority escalation.
+
+MISCONCEPTION:
+  "Planning is just an optimization step."
+
+CORRECTION:
+  Planning is a safety boundary.
+
+MISCONCEPTION:
+  "If validation passed, planning is trivial."
+
+CORRECTION:
+  Validation permits.
+  Planning operationalizes.
+
+---
+
+# FAILURE PATTERNS TO WATCH FOR
+
+PATTERN:
+  Planning introduces new intent.
+
+RESULT:
+  The system acts on meaning never proposed.
+
+PATTERN:
+  Planning hides ambiguity.
+
+RESULT:
+  Execution guesses under pressure.
+
+PATTERN:
+  Planning adapts at runtime.
+
+RESULT:
+  Invariants erode silently.
+
+END

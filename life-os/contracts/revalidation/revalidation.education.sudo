@@ -1,0 +1,104 @@
+# RE VALIDATION CONTRACT — EDUCATION
+
+PURPOSE:
+  Teach why systems must re check assumptions
+  after acting but before believing.
+
+---
+
+# CACHE WARM
+
+WHAT_LAYER:
+  RNA
+
+UNIVERSAL_PROBLEM:
+  Time and context invalidate assumptions.
+
+RECALL_HOOKS:
+  MNEMONICS:
+    - "Acted ≠ Allowed"
+    - "Then was not now"
+    - "Check before belief"
+
+  INVARIANT_REMINDERS:
+    - Execution is provisional
+    - Context outranks history
+    - Trust must be earned twice
+
+  QUESTIONS:
+    - What changed while we were acting?
+    - Are permissions still valid?
+    - Does this still mean what we think it means?
+
+CONTEXT_SPECIFICITY:
+  SYSTEMS
+  AGENTS
+  AI INTEGRATION
+
+FAILURE_MODE:
+  Stale assumptions becoming truth
+  Authority granted after revocation
+  Silent invariant violation
+
+---
+
+# MENTAL MODEL
+
+MODEL:
+  Re Validation is a second lock on the door.
+
+ANALOGY:
+  Checking credentials again before boarding.
+  Re checking account balance before transfer.
+  Verifying state before committing a transaction.
+
+---
+
+# WHY RE VALIDATION EXISTS
+
+INSIGHT:
+  Computers act faster than humans,
+  but slower than meaning can change.
+
+CONCLUSION:
+  Acting safely requires checking twice.
+
+---
+
+# COMMON MISUNDERSTANDINGS
+
+MISCONCEPTION:
+  "Initial validation was enough."
+
+CORRECTION:
+  Validation answers a past question.
+
+MISCONCEPTION:
+  "Nothing changed during execution."
+
+CORRECTION:
+  You cannot assume that.
+
+MISCONCEPTION:
+  "Re validation is redundant."
+
+CORRECTION:
+  Redundancy is protection, not waste.
+
+---
+
+# FAILURE PATTERNS
+
+PATTERN:
+  Skipping re validation for speed.
+
+RESULT:
+  Permanent belief based on outdated rules.
+
+PATTERN:
+  Partial re validation.
+
+RESULT:
+  Invariants erode selectively.
+
+END

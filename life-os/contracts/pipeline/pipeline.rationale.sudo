@@ -1,0 +1,131 @@
+# RNA PIPELINE — RATIONALE
+
+PURPOSE:
+  Capture why the pipeline is staged this way
+  and what silent failures it prevents.
+
+SCOPE:
+  This file explains tradeoffs and “why not simpler”
+  for future maintainers and future you.
+
+---
+
+# WHY STAGES MUST BE SEPARATE
+
+REASON:
+  Validation, execution, and commit solve different problems.
+
+VALIDATION_SOLVES:
+  "Is this allowed given what we know now?"
+
+EXECUTION_SOLVES:
+  "What happened when we tried?"
+
+COMMIT_SOLVES:
+  "Does the system now believe and stand behind this meaning?"
+
+RISK_IF_MERGED:
+  - validation + execution merge creates accidental side effects
+  - execution + commit merge creates accidental trust escalation
+  - commit without re checking creates stale truth
+
+---
+
+# WHY RE VALIDATION EXISTS
+
+ASSUMPTION:
+  Time does not stand still.
+
+CHANGES_THAT_CAN_HAPPEN_DURING_EXECUTION:
+  - permissions revoked
+  - invariants updated
+  - target state changed
+  - dependencies drift
+  - scope rules tightened
+
+RISK_WITHOUT_RE VALIDATION:
+  The system commits meaning that was allowed earlier
+  but is no longer justified now.
+
+---
+
+# WHY INTAKE MUST BE DUMB
+
+INTAKE_GOAL:
+  Make a stable record.
+
+RISK_IF_INTAKE_TRIES_TO_HELP:
+  - it infers intent incorrectly
+  - it mutates meaning before validation
+  - it creates unreviewable, irreproducible proposals
+
+DESIGN_OUTCOME:
+  Intake is replayable and deterministic.
+
+---
+
+# WHY PLANNING IS A STAGE
+
+REASON:
+  "Approve" is not a plan.
+
+PLANNING_MAKES_EXPLICIT:
+  - step order
+  - dependency requirements
+  - scope boundaries
+  - failure points
+
+RISK_IF_SKIPPED:
+  Execution becomes improvisation,
+  which is where invariants silently get bypassed.
+
+---
+
+# WHY COMMIT MUST BE ATOMIC
+
+REASON:
+  Partial belief is silent corruption.
+
+ATOMICITY_PREVENTS:
+  - half published meaning
+  - inconsistent trust levels
+  - “some outputs trusted, some not” without explicit record
+
+DESIGN_OUTCOME:
+  Either the system believes all the approved meaning,
+  or it believes none of it.
+
+---
+
+# WHY AUDIT LINKS ARE REQUIRED
+
+REASON:
+  Without linkage, you cannot debug authority leaks.
+
+LINKAGE_ENSURES:
+  - replayability
+  - provenance
+  - accountability
+  - the ability to revoke trust correctly
+
+RISK_IF_MISSING:
+  Meaning drifts with no trace,
+  and the system cannot explain itself.
+
+---
+
+# TRADEOFFS ACCEPTED
+
+TRADEOFF 1:
+  More records and more ceremony
+  in exchange for fewer silent failures.
+
+TRADEOFF 2:
+  Re validation cost
+  in exchange for correctness under drift.
+
+TRADEOFF 3:
+  Provisional outputs complexity
+  in exchange for separating effects from belief.
+
+END

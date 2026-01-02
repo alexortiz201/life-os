@@ -1,0 +1,194 @@
+# weekly_reflection.escalation.workflow.spec.sudo
+
+PURPOSE:
+  Specify an escalation workflow where validation cannot safely decide,
+  so authority is paused until a human explicitly confirms.
+
+SCOPE:
+  This workflow covers:
+    - proposal intake
+    - validation outcome: ESCALATE
+    - human decision artifact
+    - planning + execution + re-validation + commit gated on approval
+
+---
+
+# WORKFLOW
+
+NAME:
+  weekly_reflection_escalation
+
+GOAL:
+  Prove the system can block silent authority
+  while still allowing progress with explicit human consent.
+
+---
+
+# PROPOSAL (RAW)
+
+INTENT:
+  `Synthesize weekly reflection NOTE from last week's MEMORY`
+
+ACTOR:
+  `Scribe AGENT`
+
+TARGET_ENTITY:
+  MEMORY
+
+TARGET_SELECTOR:
+  time_window: `last_week`
+
+TARGET_SCOPE:
+  `MEMORY_SPACE`
+
+OUTPUT_SCOPE:
+  `NOTE_SPACE`
+
+DEPENDENCIES:
+  - read_access: MEMORY (time_window:`last_week`)
+  - write_access: NOTE_SPACE
+
+IMPACT:
+  - create NOTE: `weekly_reflection`
+
+REVERSIBILITY_CLAIM:
+  - remove NOTE
+  - invalidate downstream references
+
+---
+
+# ESCALATION_TRIGGER (EXAMPLE)
+
+ESCALATION_REASON:
+  Validation detects elevated risk:
+    - selector ambiguity OR
+    - sensitive source_type detected OR
+    - action impacts high-trust surfaces OR
+    - reversibility claim is insufficient
+
+EXAMPLE_TRIGGER:
+  TARGET_SELECTOR includes:
+    source_type: `therapy_notes`
+
+---
+
+# STAGE WALKTHROUGH
+
+STAGE_1:
+  NAME: PROPOSAL INTAKE
+  OUTPUT:
+    - PROPOSAL_RECORD
+  STAGE_LEVEL_INVARIANTS:
+    - no semantic judgment
+    - deterministic fingerprint
+    - no side effects beyond record
+
+STAGE_2:
+  NAME: VALIDATION
+  OUTPUT:
+    - VALIDATION_DECISION: ESCALATE
+    - ESCALATION_PACKET
+  ESCALATION_PACKET_MUST_CONTAIN:
+    - proposal_id
+    - risk_level
+    - reasons
+    - options:
+        - APPROVE_AS_IS
+        - APPROVE_WITH_CONSTRAINTS
+        - REJECT
+    - required_human_questions
+  STAGE_LEVEL_INVARIANTS:
+    - fail closed without human decision
+    - no planning/execution without explicit approval artifact
+
+STAGE_2B:
+  NAME: HUMAN_CONFIRMATION
+  INPUT:
+    - ESCALATION_PACKET
+  OUTPUT:
+    - HUMAN_DECISION_RECORD
+  HUMAN_DECISION_OUTCOMES:
+    - APPROVE
+    - PARTIAL_APPROVE (constraints required)
+    - REJECT
+  STAGE_LEVEL_INVARIANTS:
+    - decision must be explicit
+    - decision must be attributable
+    - constraints must be enforceable
+
+STAGE_3:
+  NAME: PLANNING
+  INPUT:
+    - PROPOSAL_RECORD
+    - HUMAN_DECISION_RECORD (APPROVE or PARTIAL_APPROVE)
+  OUTPUT:
+    - EXECUTION_PLAN
+  STAGE_LEVEL_INVARIANTS:
+    - planning cannot widen granted authority
+    - plan must encode constraints explicitly
+
+STAGE_4:
+  NAME: EXECUTION
+  OUTPUT:
+    - PROVISIONAL_NOTE
+    - EXECUTION_EFFECTS_LOG
+  STAGE_LEVEL_INVARIANTS:
+    - provisional outputs only
+    - scope breaches hard stop
+
+STAGE_5:
+  NAME: RE-VALIDATION
+  INPUT:
+    - PROPOSAL_RECORD
+    - EXECUTION_RESULT
+    - CURRENT_SYSTEM_CONTEXT (fresh)
+    - HUMAN_DECISION_RECORD
+  OUTPUT:
+    - REVALIDATION_DECISION
+  STAGE_LEVEL_INVARIANTS:
+    - human decision does not bypass invariants
+    - invariants + permissions must still hold at commit time
+
+STAGE_6:
+  NAME: COMMIT
+  OUTPUT:
+    - COMMIT_RECORD
+    - TRUST_UPDATES
+  STAGE_LEVEL_INVARIANTS:
+    - commit is the only trust boundary crossing
+    - commit must link to human decision record
+
+---
+
+# REQUIRED ARTIFACTS (AUDIT)
+
+MUST_EXIST:
+  - PROPOSAL_RECORD
+  - VALIDATION_DECISION (ESCALATE)
+  - ESCALATION_PACKET
+  - HUMAN_DECISION_RECORD
+  - EXECUTION_PLAN
+  - EXECUTION_EFFECTS_LOG
+  - REVALIDATION_DECISION
+  - COMMIT_RECORD
+
+MUST_LINK:
+  - proposal_id
+  - actor_attribution
+  - decision_ids
+  - human_decision_id
+  - plan_id
+  - effects_log_id
+  - commit_id
+
+---
+
+# SUCCESS CONDITION
+
+SUCCESS_IF:
+  - no execution occurs before human approval
+  - human decision is attributable and durable
+  - constraints, if any, are enforced through planning/execution
+  - commit remains the only trust escalation point
+
+END

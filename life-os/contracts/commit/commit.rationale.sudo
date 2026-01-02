@@ -1,0 +1,68 @@
+# COMMIT CONTRACT — RATIONALE
+
+PURPOSE:
+  Explain why commit is isolated,
+  irreversible, and system owned.
+
+---
+
+# DESIGN COMMITMENTS
+
+COMMITMENT_1:
+  Only the system commits.
+
+RATIONALE:
+  Allowing agents to commit is silent authority.
+
+---
+
+COMMITMENT_2:
+  Commit is atomic.
+
+RATIONALE:
+  Partial belief is incoherent.
+
+---
+
+COMMITMENT_3:
+  Commit is irreversible.
+
+RATIONALE:
+  Belief must not oscillate.
+
+---
+
+# REJECTED ALTERNATIVES
+
+REJECTED:
+  "Soft commit"
+
+REASON:
+  Creates ambiguous truth.
+
+---
+
+REJECTED:
+  "Agent driven commit"
+
+REASON:
+  Breaks authority boundaries.
+
+---
+
+# SYSTEM CONSEQUENCES
+
+WITHOUT COMMIT:
+  The system cannot know what is true.
+
+WITH COMMIT:
+  The system becomes coherent and reliable.
+
+---
+
+# FINAL ASSERTION
+
+STATEMENT:
+  Commit is where responsibility becomes real.
+
+END

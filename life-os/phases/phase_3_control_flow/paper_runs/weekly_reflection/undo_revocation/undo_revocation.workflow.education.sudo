@@ -1,0 +1,54 @@
+# weekly_reflection.undo_revocation.workflow.education.sudo
+
+PURPOSE:
+  Teach semantic undo vs physical deletion.
+
+---
+
+# CACHE WARM
+
+WHAT_LAYER:
+  RNA
+
+UNIVERSAL_PROBLEM:
+  Undoing decisions safely when effects have already propagated.
+
+RECALL_HOOKS:
+  MNEMONICS:
+    - "Undo = revoke trust"
+    - "Delete bytes ≠ delete consequences"
+    - "Revocation is new meaning"
+
+  INVARIANT_REMINDERS:
+    - downstream meaning must not remain trusted by accident
+    - revocation must be attributable and durable
+    - invalidation must propagate
+
+  QUESTIONS:
+    - what depends on this meaning?
+    - what becomes unsafe if it stays trusted?
+    - what does “undo” mean to the rest of the system?
+
+CONTEXT_SPECIFICITY:
+  SYSTEMS
+  STATE_AND_INVARIANTS
+  AGENTS
+
+FAILURE_MODE:
+  “Undo” deletes the note but keeps plans, dashboards, or decisions trusted
+  System continues acting on revoked meaning
+  Audit trail can’t explain why trust changed
+
+---
+
+# TEACHING NOTES
+
+UNDO IS A COMMIT:
+  You are committing new meaning:
+    "That prior meaning is no longer trusted."
+
+🍰 SUPER SIMPLE:
+  Undo doesn’t erase.
+  Undo un-approves.
+
+END

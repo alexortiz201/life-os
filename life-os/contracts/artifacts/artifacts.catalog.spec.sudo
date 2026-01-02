@@ -1,0 +1,299 @@
+# ARTIFACTS CATALOG — V1 SPEC
+
+PURPOSE:
+  Define canonical artifact classes, trust levels, and promotion rules.
+  Prevent silent authority escalation by making downstream use depend on artifact class.
+
+SCOPE:
+  This file defines:
+    - TRUST LEVELS
+    - ARTIFACT CLASS definitions (semantics + required fields + forbidden uses)
+    - PROMOTION RULES
+    - UNIVERSAL SAFETY INVARIANTS
+
+  This file does NOT define:
+    - storage locations
+    - UI rendering
+    - TypeScript schemas
+    - implementation details
+
+---
+
+# CORE PRINCIPLES
+
+RULE:
+  A produced object is not trusted meaning by default.
+
+RULE:
+  Trust increases only at explicit trust boundaries.
+
+RULE:
+  Artifact class determines allowed downstream use.
+
+---
+
+# TRUST LEVELS
+
+TRUST LEVELS:
+  UNTRUSTED:
+    DESCRIPTION:
+      Raw capture or transport.
+      No semantic claims allowed.
+    ALLOWED_ACTIONS:
+      - store
+      - route
+      - reference as input
+    FORBIDDEN_ACTIONS:
+      - drive execution
+      - justify authority
+
+  PROVISIONAL:
+    DESCRIPTION:
+      Interpreted meaning.
+      Must include provenance and uncertainty markers when interpretive.
+    ALLOWED_ACTIONS:
+      - inform planning
+      - propose next steps
+      - be reviewed for promotion
+    FORBIDDEN_ACTIONS:
+      - act without validation
+      - be treated as system belief
+
+  COMMITTED:
+    DESCRIPTION:
+      System-backed meaning.
+      Allowed to drive downstream action without re-verification.
+    ALLOWED_ACTIONS:
+      - authorize downstream behavior per contracts
+      - be used as stable system state
+    FORBIDDEN_ACTIONS:
+      - silent downgrade without revocation record
+
+  DERIVED:
+    DESCRIPTION:
+      Computed from COMMITTED meaning.
+      Must link to sources and derivation rules.
+    ALLOWED_ACTIONS:
+      - accelerate reads and summaries
+      - power UI views
+    FORBIDDEN_ACTIONS:
+      - override committed meaning
+      - hide source lineage
+
+RULE:
+  Most agent outputs are PROVISIONAL unless produced by COMMIT
+  or explicitly accepted via a promotion rule.
+
+---
+
+# ARTIFACT CLASSES
+
+ARTIFACT CLASS:
+  NAME: NOTE
+  TRUST LEVEL: PROVISIONAL
+  PURPOSE:
+    Interpreted meaning the system is considering.
+  PRODUCED BY:
+    - PIPELINE STAGE: EXECUTION (provisional write)
+    - AGENT ROLE: SCRIBE AGENT (draft only)
+  REQUIRED FIELDS:
+    - note_id
+    - author_actor
+    - provenance_links
+    - content
+    - timestamp
+    - fingerprint (optional)
+  FORBIDDEN USES:
+    - cannot grant permissions
+    - cannot be treated as COMMITTED without promotion record
+
+ARTIFACT CLASS:
+  NAME: REPORT
+  TRUST LEVEL: PROVISIONAL
+  PURPOSE:
+    Structured summary intended to inform decisions.
+  PRODUCED BY:
+    - AGENT ROLE: HISTORIAN AGENT
+    - AGENT ROLE: PSYCHOLOGY AGENT
+    - AGENT ROLE: TEACHER AGENT
+  REQUIRED FIELDS:
+    - report_id
+    - author_role
+    - scope
+    - evidence_links
+    - claims_with_confidence
+    - timestamp
+  FORBIDDEN USES:
+    - cannot directly change engine behavior
+    - cannot be treated as COMMITTED truth
+
+ARTIFACT CLASS:
+  NAME: JOURNAL ENTRY
+  TRUST LEVEL: UNTRUSTED
+  PURPOSE:
+    Raw user input captured for later interpretation.
+  PRODUCED BY:
+    - USER
+    - PIPELINE STAGE: INTAKE (as raw capture)
+    - AGENT ROLE: SCRIBE AGENT (normalization only)
+  REQUIRED FIELDS:
+    - entry_id
+    - author_actor
+    - raw_payload
+    - capture_mode (text, audio, image, video)
+    - timestamp
+    - provenance (source, device, file ref)
+  FORBIDDEN USES:
+    - cannot be treated as NOTE by default
+    - cannot be used as justification without interpretation step
+
+ARTIFACT CLASS:
+  NAME: ANALYSIS REPORT
+  TRUST LEVEL: PROVISIONAL
+  PURPOSE:
+    Interpret patterns with explicit uncertainty markers.
+  PRODUCED BY:
+    - AGENT ROLE: PSYCHOLOGY AGENT
+    - AGENT ROLE: HISTORIAN AGENT
+  REQUIRED FIELDS:
+    - analysis_id
+    - author_role
+    - scope_of_analysis
+    - evidence_links
+    - hypotheses
+    - uncertainty_markers
+    - timestamp
+  FORBIDDEN USES:
+    - cannot label user traits as fixed truth
+    - cannot modify engine rules without governance
+
+ARTIFACT CLASS:
+  NAME: TEACHING PLAN
+  TRUST LEVEL: PROVISIONAL
+  PURPOSE:
+    A proposed instructional sequence for a user.
+  PRODUCED BY:
+    - AGENT ROLE: TEACHER AGENT
+  REQUIRED FIELDS:
+    - plan_id
+    - user_id
+    - subject_scope
+    - cache_warm
+    - steps
+    - pressure_tests
+    - expected_outputs
+    - timestamp
+  FORBIDDEN USES:
+    - cannot change teaching engine policy
+    - cannot be treated as user commitment
+
+ARTIFACT CLASS:
+  NAME: FUNDAMENTAL
+  TRUST LEVEL: PROVISIONAL
+  PURPOSE:
+    Compressed recall truth for review rotation.
+  PRODUCED BY:
+    - AGENT ROLE: TEACHER AGENT (draft)
+    - USER (selection / acceptance)
+  REQUIRED FIELDS:
+    - fundamental_id
+    - statement
+    - super_simple
+    - tags
+    - source_context (optional)
+    - timestamp
+  PROMOTION RULE:
+    Becomes COMMITTED only if user explicitly accepts into review set.
+  FORBIDDEN USES:
+    - cannot be treated as system truth before acceptance
+
+ARTIFACT CLASS:
+  NAME: AUDIT LOG
+  TRUST LEVEL: DERIVED
+  PURPOSE:
+    Link pipeline artifacts into an attributable chain.
+  PRODUCED BY:
+    - PIPELINE STAGE: COMMIT (linking requirement)
+    - SYSTEM (derived index)
+  REQUIRED FIELDS:
+    - audit_id
+    - linked_ids (proposal, decisions, plan, effects, commit)
+    - actor_attribution
+    - timestamps
+    - integrity_checks (optional)
+  FORBIDDEN USES:
+    - cannot substitute for primary artifacts
+    - cannot create permissions
+
+ARTIFACT CLASS:
+  NAME: EXECUTION EFFECTS LOG
+  TRUST LEVEL: PROVISIONAL
+  PURPOSE:
+    Attributable record of what happened during execution.
+  PRODUCED BY:
+    - PIPELINE STAGE: EXECUTION
+  REQUIRED FIELDS:
+    - effects_log_id
+    - proposal_id
+    - plan_id
+    - actor_attribution
+    - start_timestamp
+    - end_timestamp
+    - observed_effects
+    - produced_objects (provisional)
+    - errors (optional)
+  FORBIDDEN USES:
+    - cannot promote outputs to trusted meaning
+
+ARTIFACT CLASS:
+  NAME: COMMIT RECORD
+  TRUST LEVEL: COMMITTED
+  PURPOSE:
+    System belief update that promotes justified outputs.
+  PRODUCED BY:
+    - PIPELINE STAGE: COMMIT
+  REQUIRED FIELDS:
+    - commit_id
+    - proposal_id
+    - decision_links
+    - plan_id
+    - effects_log_id
+    - committed_objects
+    - trust_updates
+    - actor_attribution
+    - commit_timestamp
+  ALLOWED USES:
+    Downstream actions may rely on committed meaning without re-validation.
+
+---
+
+# PROMOTION RULES
+
+RULE:
+  Only COMMIT stage promotes pipeline outputs to COMMITTED meaning.
+
+RULE:
+  Non-pipeline artifacts (reports, plans, analyses) require:
+    - explicit user acceptance OR
+    - governance-approved promotion path
+
+RULE:
+  No artifact may change trust level without an explicit promotion record.
+
+---
+
+# UNIVERSAL SAFETY INVARIANTS
+
+INVARIANT:
+  Artifact class determines allowed downstream actions.
+
+INVARIANT:
+  No PROVISIONAL artifact may be treated as COMMITTED.
+
+INVARIANT:
+  Every artifact must be attributable and linkable to sources.
+
+INVARIANT:
+  Deleting files does not revoke committed meaning without revocation records.
+
+END

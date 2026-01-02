@@ -1,0 +1,95 @@
+# WEEKLY_REFLECTION — WORKFLOW RATIONALE
+
+PURPOSE:
+  Explain why `weekly_reflection` is the chosen paper-execution workflow for Phase 3.
+  Capture tradeoffs and what this workflow stress-tests in the RNA pipeline.
+
+SCOPE:
+  Rationale only.
+  This file does NOT define rules beyond the spec.
+
+---
+
+# WHY_THIS_WORKFLOW
+
+REASON:
+  Weekly reflection is a “meaning transformation” workflow:
+    MEMORY → NOTE → (optional) ARTIFACT
+
+WHY_IT_IS_GOOD_EARLY:
+  - It touches multiple MEMORY items (time window selector)
+  - It creates a human-facing output
+  - It tempts us to treat AI output as “truth”
+  - It naturally tests provisional vs committed meaning
+
+---
+
+# WHAT_IT_STRESS_TESTS
+
+STRESS_TESTS:
+  - TARGET vs OUTPUT correctness
+  - permission gating over collections (MEMORY set)
+  - “no trust before commit” invariant
+  - audit chain completeness
+  - re-validation necessity (stale assumptions)
+
+---
+
+# TRADEOFFS
+
+TRADEOFF_1:
+  Using time_window selectors adds power, but increases risk:
+    - selector bugs can cause the wrong MEMORY set to be used
+    - re-validation must ensure the selector is still valid
+
+TRADEOFF_2:
+  Writing NOTE during execution is useful, but dangerous:
+    - it must remain provisional
+    - external systems must not treat it as authoritative pre-commit
+
+TRADEOFF_3:
+  Optional ARTIFACT output increases meaning risk:
+    - artifacts often become referenced by other workflows
+    - invalidation must consider downstream links
+
+---
+
+# WHY_REVALIDATION_MATTERS_HERE
+
+RATIONALE:
+  This workflow is the canonical example where:
+    - a time window can shift
+    - permissions can be revoked mid-run
+    - the system context can change
+    - execution can succeed under assumptions that are no longer true
+
+CLAIM:
+  If re-validation is removed,
+  commit can silently ratify stale or unauthorized meaning.
+
+---
+
+# FAILURE_MODES_IF_WRONG
+
+IF_TARGET_IS_WRONG:
+  The system validates the wrong thing and commits corrupted meaning.
+
+IF_EXECUTION_IMPLICITLY_COMMITS:
+  Undo becomes impossible at meaning level, even if bytes are deleted.
+
+IF_REVALIDATION_IS_SKIPPED:
+  The system commits under stale permissions or stale invariants.
+
+IF_AUDIT_CHAIN_IS_INCOMPLETE:
+  The system cannot explain why it believes what it believes.
+
+---
+
+# SUPER_SIMPLE
+
+SUMMARY:
+  Weekly reflection looks harmless.
+  That’s why it’s a perfect test:
+  harmless workflows are where systems start lying.
+
+END

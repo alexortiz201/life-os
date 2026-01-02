@@ -1,0 +1,102 @@
+# agent_authority_contract.education.sudo
+# AGENT AUTHORITY CONTRACT — EDUCATION
+
+PURPOSE:
+  Teach the human what problem "agent authority" solves
+  and how to reason about it under stress.
+
+---
+
+# CACHE WARM
+
+WHAT_LAYER:
+  RNA
+
+UNIVERSAL_PROBLEM:
+  Delegation without silent authority escalation.
+
+RECALL_HOOKS:
+  MNEMONICS:
+    - "Delegate ≠ Trust"
+    - "Grant is a leash"
+    - "Agents propose, system disposes"
+    - "No grant, no voice"
+
+  INVARIANT_REMINDERS:
+    - An agent can’t approve itself
+    - Expiry is required
+    - Missing bound means not allowed
+    - Stop beats speed
+
+  QUESTIONS:
+    - What is this agent allowed to touch?
+    - What must it never be able to do?
+    - How does permission end?
+    - What happens mid-flight if permission is revoked?
+
+CONTEXT SPECIFICITY:
+  AGENTS
+  AI INTEGRATION
+  SYSTEMS
+
+FAILURE_MODE:
+  Silent authority escalation
+  Unbounded background action
+  "Looks fine" logs that hide who authorized it
+
+---
+
+# MENTAL MODEL
+
+MODEL:
+  A grant is a signed capability.
+
+MEANS:
+  - The agent is allowed to speak (propose)
+  - The system still decides (validate + commit)
+  - The grant limits what can be spoken about (targets, scopes, selectors)
+  - The grant ends (expires) even if nobody remembers
+
+🍰 SUPER SIMPLE:
+  A grant is a leash.
+  No leash, no walking.
+  Even with a leash, you still ask before you cross the street.
+
+---
+
+# COMMON CONFUSIONS
+
+CONFUSION:
+  "If the agent has permission, why not let it execute?"
+
+ANSWER:
+  Permission to propose is not permission to commit.
+  Execution changes the world.
+  Commit changes belief.
+  Agents must never change belief directly.
+
+CONFUSION:
+  "Why require expiry?"
+
+ANSWER:
+  Indefinite permission becomes invisible risk.
+  Expiry forces re-justification.
+
+CONFUSION:
+  "Why 'missing bound means not allowed'?"
+
+ANSWER:
+  Default-open creates accidental power.
+  Default-closed prevents silent drift.
+
+---
+
+# HOW THIS SHOWS UP IN REAL SYSTEMS
+
+EXAMPLES:
+  - API keys with scopes and expiry
+  - OAuth tokens with audiences and lifetimes
+  - CI/CD roles that can propose changes but require review to merge
+  - Database users allowed to read but not write
+
+END

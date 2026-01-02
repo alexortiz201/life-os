@@ -1,0 +1,135 @@
+# RNA PIPELINE — EDUCATION
+
+PURPOSE:
+  Teach the mental model for the RNA pipeline stages
+  without mixing in implementation detail.
+
+SCOPE:
+  Explain:
+    - what each stage is for
+    - what each stage is NOT allowed to do
+    - what “provisional” and “commit” mean
+
+---
+
+# CACHE WARM
+
+WHAT_LAYER:
+  RNA
+
+UNIVERSAL_PROBLEM:
+  Safe intent handling under changing context:
+    - prevent silent authority escalation
+    - prevent stale assumptions becoming truth
+    - keep “effects” separate from “belief”
+
+RECALL_HOOKS:
+  MNEMONICS:
+    - "Validate, Execute, Commit"
+    - "Try is not truth"
+    - "Effects first, belief last"
+
+  INVARIANT REMINDERS:
+    - Nothing trusted by accident
+    - Execution may change the world, not belief
+    - Commit is the only trust boundary
+
+  QUESTIONS:
+    - What is allowed to change here: world, records, or belief?
+    - If we stop after this stage, did anything become trusted?
+    - What could drift between now and commit?
+
+CONTEXT_SPECIFICITY:
+  SYSTEMS
+  AGENTS
+  AI_INTEGRATION
+
+FAILURE_MODE:
+  Silent corruption via stale context
+  Authority leaks via premature trust
+  Audit gaps that prevent debugging
+
+---
+
+# STAGE PURPOSES
+
+PROPOSAL INTAKE:
+  PURPOSE:
+    Turn raw intent into a stable fact the system can reason about.
+  NOT_ALLOWED:
+    Decide anything.
+    Helpfully “fix” meaning.
+  OUTPUT:
+    A frozen proposal record.
+
+VALIDATION:
+  PURPOSE:
+    Decide whether the proposed action is allowed right now.
+  NOT_ALLOWED:
+    Produce effects.
+    Create trusted outputs.
+  OUTPUT:
+    A decision record.
+
+PLANNING:
+  PURPOSE:
+    Convert an approved decision into an explicit step sequence.
+  NOT_ALLOWED:
+    Execute steps.
+  OUTPUT:
+    An execution plan.
+
+EXECUTION:
+  PURPOSE:
+    Perform the planned steps and record what happened.
+  NOT_ALLOWED:
+    Make the system believe it happened.
+  OUTPUT:
+    Effects log + results (provisional).
+
+RE VALIDATION:
+  PURPOSE:
+    Re check whether commit is still justified right now.
+  NOT_ALLOWED:
+    Execute more.
+    Commit.
+  OUTPUT:
+    Commit decision.
+
+COMMIT:
+  PURPOSE:
+    Cross the trust boundary:
+      - publish meaning
+      - promote outputs
+      - update system belief
+  NOT_ALLOWED:
+    Execute new work.
+  OUTPUT:
+    A commit record (the system now stands behind the meaning).
+
+---
+
+# KEY DEFINITIONS
+
+PROVISIONAL:
+  Effects that exist but are not trusted as meaning.
+
+COMMIT:
+  The moment the system agrees to believe and act on new meaning.
+
+RE VALIDATION:
+  A second check because context and permissions can change during execution.
+
+---
+
+# SUPER SIMPLE
+
+SUMMARY:
+  Write it down.
+  Decide if it’s allowed.
+  Plan it.
+  Try it.
+  Check again.
+  Then believe it.
+
+END

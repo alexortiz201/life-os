@@ -1,0 +1,353 @@
+# WEEKLY_REFLECTION — WORKFLOW SPEC
+
+PURPOSE:
+  Paper-execute the `weekly_reflection` workflow through the RNA pipeline.
+  Produce every required artifact at the correct stage boundary.
+  Ensure no trusted meaning exists before COMMIT.
+
+SCOPE:
+  This workflow covers:
+    - synthesizing a weekly reflection from MEMORY
+    - producing a NOTE (provisional meaning)
+    - optionally producing an ARTIFACT (published reflection)
+    - enforcing validation, re-validation, and commit boundaries
+
+  This workflow does NOT cover:
+    - UI
+    - database schema
+    - LLM prompt details
+    - theming / presentation overlays
+    - multi-agent coordination
+
+---
+
+# WORKFLOW_ID
+
+WORKFLOW:
+  NAME: WEEKLY_REFLECTION
+  VERSION: V1
+
+---
+
+# ASSUMPTIONS
+
+ASSUME:
+  - MEMORY exists for the target time window
+  - The system has a defined NOTE_SPACE scope
+  - The system has a defined ARTIFACT_SPACE scope
+  - The ACTOR is attributable
+  - Pipeline stages run in order, but any stage may halt
+
+RULE:
+  No stage may assume the next stage will run.
+
+---
+
+# TARGET_DEFINITION
+
+TARGET_ENTITY:
+  MEMORY
+
+TARGET_SELECTOR:
+  time_window: `last_week`
+
+TARGET_SCOPE:
+  NOTE_SPACE
+
+OUTPUT_SCOPE:
+  ARTIFACT_SPACE (optional)
+
+RULE:
+  TARGET describes what is acted upon.
+  OUTPUT describes what is created.
+  SCOPE constrains where outputs may land.
+
+---
+
+# STAGE_1 — PROPOSAL INTAKE
+
+INPUT:
+  RAW_PROPOSAL:
+    INTENT: `SYNTHESIZE weekly_reflection from MEMORY`
+    ACTOR: `Scribe AGENT`
+    TARGET_ENTITY: MEMORY
+    TARGET_SELECTOR: time_window: `last_week`
+    TARGET_SCOPE: NOTE_SPACE
+    DEPENDENCIES:
+      - read_access: MEMORY (time_window:`last_week`)
+      - write_access: NOTE_SPACE
+      - optional_write_access: ARTIFACT_SPACE
+    IMPACT:
+      - create NOTE in NOTE_SPACE
+      - optional create ARTIFACT in ARTIFACT_SPACE
+    REVERSIBILITY_CLAIM:
+      - revoke NOTE trust
+      - revoke ARTIFACT trust
+      - mark downstream references invalid
+
+OUTPUT:
+  PROPOSAL_RECORD:
+    - proposal_id
+    - normalized_fields
+    - fingerprint
+    - actor_attribution
+    - intake_timestamp
+    - preserved_raw_payload
+
+STAGE_INVARIANTS:
+  - No side effects beyond creating PROPOSAL_RECORD
+  - No validation occurs
+  - No planning occurs
+  - No execution occurs
+  - No trust is granted
+
+HALT_ON:
+  - missing required fields
+  - normalization failure
+  - fingerprint failure
+
+---
+
+# STAGE_2 — VALIDATION
+
+INPUT:
+  - PROPOSAL_RECORD
+  - SYSTEM_CONTEXT_SNAPSHOT_V1
+
+VALIDATION_CHECKS:
+  - actor_is_known_and_attributable
+  - permissions_allow_read: MEMORY (time_window:`last_week`)
+  - permissions_allow_write: NOTE_SPACE
+  - TARGET_SCOPE is permitted for ACTOR
+  - proposal_fields are structurally complete
+  - invariants_not_violated_by_intent
+  - trust_escalation_rules_respected (no implicit ARTIFACT authority)
+
+OUTPUT:
+  VALIDATION_DECISION_RECORD:
+    - decision_id
+    - proposal_id
+    - outcome
+    - constraints (optional)
+    - context_fingerprint
+    - timestamp
+
+OUTCOMES:
+  - APPROVE
+  - REJECT
+  - PARTIAL_APPROVE
+  - ESCALATE
+
+STAGE_INVARIANTS:
+  - No side effects beyond decision record
+  - No plan is produced
+  - No artifacts or notes are created
+  - Fail-closed by default
+
+HALT_ON:
+  - REJECT
+  - ESCALATE (if no escalation path exists)
+
+---
+
+# STAGE_3 — PLANNING
+
+INPUT:
+  - PROPOSAL_RECORD
+  - VALIDATION_DECISION_RECORD (APPROVE or PARTIAL_APPROVE)
+
+OUTPUT:
+  EXECUTION_PLAN_RECORD:
+    - plan_id
+    - proposal_id
+    - ordered_steps
+    - required_runtime_dependencies
+    - expected_outputs (NOTE, optional ARTIFACT)
+    - allowed_scopes (NOTE_SPACE, optional ARTIFACT_SPACE)
+    - plan_fingerprint
+    - timestamp
+
+PLAN_STEPS (MINIMUM):
+  STEP_1:
+    NAME: LOAD_MEMORY_SET
+    SCOPE: read MEMORY (time_window:`last_week`)
+  STEP_2:
+    NAME: SYNTHESIZE_NOTE_DRAFT
+    SCOPE: produce NOTE_CONTENT (provisional)
+  STEP_3:
+    NAME: MATERIALIZE_NOTE
+    SCOPE: write NOTE into NOTE_SPACE
+  STEP_4:
+    NAME: OPTIONAL_MATERIALIZE_ARTIFACT
+    CONDITION: if proposal requests artifact AND allowed by validation
+    SCOPE: write ARTIFACT into ARTIFACT_SPACE
+
+STAGE_INVARIANTS:
+  - No execution occurs
+  - No notes or artifacts are created
+  - Plan must obey validation constraints
+  - Plan must be explicit enough to audit
+
+HALT_ON:
+  - cannot produce explicit ordered steps
+  - missing required dependencies for safe execution
+
+---
+
+# STAGE_4 — EXECUTION
+
+INPUT:
+  - PROPOSAL_RECORD
+  - VALIDATION_DECISION_RECORD
+  - EXECUTION_PLAN_RECORD
+
+OUTPUT:
+  EXECUTION_EFFECTS_LOG:
+    - effects_log_id
+    - proposal_id
+    - plan_id
+    - actor_attribution
+    - start_timestamp
+    - end_timestamp
+    - observed_effects
+    - produced_objects (provisional)
+    - runtime_errors (optional)
+
+EXECUTION_EFFECTS (EXPECTED):
+  - READ: MEMORY_SET(time_window:`last_week`)
+  - WRITE_PROVISIONAL: NOTE in NOTE_SPACE
+  - OPTIONAL_WRITE_PROVISIONAL: ARTIFACT in ARTIFACT_SPACE
+
+RULE:
+  Execution may change the world.
+  Execution must not change belief.
+
+STAGE_INVARIANTS:
+  - All outputs are provisional until COMMIT
+  - Every effect is logged and attributable
+  - No trust escalation occurs
+  - No silent meaning creation occurs
+
+HALT_ON:
+  - invariant violation
+  - scope breach
+  - runtime dependency missing
+  - execution failure
+
+---
+
+# STAGE_5 — RE-VALIDATION
+
+INPUT:
+  - PROPOSAL_RECORD
+  - EXECUTION_PLAN_RECORD
+  - EXECUTION_EFFECTS_LOG
+  - SYSTEM_CONTEXT_SNAPSHOT_V2 (fresh)
+
+REVALIDATION_CHECKS:
+  - proposal_fingerprint still matches intake record
+  - plan_fingerprint matches executed plan reference
+  - permissions still allow commit actions
+  - no invariant changed that invalidates commit
+  - no scope permissions revoked mid-flight
+  - produced_objects align with recorded effects
+  - no unlogged side effects exist (as detectable)
+
+OUTPUT:
+  REVALIDATION_DECISION_RECORD:
+    - decision_id
+    - proposal_id
+    - effects_log_id
+    - outcome
+    - constraints (optional)
+    - context_fingerprint
+    - timestamp
+
+OUTCOMES:
+  - APPROVE_COMMIT
+  - REJECT_COMMIT
+  - PARTIAL_COMMIT
+  - ESCALATE_COMMIT
+
+STAGE_INVARIANTS:
+  - No additional execution
+  - No trust escalation
+  - Decision record only
+  - Fail-closed by default
+
+HALT_ON:
+  - REJECT_COMMIT
+  - ESCALATE_COMMIT (if no escalation path exists)
+
+---
+
+# STAGE_6 — COMMIT
+
+INPUT:
+  - PROPOSAL_RECORD
+  - REVALIDATION_DECISION_RECORD (APPROVE_COMMIT or PARTIAL_COMMIT)
+  - EXECUTION_EFFECTS_LOG
+
+COMMIT_ACTIONS:
+  - promote NOTE from provisional → trusted meaning (NOTE state update)
+  - optional promote ARTIFACT from provisional → trusted meaning (ARTIFACT state update)
+  - write COMMIT_RECORD
+  - link provenance: MEMORY_SET → NOTE → ARTIFACT (if created)
+
+OUTPUT:
+  COMMIT_RECORD:
+    - commit_id
+    - proposal_id
+    - effects_log_id
+    - committed_objects
+    - trust_updates
+    - actor_attribution
+    - commit_timestamp
+
+RULE:
+  Commit is the moment the system agrees to believe new meaning.
+
+STAGE_INVARIANTS:
+  - Commit is atomic at meaning level
+  - Only objects justified by EXECUTION_EFFECTS_LOG may be committed
+  - No new execution occurs during commit
+  - Trust escalation occurs only here
+
+HALT_ON:
+  - commit preconditions not satisfied
+  - mismatch between effects log and intended commit
+
+---
+
+# REQUIRED_ARTIFACTS (WORKFLOW AUDIT)
+
+REQUIRED_LINKS:
+  - proposal_id
+  - validation_decision_id
+  - plan_id
+  - effects_log_id
+  - revalidation_decision_id
+  - commit_id
+  - actor_attribution
+
+RULE:
+  The system must answer:
+    - who caused this attempt?
+    - what exactly was attempted?
+    - what rules were in effect?
+    - what happened?
+    - what became trusted?
+    - how is trust revoked?
+
+---
+
+# HALT_BEHAVIOR
+
+RULE:
+  On any halt:
+    - no downstream stage runs
+    - no trust escalates
+    - any produced objects remain provisional
+    - the audit trail remains preserved
+
+END

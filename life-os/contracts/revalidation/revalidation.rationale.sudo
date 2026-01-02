@@ -1,0 +1,69 @@
+# RE VALIDATION CONTRACT — RATIONALE
+
+PURPOSE:
+  Explain why re validation is non negotiable
+  in any system that cares about truth.
+
+---
+
+# DESIGN COMMITMENTS
+
+COMMITMENT_1:
+  Re Validation always runs before commit.
+
+RATIONALE:
+  Commit is irreversible at the meaning level.
+
+---
+
+COMMITMENT_2:
+  Re Validation uses fresh context.
+
+RATIONALE:
+  Cached assumptions are lies waiting to happen.
+
+---
+
+COMMITMENT_3:
+  Re Validation can block commit even after success.
+
+RATIONALE:
+  Success does not override safety.
+
+---
+
+# REJECTED ALTERNATIVES
+
+REJECTED:
+  "Trust initial validation"
+
+REASON:
+  Ignores time and drift.
+
+---
+
+REJECTED:
+  "Auto commit on execution success"
+
+REASON:
+  Collapses action and belief.
+
+---
+
+# SYSTEM CONSEQUENCES
+
+WITHOUT RE VALIDATION:
+  Systems encode outdated reality as truth.
+
+WITH RE VALIDATION:
+  Systems remain honest under change.
+
+---
+
+# FINAL ASSERTION
+
+STATEMENT:
+  Re Validation exists because
+  time breaks assumptions.
+
+END

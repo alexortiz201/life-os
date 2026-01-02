@@ -1,0 +1,167 @@
+# VALIDATION CONTRACT — SPEC
+
+PURPOSE:
+  Define how the system determines whether a proposal
+  is allowed to proceed toward execution.
+
+ROLE:
+  Validation evaluates meaning, authority, scope, and invariants
+  without producing side effects or trusted outcomes.
+
+SCOPE:
+  This contract governs ONLY validation.
+  It does NOT define planning, execution, or commit behavior.
+
+---
+
+# STAGE DEFINITION
+
+STAGE:
+  NAME: VALIDATION
+  POSITION: Second stage in RNA execution pipeline
+
+RULE:
+  Validation is judgment without action.
+
+---
+
+# INPUTS
+
+INPUT:
+  PROPOSAL_RECORD
+
+CONTEXT_INPUTS:
+  - current system state snapshot
+  - applicable invariants
+  - actor permissions
+  - trust policies
+  - scope boundaries
+
+RULE:
+  Inputs are treated as authoritative snapshots.
+  Validation must not assume stability beyond this stage.
+
+---
+
+# OUTPUTS
+
+OUTPUT:
+  VALIDATION_DECISION
+
+VALIDATION_DECISION_MUST_CONTAIN:
+  - decision_type
+  - decision_constraints (if partial)
+  - evaluated invariants
+  - scope evaluation
+  - justification record
+  - attribution metadata
+  - decision_timestamp
+
+DECISION_TYPES:
+  - APPROVE
+  - REJECT
+  - PARTIAL_APPROVE
+  - ESCALATE
+
+---
+
+# RESPONSIBILITIES
+
+THIS_STAGE_MUST:
+  - evaluate proposal against invariants
+  - verify actor authority
+  - enforce scope boundaries
+  - check dependency availability
+  - record justification for decision
+  - produce an explicit decision artifact
+
+THIS_STAGE_MUST_NOT:
+  - mutate system state
+  - generate execution plans
+  - perform execution
+  - create artifacts
+  - escalate trust
+  - infer missing intent
+  - "try anyway"
+
+RULE:
+  Validation answers whether an action is allowed,
+  not how it will be performed.
+
+---
+
+# FAILURE BEHAVIOR
+
+FAILURE_ALLOWED_ONLY_IF:
+  - invariant evaluation fails unexpectedly
+  - required context is unavailable
+  - justification cannot be produced
+
+FAILURE_MODE:
+  FAIL_CLOSED
+
+FAILURE_MEANS:
+  - proposal does not advance
+  - no downstream stages may run
+
+---
+
+# STAGE INVARIANTS
+
+INVARIANT_1:
+  Validation produces no side effects.
+
+INVARIANT_2:
+  Validation decisions are fully attributable and explainable.
+
+INVARIANT_3:
+  Validation cannot grant trust or authority.
+
+INVARIANT_4:
+  Validation logic must be deterministic for identical inputs.
+
+---
+
+# TRUST MODEL
+
+TRUST_LEVEL:
+  UNTRUSTED
+
+RULE:
+  Approval does not imply truth.
+  Approval only implies permission to attempt execution.
+
+---
+
+# HANDOFF CONTRACT
+
+HANDOFF_TO:
+  PLANNING_STAGE
+
+HANDOFF_GUARANTEES:
+  - explicit decision exists
+  - constraints are recorded
+  - rejected proposals do not proceed
+
+RULE:
+  Downstream stages may rely on the decision,
+  but must not assume it remains valid indefinitely.
+
+---
+
+# ONE LINE SPINE
+
+STATEMENT:
+  "Validation decides whether an action may be attempted,
+   not whether it becomes true."
+
+---
+
+# SUPER SIMPLE
+
+SUMMARY:
+  Decide.
+  Explain.
+  Do nothing else.
+
+END
