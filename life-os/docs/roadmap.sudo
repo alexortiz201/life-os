@@ -121,6 +121,89 @@ EXIT_CRITERIA:
 
 ---
 
+# PHASE_3A: MINIMAL IMPLEMENTATION SCAFFOLDING  // OPTION A (NEXT)
+
+GOAL:
+  Make RNA concrete without adding behavior.
+
+FOCUS:
+  Types
+  Schemas
+  Shape correctness
+
+DELIVERABLES:
+  [ ] TypeScript interfaces for all pipeline artifacts
+  [ ] Zod schemas enforcing contract boundaries
+  [ ] Explicit invariant checks at stage boundaries
+  [ ] Zero business logic beyond enforcement
+
+LEARNING_SIGNAL:
+  Specs become executable shapes.
+  Safety becomes tangible.
+
+EXIT_CRITERIA:
+  You can build any stage confidently
+  because its contract is enforced by types.
+
+---
+
+# PHASE_3B: VALIDATION RISK & ESCALATION POLICY  // OPTION B
+
+GOAL:
+  Formalize how uncertainty reduces power.
+
+FOCUS:
+  Fail-closed behavior
+  Escalation rules
+  Human-in-the-loop boundaries
+
+DELIVERABLES:
+  [ ] Validation risk policy contract
+  [ ] Explicit escalation triggers
+  [ ] Human confirmation semantics
+  [ ] Governor-agent enforcement rules
+
+LEARNING_SIGNAL:
+  Governance thinking.
+  Safety under ambiguity.
+
+EXIT_CRITERIA:
+  You can explain exactly:
+    - when the system must stop
+    - when it must escalate
+    - when it is allowed to proceed narrowly
+
+---
+
+# PHASE_3C: TEACHING ENGINE EXECUTION LOOP  // OPTION C
+
+GOAL:
+  Run a real teaching interaction end-to-end.
+
+FOCUS:
+  Teaching flow
+  Artifact production
+  Learning reinforcement
+
+DELIVERABLES:
+  [ ] Teacher + Scribe pipeline wired
+  [ ] Journals → notes → fundamentals flow
+  [ ] Review rotation artifacts produced
+  [ ] No authority leakage from teaching outputs
+
+LEARNING_SIGNAL:
+  Systems teaching systems.
+  Learning as a first-class workflow.
+
+EXIT_CRITERIA:
+  A teaching session produces:
+    - auditable artifacts
+    - provisional meaning
+    - durable fundamentals
+  without violating RNA rules.
+
+---
+
 # PHASE_4: EXPRESSION — OBSERVABILITY FIRST
 
 GOAL:
@@ -140,10 +223,6 @@ DELIVERABLES:
   [ ] Execution trace viewer
   [ ] Commit history
   [ ] Provenance graphs
-
-NOTE:
-  Expression becomes participatory ONLY after
-  RNA safety is proven.
 
 EXIT_CRITERIA:
   A human understands system state
@@ -252,7 +331,7 @@ FOCUS:
   Reflection quality
 
 DELIVERABLES:
-  [ ] Teaching engine scaffolding
+  [ ] Teaching engine governance
   [ ] Learning signal tracking
   [ ] Adaptive prompting
   [ ] Fundamentals review rotation
