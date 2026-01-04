@@ -1,0 +1,8 @@
+export const PIPELINE_STAGES = [
+  "PROPOSAL_INTAKE",
+  "VALIDATION",
+  "PLANNING",
+  "EXECUTION",
+  "REVALIDATION",
+  "COMMIT",
+] as const;

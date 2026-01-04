@@ -71,4 +71,10 @@ Then believe.
 🍰 SUPER SIMPLE:
 If it’s subtle, it’s important.
 
+---
+
+STATEMENT: If trust changes, the system must write a record that proves who promoted what, from where, and why.
+🍰 SUPER_SIMPLE: If it became “true,” show the receipt.
+TAGS: systems, trust, commit, audit, invariants
+
 END

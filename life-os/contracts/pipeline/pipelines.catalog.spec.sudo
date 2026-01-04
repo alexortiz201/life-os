@@ -1,0 +1,161 @@
+# PIPELINES CATALOG — SPEC
+
+PURPOSE:
+  Define the canonical set of pipeline kinds Life-OS may run.
+  Make it explicit that RNA is a pipeline pattern, not one pipeline.
+
+GOAL:
+  Enable multiple pipelines (execution, ingestion, derivation)
+  without drifting on trust boundaries or invariants.
+
+SCOPE:
+  This catalog defines:
+    - pipeline kinds
+    - pipeline identities (name + version)
+    - shared invariants required across pipelines
+    - which pipelines are allowed to cross trust boundaries
+    - default pipeline set for V1
+
+  This catalog does NOT define:
+    - per-stage internal logic
+    - storage layout
+    - UI rendering
+    - agent implementations
+
+---
+
+# CORE RULES
+
+RULE:
+  Pipelines are the only approved control flow for creating or promoting meaning.
+
+RULE:
+  Every pipeline must declare:
+    - PIPELINE_NAME
+    - PIPELINE_VERSION
+    - PIPELINE_KIND
+    - TRUST_BOUNDARY (if any)
+
+RULE:
+  A pipeline may halt at any stage.
+  No pipeline assumes downstream stages will run.
+
+---
+
+# PIPELINE KINDS
+
+PIPELINE_KIND:
+  EXECUTION:
+    PURPOSE:
+      Turn proposals into committed meaning safely.
+    TRUST_BOUNDARY:
+      COMMIT creates COMMITTED meaning.
+
+PIPELINE_KIND:
+  INGESTION:
+    PURPOSE:
+      Convert raw user inputs into normalized, attributable records.
+    TRUST_BOUNDARY:
+      None.
+      Outputs remain UNTRUSTED.
+
+PIPELINE_KIND:
+  DERIVATION:
+    PURPOSE:
+      Compute derived artifacts from committed meaning.
+      Derivations must remain explainable and de-stale-able.
+    TRUST_BOUNDARY:
+      Derivation commit may promote DERIVED meaning
+      ONLY if derivation rules and sources are recorded.
+
+PIPELINE_KIND:
+  SPECIALIZED:
+    PURPOSE:
+      Optional future pipeline kinds.
+      Must still declare trust boundary behavior explicitly.
+    RULE:
+      SPECIALIZED is not allowed in V1 unless governance approves.
+
+---
+
+# SHARED PIPELINE INVARIANTS
+
+INVARIANT_1:
+  Every produced artifact is attributable.
+
+INVARIANT_2:
+  Every produced artifact links to its sources or input fingerprints.
+
+INVARIANT_3:
+  Trust does not increase silently.
+  Any trust increase requires an explicit promotion record.
+
+INVARIANT_4:
+  Validation is pure:
+    no side effects beyond decision records.
+
+INVARIANT_5:
+  Every pipeline defines halt semantics:
+    what remains provisional, what is discarded, what is preserved.
+
+---
+
+# DEFAULT PIPELINES — V1
+
+PIPELINE:
+  PIPELINE_NAME: RNA_EXECUTION_PIPELINE
+  PIPELINE_VERSION: V1
+  PIPELINE_KIND: EXECUTION
+  TRUST_BOUNDARY:
+    - COMMIT promotes approved outputs to COMMITTED
+  STAGES:
+    - PROPOSAL_INTAKE
+    - VALIDATION
+    - PLANNING
+    - EXECUTION
+    - REVALIDATION
+    - COMMIT
+
+PIPELINE:
+  PIPELINE_NAME: DEFAULT_INGESTION_PIPELINE
+  PIPELINE_VERSION: V1
+  PIPELINE_KIND: INGESTION
+  TRUST_BOUNDARY:
+    - none
+  STAGES:
+    - INGEST_INTAKE
+    - NORMALIZE
+    - PACKAGE
+    - STORE_UNTRUSTED
+
+RULE:
+  DEFAULT_INGESTION_PIPELINE may route internally by MEDIA_KIND,
+  but must not change trust or skip provenance.
+
+---
+
+# INGESTION MEDIA ROUTING — V1 RULE
+
+MEDIA_KIND:
+  - TEXT
+  - AUDIO
+  - IMAGE
+  - VIDEO
+
+RULE:
+  Media processing may produce intermediate artifacts
+  (transcripts, extracted text, metadata),
+  but all outputs remain UNTRUSTED.
+
+---
+
+# UPGRADE RULE
+
+RULE:
+  Adding a new pipeline requires:
+    - catalog entry
+    - declared trust boundary behavior
+    - declared invariants
+    - defined artifacts produced and their trust levels
+
+END

@@ -48,7 +48,7 @@ FOCUS:
 
 DELIVERABLES:
   [x] Meaning vs storage separated
-  [x] Trust levels defined (MEMORY → NOTE → ARTIFACT)
+  [x] Trust levels defined (MEMORY → NOTE → ARTIFACT → DERIVED)
   [x] Invariants articulated in prose
   [x] Authority escalation rules identified
   [x] DNA/RNA/Expression mental model stabilized
@@ -147,7 +147,35 @@ EXIT_CRITERIA:
 
 ---
 
-# PHASE_3B: VALIDATION RISK & ESCALATION POLICY  // OPTION B
+# PHASE_3B: TRIGGERS & DERIVATION WORKFLOWS  // OPTION B (NEW)
+
+GOAL:
+  Make derivation explicit, auditable, and safe.
+
+FOCUS:
+  Trigger → Proposal creation
+  Derivation as a first-class workflow
+  Drift prevention
+
+DELIVERABLES:
+  [ ] Trigger catalog (what can start a proposal)
+  [ ] Trigger-to-proposal policy rules
+  [ ] Derivation intent definitions (DERIVE_*)
+  [ ] Enforcement that DERIVED meaning always comes from a proposal
+  [ ] Audit linkage from source → derived artifacts
+
+LEARNING_SIGNAL:
+  Event-driven systems thinking.
+  No hidden pipelines.
+
+EXIT_CRITERIA:
+  You can explain:
+    - why derivation is not a pipeline step
+    - how derived meaning stays honest over time
+
+---
+
+# PHASE_3C: VALIDATION RISK & ESCALATION POLICY  // OPTION C
 
 GOAL:
   Formalize how uncertainty reduces power.
@@ -163,44 +191,11 @@ DELIVERABLES:
   [ ] Human confirmation semantics
   [ ] Governor-agent enforcement rules
 
-LEARNING_SIGNAL:
-  Governance thinking.
-  Safety under ambiguity.
-
 EXIT_CRITERIA:
   You can explain exactly:
     - when the system must stop
     - when it must escalate
     - when it is allowed to proceed narrowly
-
----
-
-# PHASE_3C: TEACHING ENGINE EXECUTION LOOP  // OPTION C
-
-GOAL:
-  Run a real teaching interaction end-to-end.
-
-FOCUS:
-  Teaching flow
-  Artifact production
-  Learning reinforcement
-
-DELIVERABLES:
-  [ ] Teacher + Scribe pipeline wired
-  [ ] Journals → notes → fundamentals flow
-  [ ] Review rotation artifacts produced
-  [ ] No authority leakage from teaching outputs
-
-LEARNING_SIGNAL:
-  Systems teaching systems.
-  Learning as a first-class workflow.
-
-EXIT_CRITERIA:
-  A teaching session produces:
-    - auditable artifacts
-    - provisional meaning
-    - durable fundamentals
-  without violating RNA rules.
 
 ---
 

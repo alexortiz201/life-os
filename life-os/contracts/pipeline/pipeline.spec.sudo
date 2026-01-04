@@ -332,6 +332,40 @@ STAGE_INVARIANTS:
   - Commit must be atomic at the meaning level.
   - Commit must match exactly what was executed and logged.
 
+# PATCH — COMMIT ALLOWLIST SEMANTICS
+
+LOCATION:
+  STAGE 6 — COMMIT
+
+PROBLEM:
+  An allowlist may exist in revalidation input even when outcome is APPROVE_COMMIT.
+  If the system ignores it silently, readers may assume allowlist is always enforced.
+
+RULE:
+  COMMIT behavior MUST be outcome-dependent:
+
+  IF outcome == APPROVE_COMMIT:
+    - commitAllowList MUST be ignored
+    - system commits ALL eligible outputs (per commit eligibility rules)
+
+  IF outcome == PARTIAL_COMMIT:
+    - commitAllowList MUST be enforced
+    - system commits ONLY allowlisted outputs
+    - allowlist MUST be checked for unknown ids (fail-closed)
+
+OPTIONAL_HYGIENE (RECOMMENDED):
+  IF outcome == APPROVE_COMMIT AND commitAllowList is non-empty:
+    - emit an audit note:
+        "ALLOWLIST_IGNORED_ON_FULL_APPROVAL"
+    - but do NOT fail (avoid surprising halts)
+
+RATIONALE:
+  APPROVE_COMMIT means “the system stands behind the whole execution result.”
+  PARTIAL_COMMIT means “the system stands behind only a specified subset.”
+
+INVARIANT:
+  Commit must never be ambiguous about what becomes trusted.
+
 ---
 
 # PIPELINE INVARIANTS
