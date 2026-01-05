@@ -1,5 +1,6 @@
 import z from "zod";
-import { CommitInputSchema, ProducedObjectSchema } from "./commit.schemas";
+import { CommitInputSchema, ProducedEffectSchema } from "./commit.schemas";
+import { TrustLevel } from "#/domain/trust/trust.types";
 
 export type TrustPromotionRecord = {
   objectId: string;
@@ -12,39 +13,64 @@ export type TrustPromotionRecord = {
   commitId: string;
 };
 
-type ProducedObject = z.infer<typeof ProducedObjectSchema>;
+type Note = any;
 
-// export type CommitRecord = {
-//   commitId: string;
-//   proposalId: string;
-//   committedObjects: Array<{
-//     objectId: string;
-//     kind: string;
-//     trust: "COMMITTED";
-//   }> | [];
-//   promotions: Array<TrustPromotionRecord>;
-// };
+export type Mode = "FULL" | "PARTIAL" | "UNKNOWN";
+export type EligibleEffect = z.infer<typeof ProducedEffectSchema>;
+export type ApprovedEffect = {
+  objectId: string;
+  kind: string;
+  trust: "COMMITTED";
+};
+export type RejectedEffect = {
+  objectId: string;
+  kind: string;
+  originalTrust: TrustLevel;
+  trust: TrustLevel;
+  reasonCode: string;
+  reason: string;
+};
+export type Justification = {
+  mode: Mode;
+  rulesApplied: Array<string>;
+  inputs: Array<{
+    commitId: string;
+    proposalId: string;
+    allowListCount: number;
+  }>;
+  notes?: Array<Note>;
+};
 
 export type CommitRecord = {
   commitId: string;
   proposalId: string;
-  committedObjects: Array<{
-    objectId: string;
-    kind: string;
-    trust: "COMMITTED";
-  }>;
   promotions: Array<TrustPromotionRecord>;
+  approvedEffects: Array<ApprovedEffect>;
+  rejectedEffects: Array<RejectedEffect>;
+  justification: Justification;
 };
 
 export type CommitInput = z.infer<typeof CommitInputSchema>;
 
+export type CommitReady = {
+  proposalId: string;
+  effectsLogId: string;
+  mode: Mode;
+  eligibleEffects: Array<EligibleEffect>;
+  allowListCount: number;
+  rulesApplied: Array<string>;
+  rejectedEffects: Array<RejectedEffect>;
+};
+
+export type Trace = Partial<{
+  mode: Mode;
+  proposalId: string;
+  revalidationDeclaredProposalId: string;
+  effectsLogDeclaredProposalId: string;
+  effectsLogId: string;
+  allowListCount: number;
+  rulesApplied: Array<string>;
+}>;
 export type GuardPrecommitResult =
-  | {
-      ok: true;
-      code: "PARTIAL_COMMIT_EMPTY_ALLOWLIST" | "SUCCESS";
-      data: CommitInput & {
-        mode: "FULL" | "PARTIAL";
-        commitSet: Array<ProducedObject> | [];
-      };
-    }
-  | { ok: false; code: string; message: string };
+  | { ok: true; data: CommitReady }
+  | { ok: false; code: string; message: string; trace: Trace };

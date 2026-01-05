@@ -13,7 +13,7 @@ function makeInput(overrides?: Partial<any>) {
     effectsLog: {
       effectsLogId: "effects_1",
       proposalId: "proposal_1",
-      producedObjects: [
+      producedEffects: [
         { objectId: "note_1", kind: "NOTE", trust: "PROVISIONAL" },
         { objectId: "report_1", kind: "REPORT", trust: "PROVISIONAL" },
         { objectId: "note_2", kind: "NOTE", trust: "COMMITTED" },
@@ -31,13 +31,13 @@ test("commits only PROVISIONAL produced objects", () => {
   assert.match(result.commitId, /^commit_\d+$/);
 
   // Only two provisional objects should be promoted
-  assert.equal(result.committedObjects.length, 2);
+  assert.equal(result.approvedEffects.length, 2);
   assert.deepEqual(
-    result.committedObjects.map((o) => o.objectId).sort(),
+    result.approvedEffects.map((o) => o.objectId).sort(),
     ["note_1", "report_1"].sort()
   );
 
-  for (const obj of result.committedObjects) {
+  for (const obj of result.approvedEffects) {
     assert.equal(obj.trust, "COMMITTED");
   }
 });
@@ -51,7 +51,7 @@ test("commits nothing if there are no PROVISIONAL objects", () => {
       },
       effectsLog: {
         ...makeInput().effectsLog,
-        producedObjects: [
+        producedEffects: [
           { objectId: "note_2", kind: "NOTE", trust: "COMMITTED" },
           { objectId: "raw_1", kind: "RAW", trust: "UNTRUSTED" },
         ],
@@ -59,7 +59,7 @@ test("commits nothing if there are no PROVISIONAL objects", () => {
     })
   );
 
-  assert.equal(result.committedObjects.length, 0);
+  assert.equal(result.approvedEffects.length, 0);
 });
 
 test("throws if revalidation.proposalId does not match proposalId", () => {
@@ -102,7 +102,7 @@ test("empty allowlist when PARTIAL_COMMIT commits nothing", () => {
       },
       effectsLog: {
         ...makeInput().effectsLog,
-        producedObjects: [
+        producedEffects: [
           { objectId: "note_1", kind: "NOTE", trust: "PROVISIONAL" },
         ],
       },
@@ -113,8 +113,8 @@ test("empty allowlist when PARTIAL_COMMIT commits nothing", () => {
   assert.match(result.commitId, /^commit_\d+$/);
 
   // Only two provisional objects should be promoted
-  assert.equal(result.committedObjects.length, 0);
-  assert.deepEqual(result.committedObjects, []);
+  assert.equal(result.approvedEffects.length, 0);
+  assert.deepEqual(result.approvedEffects, []);
 });
 
 test("rejects allowlisted objects when PARTIAL_COMMIT that aren’t PROVISIONAL", () => {
@@ -128,7 +128,7 @@ test("rejects allowlisted objects when PARTIAL_COMMIT that aren’t PROVISIONAL"
         },
         effectsLog: {
           ...makeInput().effectsLog,
-          producedObjects: [
+          producedEffects: [
             { objectId: "note_1", kind: "NOTE", trust: "PROVISIONAL" },
           ],
         },
@@ -152,7 +152,7 @@ test("emits one promotion record per committed object", () => {
   assert.equal(promotions.length, 2);
 
   // each promotion should correspond to a committed object
-  const committedIds = result.committedObjects.map((o) => o.objectId).sort();
+  const committedIds = result.approvedEffects.map((o) => o.objectId).sort();
   const promotedIds = promotions.map((p) => p.objectId).sort();
   assert.deepEqual(promotedIds, committedIds);
 
@@ -183,7 +183,7 @@ test("PARTIAL_COMMIT emits promotion records only for allowlisted objects", () =
       },
       effectsLog: {
         ...makeInput().effectsLog,
-        producedObjects: [
+        producedEffects: [
           { objectId: "note_1", kind: "NOTE", trust: "PROVISIONAL" },
           { objectId: "report_1", kind: "REPORT", trust: "PROVISIONAL" },
         ],
@@ -195,8 +195,8 @@ test("PARTIAL_COMMIT emits promotion records only for allowlisted objects", () =
   const promotions = (result as any).promotions as Array<any>;
 
   // only allowlisted note_1 is committed
-  assert.equal(result.committedObjects.length, 1);
-  assert.equal(result.committedObjects[0]?.objectId, "note_1");
+  assert.equal(result.approvedEffects.length, 1);
+  assert.equal(result.approvedEffects[0]?.objectId, "note_1");
 
   assert.equal(promotions.length, 1);
   assert.equal(promotions[0]?.objectId, "note_1");
@@ -215,14 +215,14 @@ test("PARTIAL_COMMIT with empty allowlist emits zero promotion records", () => {
       },
       effectsLog: {
         ...makeInput().effectsLog,
-        producedObjects: [
+        producedEffects: [
           { objectId: "note_1", kind: "NOTE", trust: "PROVISIONAL" },
         ],
       },
     })
   );
 
-  assert.equal(result.committedObjects.length, 0);
+  assert.equal(result.approvedEffects.length, 0);
 
   assert.ok(Array.isArray((result as any).promotions), "promotions must exist");
   const promotions = (result as any).promotions as Array<any>;
@@ -241,7 +241,7 @@ test("does not emit promotion records for non-PROVISIONAL produced objects", () 
       },
       effectsLog: {
         ...makeInput().effectsLog,
-        producedObjects: [
+        producedEffects: [
           { objectId: "note_2", kind: "NOTE", trust: "COMMITTED" },
           { objectId: "raw_1", kind: "RAW", trust: "UNTRUSTED" },
         ],
@@ -249,7 +249,7 @@ test("does not emit promotion records for non-PROVISIONAL produced objects", () 
     })
   );
 
-  assert.equal(result.committedObjects.length, 0);
+  assert.equal(result.approvedEffects.length, 0);
 
   assert.ok(Array.isArray((result as any).promotions), "promotions must exist");
   const promotions = (result as any).promotions as Array<any>;

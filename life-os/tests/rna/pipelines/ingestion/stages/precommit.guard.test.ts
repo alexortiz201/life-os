@@ -6,12 +6,12 @@ import { guardPrecommit } from "#/rna/pipelines/ingestion/stages/precommit.guard
  * These tests define the *minimum contract* your guard must satisfy.
  *
  * Expected return shape:
- *  - { ok: true, data: { parsed?: unknown, commitSet: Array<{ objectId: string }>, mode: "FULL" | "PARTIAL" } }
+ *  - { ok: true, data: { parsed?: unknown, approvedEffects: Array<{ objectId: string }>, mode: "FULL" | "PARTIAL" } }
  *  - { ok: false, code: string, message: string }
  *
  * Notes:
  *  - You can include more fields in `data` if you want (proposalId, effectsLogId, etc.)
- *  - Tests only depend on: ok/code + commitSet + mode.
+ *  - Tests only depend on: ok/code + approvedEffects + mode.
  */
 
 function makeInput(overrides?: Partial<any>) {
@@ -25,7 +25,7 @@ function makeInput(overrides?: Partial<any>) {
     effectsLog: {
       effectsLogId: "effects_1",
       proposalId: "proposal_1",
-      producedObjects: [
+      producedEffects: [
         { objectId: "note_1", kind: "NOTE", trust: "PROVISIONAL" },
         { objectId: "report_1", kind: "REPORT", trust: "PROVISIONAL" },
         { objectId: "note_2", kind: "NOTE", trust: "COMMITTED" },
@@ -93,7 +93,7 @@ test("COMMIT_OUTCOME_UNSUPPORTED when outcome is not APPROVE_COMMIT or PARTIAL_C
     assert.equal((result as any).code, "COMMIT_OUTCOME_UNSUPPORTED");
 });
 
-test("APPROVE_COMMIT returns FULL mode and commitSet includes all PROVISIONAL produced objects (ignores allowlist)", () => {
+test("APPROVE_COMMIT returns FULL mode and approvedEffects includes all PROVISIONAL produced objects (ignores allowlist)", () => {
   const result = guardPrecommit(
     makeInput({
       revalidation: {
@@ -110,14 +110,14 @@ test("APPROVE_COMMIT returns FULL mode and commitSet includes all PROVISIONAL pr
     assert.equal((result as any).data.mode, "FULL");
 
     // Only provisional objects should be eligible: note_1 + report_1
-    assert.deepEqual(ids((result as any).data.commitSet), [
+    assert.deepEqual(ids((result as any).data.eligibleEffects), [
       "note_1",
       "report_1",
     ]);
   }
 });
 
-test("PARTIAL_COMMIT with empty allowlist returns ok and empty commitSet", () => {
+test("PARTIAL_COMMIT with empty allowlist returns ok and empty approvedEffects", () => {
   const result = guardPrecommit(
     makeInput({
       revalidation: {
@@ -127,7 +127,7 @@ test("PARTIAL_COMMIT with empty allowlist returns ok and empty commitSet", () =>
       },
       effectsLog: {
         ...makeInput().effectsLog,
-        producedObjects: [
+        producedEffects: [
           { objectId: "note_1", kind: "NOTE", trust: "PROVISIONAL" },
           { objectId: "report_1", kind: "REPORT", trust: "PROVISIONAL" },
         ],
@@ -138,11 +138,11 @@ test("PARTIAL_COMMIT with empty allowlist returns ok and empty commitSet", () =>
   assert.equal((result as any).ok, true);
   if ((result as any).ok) {
     assert.equal((result as any).data.mode, "PARTIAL");
-    assert.deepEqual((result as any).data.commitSet, []);
+    assert.deepEqual((result as any).data.eligibleEffects, []);
   }
 });
 
-test("ALLOWLIST_UNKNOWN_OBJECT when PARTIAL_COMMIT allowlist references an objectId not in producedObjects", () => {
+test("ALLOWLIST_UNKNOWN_OBJECT when PARTIAL_COMMIT allowlist references an objectId not in producedEffects", () => {
   const result = guardPrecommit(
     makeInput({
       revalidation: {
@@ -152,7 +152,7 @@ test("ALLOWLIST_UNKNOWN_OBJECT when PARTIAL_COMMIT allowlist references an objec
       },
       effectsLog: {
         ...makeInput().effectsLog,
-        producedObjects: [
+        producedEffects: [
           { objectId: "note_1", kind: "NOTE", trust: "PROVISIONAL" },
         ],
       },
@@ -164,7 +164,7 @@ test("ALLOWLIST_UNKNOWN_OBJECT when PARTIAL_COMMIT allowlist references an objec
     assert.equal((result as any).code, "ALLOWLIST_UNKNOWN_OBJECT");
 });
 
-test("PARTIAL_COMMIT commitSet includes only allowlisted objects that are PROVISIONAL (not COMMITTED/UNTRUSTED)", () => {
+test("PARTIAL_COMMIT approvedEffects includes only allowlisted objects that are PROVISIONAL (not COMMITTED/UNTRUSTED)", () => {
   const result = guardPrecommit(
     makeInput({
       revalidation: {
@@ -174,7 +174,7 @@ test("PARTIAL_COMMIT commitSet includes only allowlisted objects that are PROVIS
       },
       effectsLog: {
         ...makeInput().effectsLog,
-        producedObjects: [
+        producedEffects: [
           { objectId: "note_1", kind: "NOTE", trust: "PROVISIONAL" },
           { objectId: "report_1", kind: "REPORT", trust: "PROVISIONAL" },
           { objectId: "note_2", kind: "NOTE", trust: "COMMITTED" },
@@ -188,8 +188,8 @@ test("PARTIAL_COMMIT commitSet includes only allowlisted objects that are PROVIS
   if ((result as any).ok) {
     assert.equal((result as any).data.mode, "PARTIAL");
 
-    // allowlist may include non-provisional ids; commitSet must filter them out
-    assert.deepEqual(ids((result as any).data.commitSet), [
+    // allowlist may include non-provisional ids; approvedEffects must filter them out
+    assert.deepEqual(ids((result as any).data.eligibleEffects), [
       "note_1",
       "report_1",
     ]);

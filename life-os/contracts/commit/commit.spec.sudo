@@ -1,4 +1,4 @@
-# COMMIT CONTRACT — SPEC
+# COMMIT — STAGE CONTRACT
 
 PURPOSE:
   Define the only moment where
@@ -30,12 +30,76 @@ RULE:
 INPUT:
   PROPOSAL_RECORD
   REVALIDATION_DECISION
-  EXECUTION_RESULT
   EXECUTION_EFFECTS_LOG
 
 RULE:
   Commit may only act on
   explicitly approved effects.
+
+---
+
+# REVALIDATION OUTCOME → COMMIT MODE
+
+RULE:
+  COMMIT_MODE is derived from REVALIDATION outcome.
+
+MAPPING:
+  outcome: APPROVE_COMMIT  -> COMMIT_MODE: FULL
+  outcome: PARTIAL_COMMIT  -> COMMIT_MODE: PARTIAL
+
+---
+
+# ALLOWLIST SEMANTICS
+
+RULE:
+  commitAllowList is meaningful ONLY in PARTIAL mode.
+
+FULL_MODE_RULE:
+  IF outcome == APPROVE_COMMIT
+  THEN commitAllowList MUST be ignored by COMMIT logic.
+
+NOTE:
+  The system MAY accept commitAllowList as input for compatibility,
+  but it must not affect what is committed in FULL mode.
+
+PARTIAL_MODE_RULE:
+  IF outcome == PARTIAL_COMMIT
+  THEN commitAllowList is authoritative for selecting commit candidates.
+
+PARTIAL_EMPTY_ALLOWLIST_RULE:
+  IF outcome == PARTIAL_COMMIT AND commitAllowList is empty
+  THEN COMMIT MUST commit nothing AND MUST still emit a COMMIT_RECORD.
+
+---
+
+# ELIGIBILITY RULE (MINIMAL V1)
+
+RULE:
+  Only PROVISIONAL produced objects are eligible for promotion in this stage.
+
+FORBIDDEN:
+  - committing UNTRUSTED objects
+  - re-committing already COMMITTED objects
+  - deriving new objects inside COMMIT (no new execution)
+
+---
+
+# REQUIRED PRECOMMIT GUARD
+
+RULE:
+  COMMIT must not interpret raw input directly.
+
+REQUIRE:
+  A PRECOMMIT_GUARD must run before any promotions are attempted.
+
+PRECOMMIT_GUARD_OUTPUT:
+  - parsed CommitInput (canonical)
+  - COMMIT_MODE: FULL | PARTIAL
+  - COMMIT_SET: list of eligible objects to promote
+  - HALT_REASON on failure (fail-closed)
+
+RULE:
+  COMMIT_STAGE may only iterate over COMMIT_SET produced by the guard.
 
 ---
 
@@ -48,16 +112,41 @@ OUTPUT:
 COMMIT_RECORD_MUST_CONTAIN:
   - commit_id
   - proposal_id
-  - approved effects
-  - rejected effects
-  - justification
+  - effects_log_id
+  - committed_objects
+  - promotions
   - timestamp
-  - actor attribution (system)
+  - actor_attribution (system)
+  - approvedEffects
+  - rejectedEffects
+  - justification
 
 TRUST_UPDATES_MUST:
-  - promote provisional artifacts
-  - update meaning level state
-  - mark new authority boundaries
+  - promote provisional objects to COMMITTED
+  - update meaning-level state accordingly
+
+NOTE: justification.mode - FULL ignores allowlist, PARTIAL uses it
+
+---
+
+# PROMOTION RECORDS
+
+RULE:
+  Every committed object MUST have a corresponding promotion record.
+
+PROMOTION_1_TO_1_RULE:
+  For each committedObject:
+    - exactly one TrustPromotionRecord exists
+
+TrustPromotionRecord MUST include:
+  - objectId
+  - from: PROVISIONAL
+  - to: COMMITTED
+  - stage: COMMIT
+  - proposalId
+  - effectsLogId
+  - commitId
+  - reason
 
 ---
 
@@ -102,10 +191,10 @@ INVARIANT_1:
   Commit is atomic at the meaning level.
 
 INVARIANT_2:
-  Commit is irreversible.
+  Commit is irreversible at the trust boundary.
 
 INVARIANT_3:
-  Commit creates system belief.
+  Commit is the only creator of COMMITTED meaning.
 
 ---
 
@@ -142,8 +231,8 @@ STATEMENT:
 # SUPER SIMPLE
 
 SUMMARY:
-  Decide.
-  Believe.
-  Stand behind it.
+  Approve.
+  Promote.
+  Record.
 
 END

@@ -9,25 +9,33 @@ export function commitStage(input: unknown): CommitRecord {
     throw new Error(`${result.code}: ${result.message}`);
   }
 
-  const { ok, code, data } = result;
+  const { ok, data } = result;
 
   const commitId = `commit_${Date.now()}`;
   const proposalId = data.proposalId;
-  const committedObjects: CommitRecord["committedObjects"] = [];
+  const approvedEffects: CommitRecord["approvedEffects"] = [];
+  const rejectedEffects: CommitRecord["rejectedEffects"] = data.rejectedEffects;
+  const justification: CommitRecord["justification"] = {
+    mode: data.mode,
+    rulesApplied: data.rulesApplied,
+    inputs: [{ commitId, proposalId, allowListCount: data.allowListCount }],
+  };
   const promotions: CommitRecord["promotions"] = [];
 
-  if (ok && code === "PARTIAL_COMMIT_EMPTY_ALLOWLIST") {
+  if (ok && data.mode === "PARTIAL" && !data.eligibleEffects.length) {
     return {
       commitId,
       proposalId,
-      committedObjects,
+      approvedEffects,
+      rejectedEffects,
       promotions,
+      justification,
     };
   }
 
-  const effectsLogId = data.effectsLog.effectsLogId;
+  const effectsLogId = data.effectsLogId;
 
-  for (const obj of data.commitSet) {
+  for (const obj of data.eligibleEffects) {
     const reason = "Commit stage promotion of provisional execution outputs.";
     const guard = guardTrustPromotion({
       from: obj.trust,
@@ -40,7 +48,7 @@ export function commitStage(input: unknown): CommitRecord {
       throw new Error(`${guard.code}: ${guard.message}`);
     }
 
-    committedObjects.push({
+    approvedEffects.push({
       objectId: obj.objectId,
       kind: obj.kind,
       trust: "COMMITTED",
@@ -60,7 +68,9 @@ export function commitStage(input: unknown): CommitRecord {
   return {
     commitId,
     proposalId,
-    committedObjects,
+    approvedEffects,
+    rejectedEffects,
     promotions,
+    justification,
   };
 }
