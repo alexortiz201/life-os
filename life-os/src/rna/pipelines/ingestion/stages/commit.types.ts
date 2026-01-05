@@ -1,6 +1,7 @@
 import z from "zod";
 import { CommitInputSchema, ProducedEffectSchema } from "./commit.schemas";
-import { TrustLevel } from "#/domain/trust/trust.types";
+import type { TrustLevel } from "#/domain/trust/trust.types";
+import type { PrecommitRule } from "./commit.rules";
 
 export type TrustPromotionRecord = {
   objectId: string;
@@ -16,12 +17,15 @@ export type TrustPromotionRecord = {
 type Note = any;
 
 export type Mode = "FULL" | "PARTIAL" | "UNKNOWN";
+
 export type EligibleEffect = z.infer<typeof ProducedEffectSchema>;
+
 export type ApprovedEffect = {
   objectId: string;
   kind: string;
   trust: "COMMITTED";
 };
+
 export type RejectedEffect = {
   objectId: string;
   kind: string;
@@ -30,9 +34,10 @@ export type RejectedEffect = {
   reasonCode: string;
   reason: string;
 };
+
 export type Justification = {
-  mode: Mode;
-  rulesApplied: Array<string>;
+  mode: CommitReadyMode;
+  rulesApplied: PrecommitRule[];
   inputs: Array<{
     commitId: string;
     proposalId: string;
@@ -52,13 +57,16 @@ export type CommitRecord = {
 
 export type CommitInput = z.infer<typeof CommitInputSchema>;
 
+// success-only mode (since you fail-closed on unsupported outcomes)
+export type CommitReadyMode = "FULL" | "PARTIAL";
+
 export type CommitReady = {
   proposalId: string;
   effectsLogId: string;
-  mode: Mode;
+  mode: CommitReadyMode;
   eligibleEffects: Array<EligibleEffect>;
   allowListCount: number;
-  rulesApplied: Array<string>;
+  rulesApplied: PrecommitRule[];
   rejectedEffects: Array<RejectedEffect>;
 };
 
@@ -69,8 +77,9 @@ export type Trace = Partial<{
   effectsLogDeclaredProposalId: string;
   effectsLogId: string;
   allowListCount: number;
-  rulesApplied: Array<string>;
+  rulesApplied: PrecommitRule[];
 }>;
+
 export type GuardPrecommitResult =
   | { ok: true; data: CommitReady }
   | { ok: false; code: string; message: string; trace: Trace };

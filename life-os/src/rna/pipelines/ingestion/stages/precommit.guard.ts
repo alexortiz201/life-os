@@ -1,9 +1,11 @@
+import { PrecommitRule } from "./commit.rules";
 import { CommitInputSchema } from "./commit.schemas";
 import {
   GuardPrecommitResult,
   Mode,
   Trace,
-  RejectedEffect,
+  // RejectedEffect,
+  CommitReadyMode,
 } from "./commit.types";
 
 const makeErrorResult = ({
@@ -21,7 +23,7 @@ export function guardPrecommit(input: unknown): GuardPrecommitResult {
 
   if (!parsed.success) {
     const revalidation = (input as any)?.revalidation;
-    const mode =
+    const mode: Mode =
       revalidation?.outcome === "PARTIAL_COMMIT"
         ? "PARTIAL"
         : revalidation?.outcome === "APPROVE_COMMIT"
@@ -34,13 +36,11 @@ export function guardPrecommit(input: unknown): GuardPrecommitResult {
       trace: {
         mode,
         proposalId: (input as any)?.proposalId,
-        revalidationDeclaredProposalId: (input as any)?.revalidation
-          ?.proposalId,
+        revalidationDeclaredProposalId: revalidation?.proposalId,
         effectsLogDeclaredProposalId: (input as any)?.effectsLog?.proposalId,
         effectsLogId: (input as any)?.effectsLog?.effectsLogId,
-        allowListCount:
-          (input as any)?.revalidation?.commitAllowList?.length ?? 0,
-        rulesApplied: ["PARSE_FAILED"],
+        allowListCount: revalidation?.commitAllowList?.length ?? 0,
+        rulesApplied: ["PARSE_FAILED"] satisfies PrecommitRule[],
       },
     });
   }
@@ -66,7 +66,9 @@ export function guardPrecommit(input: unknown): GuardPrecommitResult {
         effectsLogDeclaredProposalId: effectsLog.proposalId,
         effectsLogId: effectsLog.effectsLogId,
         allowListCount: revalidation.commitAllowList.length,
-        rulesApplied: ["PROPOSAL_ID_MISMATCH_REVALIDATION"],
+        rulesApplied: [
+          "PROPOSAL_ID_MISMATCH_REVALIDATION",
+        ] satisfies PrecommitRule[],
       },
     });
   }
@@ -81,7 +83,9 @@ export function guardPrecommit(input: unknown): GuardPrecommitResult {
         effectsLogDeclaredProposalId: effectsLog.proposalId,
         effectsLogId: effectsLog.effectsLogId,
         allowListCount: revalidation.commitAllowList.length,
-        rulesApplied: ["PROPOSAL_ID_MISMATCH_EFFECTS_LOG"],
+        rulesApplied: [
+          "PROPOSAL_ID_MISMATCH_EFFECTS_LOG",
+        ] satisfies PrecommitRule[],
       },
     });
   }
@@ -97,20 +101,20 @@ export function guardPrecommit(input: unknown): GuardPrecommitResult {
         effectsLogDeclaredProposalId: effectsLog.proposalId,
         effectsLogId: effectsLog.effectsLogId,
         allowListCount: revalidation.commitAllowList.length,
-        rulesApplied: ["OUTCOME_UNSUPPORTED"],
+        rulesApplied: ["OUTCOME_UNSUPPORTED"] satisfies PrecommitRule[],
       },
     });
   }
 
   const effectsLogId = effectsLog.effectsLogId;
   const commitReadyData = {
-    mode,
+    mode: mode as CommitReadyMode,
     proposalId,
     effectsLogId,
     allowListCount: revalidation.commitAllowList.length,
     eligibleEffects: [],
     rejectedEffects: [],
-    rulesApplied: [],
+    rulesApplied: [] satisfies PrecommitRule[],
   };
 
   if (
@@ -121,7 +125,9 @@ export function guardPrecommit(input: unknown): GuardPrecommitResult {
       ok: true,
       data: {
         ...commitReadyData,
-        rulesApplied: ["PARTIAL_EMPTY_ALLOWLIST_COMMITS_NOTHING"],
+        rulesApplied: [
+          "PARTIAL_EMPTY_ALLOWLIST_COMMITS_NOTHING",
+        ] satisfies PrecommitRule[],
       },
     };
   }
@@ -153,7 +159,9 @@ export function guardPrecommit(input: unknown): GuardPrecommitResult {
         effectsLogDeclaredProposalId: effectsLog.proposalId,
         effectsLogId: effectsLog.effectsLogId,
         allowListCount: revalidation.commitAllowList.length,
-        rulesApplied: ["PARTIAL_ALLOWLIST_HAS_UNKNOWN_IDS"],
+        rulesApplied: [
+          "PARTIAL_ALLOWLIST_HAS_UNKNOWN_IDS",
+        ] satisfies PrecommitRule[],
       },
     });
   }
@@ -170,7 +178,9 @@ export function guardPrecommit(input: unknown): GuardPrecommitResult {
         ...commitReadyData,
         eligibleEffects: [...allowListEffects],
         rejectedEffects: [],
-        rulesApplied: ["PARTIAL_COMMIT_USE_ALLOWLIST"],
+        rulesApplied: [
+          "PARTIAL_COMMIT_USE_ALLOWLIST",
+        ] satisfies PrecommitRule[],
       },
     };
   }
@@ -184,7 +194,7 @@ export function guardPrecommit(input: unknown): GuardPrecommitResult {
       rulesApplied: [
         "FULL_COMMIT_ALL_PROVISIONAL_EFFECTS",
         "FULL_IGNORES_ALLOWLIST",
-      ],
+      ] satisfies PrecommitRule[],
     },
   };
 }
