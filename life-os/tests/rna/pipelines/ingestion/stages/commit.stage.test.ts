@@ -123,6 +123,7 @@ test("rejects allowlisted objects when PARTIAL_COMMIT that aren’t PROVISIONAL"
       makeInput({
         revalidation: {
           ...makeInput().revalidation,
+          outcome: "PARTIAL_COMMIT",
           commitAllowList: ["ghost_id"],
         },
         effectsLog: {
