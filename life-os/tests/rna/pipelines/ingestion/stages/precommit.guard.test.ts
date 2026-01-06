@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { guardPrecommit } from "#/rna/pipelines/ingestion/stages/commit/precommit.guard";
+import { CommitInput } from "#/types/rna/pipeline/ingestion/commit/commit.types";
 
 /**
  * These tests define the *minimum contract* your guard must satisfy.
@@ -14,7 +15,7 @@ import { guardPrecommit } from "#/rna/pipelines/ingestion/stages/commit/precommi
  *  - Tests only depend on: ok/code + approvedEffects + mode.
  */
 
-function makeInput(overrides?: Partial<any>) {
+function makeInput(overrides?: Partial<any>): CommitInput {
   return {
     proposalId: "proposal_1",
     revalidation: {
@@ -26,10 +27,30 @@ function makeInput(overrides?: Partial<any>) {
       effectsLogId: "effects_1",
       proposalId: "proposal_1",
       producedEffects: [
-        { objectId: "note_1", kind: "NOTE", trust: "PROVISIONAL" },
-        { objectId: "report_1", kind: "REPORT", trust: "PROVISIONAL" },
-        { objectId: "note_2", kind: "NOTE", trust: "COMMITTED" },
-        { objectId: "raw_1", kind: "RAW", trust: "UNTRUSTED" },
+        {
+          effectType: "ARTIFACT",
+          objectId: "note_1",
+          kind: "NOTE",
+          trust: "PROVISIONAL",
+        },
+        {
+          effectType: "ARTIFACT",
+          objectId: "report_1",
+          kind: "REPORT",
+          trust: "PROVISIONAL",
+        },
+        {
+          effectType: "ARTIFACT",
+          objectId: "note_2",
+          kind: "NOTE",
+          trust: "COMMITTED",
+        },
+        {
+          effectType: "ARTIFACT",
+          objectId: "raw_1",
+          kind: "RAW",
+          trust: "UNTRUSTED",
+        },
       ],
     },
     ...overrides,
@@ -128,8 +149,18 @@ test("PARTIAL_COMMIT with empty allowlist returns ok and empty approvedEffects",
       effectsLog: {
         ...makeInput().effectsLog,
         producedEffects: [
-          { objectId: "note_1", kind: "NOTE", trust: "PROVISIONAL" },
-          { objectId: "report_1", kind: "REPORT", trust: "PROVISIONAL" },
+          {
+            effectType: "ARTIFACT",
+            objectId: "note_1",
+            kind: "NOTE",
+            trust: "PROVISIONAL",
+          },
+          {
+            effectType: "ARTIFACT",
+            objectId: "report_1",
+            kind: "REPORT",
+            trust: "PROVISIONAL",
+          },
         ],
       },
     })
@@ -153,7 +184,12 @@ test("ALLOWLIST_UNKNOWN_OBJECT when PARTIAL_COMMIT allowlist references an objec
       effectsLog: {
         ...makeInput().effectsLog,
         producedEffects: [
-          { objectId: "note_1", kind: "NOTE", trust: "PROVISIONAL" },
+          {
+            effectType: "ARTIFACT",
+            objectId: "note_1",
+            kind: "NOTE",
+            trust: "PROVISIONAL",
+          },
         ],
       },
     })
@@ -175,10 +211,30 @@ test("PARTIAL_COMMIT approvedEffects includes only allowlisted objects that are 
       effectsLog: {
         ...makeInput().effectsLog,
         producedEffects: [
-          { objectId: "note_1", kind: "NOTE", trust: "PROVISIONAL" },
-          { objectId: "report_1", kind: "REPORT", trust: "PROVISIONAL" },
-          { objectId: "note_2", kind: "NOTE", trust: "COMMITTED" },
-          { objectId: "raw_1", kind: "RAW", trust: "UNTRUSTED" },
+          {
+            effectType: "ARTIFACT",
+            objectId: "note_1",
+            kind: "NOTE",
+            trust: "PROVISIONAL",
+          },
+          {
+            effectType: "ARTIFACT",
+            objectId: "report_1",
+            kind: "REPORT",
+            trust: "PROVISIONAL",
+          },
+          {
+            effectType: "ARTIFACT",
+            objectId: "note_2",
+            kind: "NOTE",
+            trust: "COMMITTED",
+          },
+          {
+            effectType: "ARTIFACT",
+            objectId: "raw_1",
+            kind: "RAW",
+            trust: "UNTRUSTED",
+          },
         ],
       },
     })

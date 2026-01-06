@@ -1,8 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { commitStage } from "#/rna/pipelines/ingestion/stages/commit/commit.stage";
+import type { CommitInput } from "#types/rna/pipeline/ingestion/commit/commit.types";
 
-function makeInput(overrides?: Partial<any>) {
+function makeInput(overrides?: Partial<any>): CommitInput {
   return {
     proposalId: "proposal_1",
     revalidation: {
@@ -14,10 +15,30 @@ function makeInput(overrides?: Partial<any>) {
       effectsLogId: "effects_1",
       proposalId: "proposal_1",
       producedEffects: [
-        { objectId: "note_1", kind: "NOTE", trust: "PROVISIONAL" },
-        { objectId: "report_1", kind: "REPORT", trust: "PROVISIONAL" },
-        { objectId: "note_2", kind: "NOTE", trust: "COMMITTED" },
-        { objectId: "raw_1", kind: "RAW", trust: "UNTRUSTED" },
+        {
+          effectType: "ARTIFACT",
+          objectId: "note_1",
+          kind: "NOTE",
+          trust: "PROVISIONAL",
+        },
+        {
+          effectType: "ARTIFACT",
+          objectId: "report_1",
+          kind: "REPORT",
+          trust: "PROVISIONAL",
+        },
+        {
+          effectType: "ARTIFACT",
+          objectId: "note_2",
+          kind: "NOTE",
+          trust: "COMMITTED",
+        },
+        {
+          effectType: "ARTIFACT",
+          objectId: "raw_1",
+          kind: "RAW",
+          trust: "UNTRUSTED",
+        },
       ],
     },
     ...overrides,
@@ -52,8 +73,18 @@ test("commits nothing if there are no PROVISIONAL objects", () => {
       effectsLog: {
         ...makeInput().effectsLog,
         producedEffects: [
-          { objectId: "note_2", kind: "NOTE", trust: "COMMITTED" },
-          { objectId: "raw_1", kind: "RAW", trust: "UNTRUSTED" },
+          {
+            effectType: "ARTIFACT",
+            objectId: "note_2",
+            kind: "NOTE",
+            trust: "COMMITTED",
+          },
+          {
+            effectType: "ARTIFACT",
+            objectId: "raw_1",
+            kind: "RAW",
+            trust: "UNTRUSTED",
+          },
         ],
       },
     })
@@ -103,7 +134,12 @@ test("empty allowlist when PARTIAL_COMMIT commits nothing", () => {
       effectsLog: {
         ...makeInput().effectsLog,
         producedEffects: [
-          { objectId: "note_1", kind: "NOTE", trust: "PROVISIONAL" },
+          {
+            effectType: "ARTIFACT",
+            objectId: "note_1",
+            kind: "NOTE",
+            trust: "PROVISIONAL",
+          },
         ],
       },
     })
@@ -112,7 +148,6 @@ test("empty allowlist when PARTIAL_COMMIT commits nothing", () => {
   assert.equal(result.proposalId, "proposal_1");
   assert.match(result.commitId, /^commit_\d+$/);
 
-  // Only two provisional objects should be promoted
   assert.equal(result.approvedEffects.length, 0);
   assert.deepEqual(result.approvedEffects, []);
 });
@@ -129,7 +164,12 @@ test("rejects allowlisted objects when PARTIAL_COMMIT that aren’t PROVISIONAL"
         effectsLog: {
           ...makeInput().effectsLog,
           producedEffects: [
-            { objectId: "note_1", kind: "NOTE", trust: "PROVISIONAL" },
+            {
+              effectType: "ARTIFACT",
+              objectId: "note_1",
+              kind: "NOTE",
+              trust: "PROVISIONAL",
+            },
           ],
         },
       })
@@ -143,15 +183,12 @@ test("rejects allowlisted objects when PARTIAL_COMMIT that aren’t PROVISIONAL"
 test("emits one promotion record per committed object", () => {
   const result = commitStage(makeInput());
 
-  // You will add: result.promotions
   assert.ok(Array.isArray((result as any).promotions), "promotions must exist");
 
   const promotions = (result as any).promotions as Array<any>;
 
-  // only note_1 + report_1 are committed
   assert.equal(promotions.length, 2);
 
-  // each promotion should correspond to a committed object
   const committedIds = result.approvedEffects.map((o) => o.objectId).sort();
   const promotedIds = promotions.map((p) => p.objectId).sort();
   assert.deepEqual(promotedIds, committedIds);
@@ -184,8 +221,18 @@ test("PARTIAL_COMMIT emits promotion records only for allowlisted objects", () =
       effectsLog: {
         ...makeInput().effectsLog,
         producedEffects: [
-          { objectId: "note_1", kind: "NOTE", trust: "PROVISIONAL" },
-          { objectId: "report_1", kind: "REPORT", trust: "PROVISIONAL" },
+          {
+            effectType: "ARTIFACT",
+            objectId: "note_1",
+            kind: "NOTE",
+            trust: "PROVISIONAL",
+          },
+          {
+            effectType: "ARTIFACT",
+            objectId: "report_1",
+            kind: "REPORT",
+            trust: "PROVISIONAL",
+          },
         ],
       },
     })
@@ -194,7 +241,6 @@ test("PARTIAL_COMMIT emits promotion records only for allowlisted objects", () =
   assert.ok(Array.isArray((result as any).promotions), "promotions must exist");
   const promotions = (result as any).promotions as Array<any>;
 
-  // only allowlisted note_1 is committed
   assert.equal(result.approvedEffects.length, 1);
   assert.equal(result.approvedEffects[0]?.objectId, "note_1");
 
@@ -216,7 +262,12 @@ test("PARTIAL_COMMIT with empty allowlist emits zero promotion records", () => {
       effectsLog: {
         ...makeInput().effectsLog,
         producedEffects: [
-          { objectId: "note_1", kind: "NOTE", trust: "PROVISIONAL" },
+          {
+            effectType: "ARTIFACT",
+            objectId: "note_1",
+            kind: "NOTE",
+            trust: "PROVISIONAL",
+          },
         ],
       },
     })
@@ -242,8 +293,18 @@ test("does not emit promotion records for non-PROVISIONAL produced objects", () 
       effectsLog: {
         ...makeInput().effectsLog,
         producedEffects: [
-          { objectId: "note_2", kind: "NOTE", trust: "COMMITTED" },
-          { objectId: "raw_1", kind: "RAW", trust: "UNTRUSTED" },
+          {
+            effectType: "ARTIFACT",
+            objectId: "note_2",
+            kind: "NOTE",
+            trust: "COMMITTED",
+          },
+          {
+            effectType: "ARTIFACT",
+            objectId: "raw_1",
+            kind: "RAW",
+            trust: "UNTRUSTED",
+          },
         ],
       },
     })
