@@ -1,12 +1,12 @@
-import { PrecommitRule } from "./commit.rules";
-import { CommitInputSchema } from "./commit.schemas";
+import { PrecommitRule } from "#types/rna/pipeline/ingestion/commit/commit.rules";
+import { CommitInputSchema } from "#types/rna/pipeline/ingestion/commit/commit.schemas";
 import {
   GuardPrecommitResult,
   Mode,
   Trace,
   // RejectedEffect,
   CommitReadyMode,
-} from "./commit.types";
+} from "#types/rna/pipeline/ingestion/commit/commit.types";
 
 const makeErrorResult = ({
   code,

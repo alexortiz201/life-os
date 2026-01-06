@@ -95,7 +95,7 @@ REQUIRE:
 PRECOMMIT_GUARD_OUTPUT:
   - parsed CommitInput (canonical)
   - COMMIT_MODE: FULL | PARTIAL
-  - COMMIT_SET: list of eligible objects to promote
+  - ELIGIBLE_EFFECTS: list of eligible effects to promote
   - HALT_REASON on failure (fail-closed)
 
 RULE:

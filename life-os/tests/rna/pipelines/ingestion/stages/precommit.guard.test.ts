@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { guardPrecommit } from "#/rna/pipelines/ingestion/stages/precommit.guard";
+import { guardPrecommit } from "#/rna/pipelines/ingestion/stages/commit/precommit.guard";
 
 /**
  * These tests define the *minimum contract* your guard must satisfy.

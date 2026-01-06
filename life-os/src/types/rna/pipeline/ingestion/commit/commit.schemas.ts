@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { TrustLevelSchema } from "#/domain/trust/trust.schemas";
+import { TrustLevelSchema } from "#types/domain/trust/trust.schemas";
+import { COMMIT_OUTCOMES } from "#/types/rna/pipeline/ingestion/commit/commitDecision.constants";
 
 export const ProducedEffectSchema = z.object({
   objectId: z.string().min(1),
@@ -15,7 +16,7 @@ const ExecutionEffectsLogSchema = z.object({
 
 const RevalidationDecisionSchema = z.object({
   proposalId: z.string().min(1),
-  outcome: z.enum(["APPROVE_COMMIT", "PARTIAL_COMMIT", "REJECT_COMMIT"]),
+  outcome: z.enum(COMMIT_OUTCOMES),
   commitAllowList: z.string().array().default([]),
 });
 

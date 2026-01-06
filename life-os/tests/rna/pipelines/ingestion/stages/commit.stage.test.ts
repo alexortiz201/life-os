@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { commitStage } from "#/rna/pipelines/ingestion/stages/commit.stage";
+import { commitStage } from "#/rna/pipelines/ingestion/stages/commit/commit.stage";
 
 function makeInput(overrides?: Partial<any>) {
   return {

@@ -1,6 +1,6 @@
 import z from "zod";
 import { CommitInputSchema, ProducedEffectSchema } from "./commit.schemas";
-import type { TrustLevel } from "#/domain/trust/trust.types";
+import type { TrustLevel } from "#types/domain/trust/trust.types";
 import type { PrecommitRule } from "./commit.rules";
 
 export type TrustPromotionRecord = {
@@ -58,7 +58,7 @@ export type CommitRecord = {
 export type CommitInput = z.infer<typeof CommitInputSchema>;
 
 // success-only mode (since you fail-closed on unsupported outcomes)
-export type CommitReadyMode = "FULL" | "PARTIAL";
+export type CommitReadyMode = Exclude<Mode, "UNKNOWN">;
 
 export type CommitReady = {
   proposalId: string;

@@ -1,5 +1,7 @@
 import { guardTrustPromotion } from "#/domain/trust/trustPromotion.guard";
-import { CommitRecord } from "./commit.types";
+
+import type { CommitRecord } from "#types/rna/pipeline/ingestion/commit/commit.types";
+
 import { guardPrecommit } from "./precommit.guard";
 
 export function commitStage(input: unknown): CommitRecord {

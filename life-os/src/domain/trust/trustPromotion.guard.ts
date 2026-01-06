@@ -1,9 +1,9 @@
 import { z } from "zod";
-import { TrustLevelSchema } from "./trust.schemas";
-import { TRUST_RANK } from "./trust.constants";
+import { TrustLevelSchema } from "#types/domain/trust/trust.schemas";
+import { TRUST_RANK } from "#types/domain/trust/trust.constants";
 
-import { PipelineStageSchema } from "#/domain/pipeline/pipeline.schemas";
-import type { PipelineStage } from "#/domain/pipeline/pipeline.types";
+import { PipelineStageSchema } from "#/types/rna/pipeline/pipeline.schemas";
+import type { PipelineStage } from "#/types/rna/pipeline/pipeline.types";
 
 const TrustPromotionRequestSchema = z.object({
   from: TrustLevelSchema,
