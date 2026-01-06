@@ -110,7 +110,7 @@ test("APPROVE_COMMIT returns FULL mode and approvedEffects includes all PROVISIO
     assert.equal((result as any).data.mode, "FULL");
 
     // Only provisional objects should be eligible: note_1 + report_1
-    assert.deepEqual(ids((result as any).data.eligibleEffects), [
+    assert.deepEqual(ids((result as any).data.commitEligibleEffects), [
       "note_1",
       "report_1",
     ]);
@@ -138,7 +138,7 @@ test("PARTIAL_COMMIT with empty allowlist returns ok and empty approvedEffects",
   assert.equal((result as any).ok, true);
   if ((result as any).ok) {
     assert.equal((result as any).data.mode, "PARTIAL");
-    assert.deepEqual((result as any).data.eligibleEffects, []);
+    assert.deepEqual((result as any).data.commitEligibleEffects, []);
   }
 });
 
@@ -189,7 +189,7 @@ test("PARTIAL_COMMIT approvedEffects includes only allowlisted objects that are 
     assert.equal((result as any).data.mode, "PARTIAL");
 
     // allowlist may include non-provisional ids; approvedEffects must filter them out
-    assert.deepEqual(ids((result as any).data.eligibleEffects), [
+    assert.deepEqual(ids((result as any).data.commitEligibleEffects), [
       "note_1",
       "report_1",
     ]);

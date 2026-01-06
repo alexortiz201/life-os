@@ -1,7 +1,15 @@
 import z from "zod";
-import { CommitInputSchema, ProducedEffectSchema } from "./commit.schemas";
+
+import type {
+  EffectDecisionMode,
+  EffectDecisionModeOrUnknown,
+  GuardResult,
+  StageGuardTrace,
+} from "#types/rna/pipeline/pipeline.types";
+import type { ArtifactEffect } from "#types/domain/effects/effects.types";
 import type { TrustLevel } from "#types/domain/trust/trust.types";
 import type { PrecommitRule } from "./commit.rules";
+import { CommitInputSchema } from "./commit.schemas";
 
 export type TrustPromotionRecord = {
   objectId: string;
@@ -15,10 +23,6 @@ export type TrustPromotionRecord = {
 };
 
 type Note = any;
-
-export type Mode = "FULL" | "PARTIAL" | "UNKNOWN";
-
-export type EligibleEffect = z.infer<typeof ProducedEffectSchema>;
 
 export type ApprovedEffect = {
   objectId: string;
@@ -36,7 +40,7 @@ export type RejectedEffect = {
 };
 
 export type Justification = {
-  mode: CommitReadyMode;
+  mode: EffectDecisionMode;
   rulesApplied: PrecommitRule[];
   inputs: Array<{
     commitId: string;
@@ -57,29 +61,25 @@ export type CommitRecord = {
 
 export type CommitInput = z.infer<typeof CommitInputSchema>;
 
-// success-only mode (since you fail-closed on unsupported outcomes)
-export type CommitReadyMode = Exclude<Mode, "UNKNOWN">;
-
 export type CommitReady = {
   proposalId: string;
   effectsLogId: string;
-  mode: CommitReadyMode;
-  eligibleEffects: Array<EligibleEffect>;
+  mode: EffectDecisionMode;
+  commitEligibleEffects: Array<ArtifactEffect>;
   allowListCount: number;
   rulesApplied: PrecommitRule[];
   rejectedEffects: Array<RejectedEffect>;
 };
 
-export type Trace = Partial<{
-  mode: Mode;
-  proposalId: string;
-  revalidationDeclaredProposalId: string;
-  effectsLogDeclaredProposalId: string;
-  effectsLogId: string;
-  allowListCount: number;
-  rulesApplied: PrecommitRule[];
-}>;
+export type PrecommitTrace = StageGuardTrace<
+  EffectDecisionModeOrUnknown,
+  PrecommitRule
+> &
+  Partial<{
+    revalidationDeclaredProposalId: string;
+    effectsLogDeclaredProposalId: string;
+    effectsLogId: string;
+    allowListCount: number;
+  }>;
 
-export type GuardPrecommitResult =
-  | { ok: true; data: CommitReady }
-  | { ok: false; code: string; message: string; trace: Trace };
+export type GuardPrecommitResult = GuardResult<CommitReady, PrecommitTrace>;

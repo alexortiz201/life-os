@@ -1,10 +1,13 @@
 import { guardTrustPromotion } from "#/domain/trust/trustPromotion.guard";
 
-import type { CommitRecord } from "#types/rna/pipeline/ingestion/commit/commit.types";
+import type {
+  CommitInput,
+  CommitRecord,
+} from "#types/rna/pipeline/ingestion/commit/commit.types";
 
 import { guardPrecommit } from "./precommit.guard";
 
-export function commitStage(input: unknown): CommitRecord {
+export function commitStage(input: CommitInput): CommitRecord {
   const result = guardPrecommit(input);
 
   if (!result.ok) {
@@ -24,7 +27,7 @@ export function commitStage(input: unknown): CommitRecord {
   };
   const promotions: CommitRecord["promotions"] = [];
 
-  if (ok && data.mode === "PARTIAL" && !data.eligibleEffects.length) {
+  if (ok && data.mode === "PARTIAL" && !data.commitEligibleEffects.length) {
     return {
       commitId,
       proposalId,
@@ -37,7 +40,9 @@ export function commitStage(input: unknown): CommitRecord {
 
   const effectsLogId = data.effectsLogId;
 
-  for (const obj of data.eligibleEffects) {
+  for (const obj of data.commitEligibleEffects) {
+    if (obj.effectType !== "ARTIFACT") continue;
+
     const reason = "Commit stage promotion of provisional execution outputs.";
     const guard = guardTrustPromotion({
       from: obj.trust,

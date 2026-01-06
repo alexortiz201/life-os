@@ -1,8 +1,8 @@
 // import { guardTrustPromotion } from "#/domain/trust/trustPromotion.guard";
-import type { RevalidationDecision } from "#types/rna/pipeline/ingestion/revalidation/revalidation.types";
+import type { RevalidationCommitDirective } from "#types/rna/pipeline/ingestion/revalidation/revalidation.types";
 // import { guardPrecommit } from "../precommit.guard";
 
-export function commitStage(input: unknown): RevalidationDecision {
+export function revalidationStage(input: unknown): RevalidationCommitDirective {
   // const result = guardPrecommit(input);
 
   // if (!result.ok) {
@@ -14,5 +14,5 @@ export function commitStage(input: unknown): RevalidationDecision {
   // const commitId = `commit_${Date.now()}`;
   // const proposalId = data.proposalId;
 
-  return {} as any;
+  return { proposalId: "", outcome: "REJECT_COMMIT", commitAllowList: [] };
 }

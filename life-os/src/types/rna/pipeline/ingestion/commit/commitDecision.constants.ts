@@ -3,3 +3,5 @@ export const COMMIT_OUTCOMES = [
   "PARTIAL_COMMIT",
   "REJECT_COMMIT",
 ] as const;
+
+export type CommitOutcome = (typeof COMMIT_OUTCOMES)[number];

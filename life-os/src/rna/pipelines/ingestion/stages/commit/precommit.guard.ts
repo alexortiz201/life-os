@@ -1,11 +1,13 @@
+import { ArtifactEffect } from "#/types/domain/effects/effects.types";
+import {
+  EffectDecisionMode,
+  EffectDecisionModeOrUnknown,
+} from "#/types/rna/pipeline/pipeline.types";
 import { PrecommitRule } from "#types/rna/pipeline/ingestion/commit/commit.rules";
 import { CommitInputSchema } from "#types/rna/pipeline/ingestion/commit/commit.schemas";
 import {
   GuardPrecommitResult,
-  Mode,
-  Trace,
-  // RejectedEffect,
-  CommitReadyMode,
+  PrecommitTrace,
 } from "#types/rna/pipeline/ingestion/commit/commit.types";
 
 const makeErrorResult = ({
@@ -15,7 +17,7 @@ const makeErrorResult = ({
 }: {
   code: string;
   message: string;
-  trace: Trace;
+  trace: PrecommitTrace;
 }) => ({ ok: false as false, code, message, trace });
 
 export function guardPrecommit(input: unknown): GuardPrecommitResult {
@@ -23,7 +25,7 @@ export function guardPrecommit(input: unknown): GuardPrecommitResult {
 
   if (!parsed.success) {
     const revalidation = (input as any)?.revalidation;
-    const mode: Mode =
+    const mode: EffectDecisionModeOrUnknown =
       revalidation?.outcome === "PARTIAL_COMMIT"
         ? "PARTIAL"
         : revalidation?.outcome === "APPROVE_COMMIT"
@@ -47,7 +49,7 @@ export function guardPrecommit(input: unknown): GuardPrecommitResult {
 
   const data = parsed.data;
   const { revalidation, effectsLog, proposalId } = data;
-  const mode: Mode =
+  const mode: EffectDecisionModeOrUnknown =
     revalidation.outcome === "PARTIAL_COMMIT"
       ? "PARTIAL"
       : revalidation.outcome === "APPROVE_COMMIT"
@@ -108,11 +110,11 @@ export function guardPrecommit(input: unknown): GuardPrecommitResult {
 
   const effectsLogId = effectsLog.effectsLogId;
   const commitReadyData = {
-    mode: mode as CommitReadyMode,
+    mode: mode as EffectDecisionMode,
     proposalId,
     effectsLogId,
     allowListCount: revalidation.commitAllowList.length,
-    eligibleEffects: [],
+    commitEligibleEffects: [],
     rejectedEffects: [],
     rulesApplied: [] satisfies PrecommitRule[],
   };
@@ -132,11 +134,13 @@ export function guardPrecommit(input: unknown): GuardPrecommitResult {
     };
   }
 
-  const provisionalEffects: typeof effectsLog.producedEffects = [];
+  const provisionalEffects: ArtifactEffect[] = [];
   const producedEffectsIds = effectsLog.producedEffects.reduce((acc, o) => {
-    if (o.trust === "PROVISIONAL") provisionalEffects.push(o);
+    if (o.effectType === "ARTIFACT") {
+      if (o.trust === "PROVISIONAL") provisionalEffects.push(o);
 
-    acc.push(o.objectId);
+      acc.push(o.objectId);
+    }
 
     return acc;
   }, [] as string[]);
@@ -176,7 +180,7 @@ export function guardPrecommit(input: unknown): GuardPrecommitResult {
       ok: true,
       data: {
         ...commitReadyData,
-        eligibleEffects: [...allowListEffects],
+        commitEligibleEffects: [...allowListEffects],
         rejectedEffects: [],
         rulesApplied: [
           "PARTIAL_COMMIT_USE_ALLOWLIST",
@@ -189,7 +193,7 @@ export function guardPrecommit(input: unknown): GuardPrecommitResult {
     ok: true,
     data: {
       ...commitReadyData,
-      eligibleEffects: [...provisionalEffects],
+      commitEligibleEffects: [...provisionalEffects],
       rejectedEffects: [],
       rulesApplied: [
         "FULL_COMMIT_ALL_PROVISIONAL_EFFECTS",

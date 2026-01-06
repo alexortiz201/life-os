@@ -1,238 +1,291 @@
 # COMMIT — STAGE CONTRACT
 
 PURPOSE:
-  Define the only moment where
-  new meaning becomes trusted by the system.
+Define the only moment where
+new meaning becomes trusted by the system.
 
 ROLE:
-  Commit transforms provisional effects
-  into authoritative system belief.
+Commit transforms provisional effects
+into authoritative system belief.
 
 SCOPE:
-  This contract governs ONLY commit.
-  It does NOT define execution or validation.
+This contract governs ONLY commit.
+It does NOT define execution, validation, or downstream orchestration.
 
 ---
 
 # STAGE DEFINITION
 
 STAGE:
-  NAME: COMMIT
-  POSITION: Final stage in RNA execution pipeline
+NAME: COMMIT
+POSITION: Final stage in RNA execution pipeline
 
 RULE:
-  Commit is the only trust boundary.
+Commit is the only trust boundary.
 
 ---
 
 # INPUTS
 
 INPUT:
-  PROPOSAL_RECORD
-  REVALIDATION_DECISION
-  EXECUTION_EFFECTS_LOG
+- PROPOSAL_RECORD
+- REVALIDATION_DECISION
+- EXECUTION_EFFECTS_LOG
 
 RULE:
-  Commit may only act on
-  explicitly approved effects.
+Commit may only act on
+explicitly approved effects.
+
+---
+
+# EFFECT MODEL
+
+DEFINITION:
+An Effect represents a claimed outcome of execution.
+
+EFFECT_CATEGORIES (NON-EXHAUSTIVE):
+- ArtifactEffect: produces a durable object (note, report, record, file, etc.)
+- DispatchEffect: signals intent to trigger another pipeline or agent
+- ExternalEffect: represents an interaction with an external system
+
+RULE:
+Only ArtifactEffects are eligible to become trusted system meaning.
+
+NOTE:
+Non-artifact effects MAY be recorded or audited,
+but MUST NOT be promoted to COMMITTED trust.
 
 ---
 
 # REVALIDATION OUTCOME → COMMIT MODE
 
 RULE:
-  COMMIT_MODE is derived from REVALIDATION outcome.
+COMMIT_MODE is derived from REVALIDATION outcome.
 
 MAPPING:
-  outcome: APPROVE_COMMIT  -> COMMIT_MODE: FULL
-  outcome: PARTIAL_COMMIT  -> COMMIT_MODE: PARTIAL
+- outcome: APPROVE_COMMIT → COMMIT_MODE: FULL
+- outcome: PARTIAL_COMMIT → COMMIT_MODE: PARTIAL
+
+NOTE:
+COMMIT_MODE describes how eligibility is selected,
+not whether commit is allowed.
 
 ---
 
 # ALLOWLIST SEMANTICS
 
 RULE:
-  commitAllowList is meaningful ONLY in PARTIAL mode.
+commitAllowList is meaningful ONLY in PARTIAL mode.
 
 FULL_MODE_RULE:
-  IF outcome == APPROVE_COMMIT
-  THEN commitAllowList MUST be ignored by COMMIT logic.
+IF outcome == APPROVE_COMMIT
+THEN commitAllowList MUST be ignored by COMMIT logic.
 
 NOTE:
-  The system MAY accept commitAllowList as input for compatibility,
-  but it must not affect what is committed in FULL mode.
+The system MAY accept commitAllowList as input for compatibility,
+but it MUST NOT affect what is committed in FULL mode.
 
 PARTIAL_MODE_RULE:
-  IF outcome == PARTIAL_COMMIT
-  THEN commitAllowList is authoritative for selecting commit candidates.
+IF outcome == PARTIAL_COMMIT
+THEN commitAllowList is authoritative for selecting commit candidates.
 
 PARTIAL_EMPTY_ALLOWLIST_RULE:
-  IF outcome == PARTIAL_COMMIT AND commitAllowList is empty
-  THEN COMMIT MUST commit nothing AND MUST still emit a COMMIT_RECORD.
+IF outcome == PARTIAL_COMMIT AND commitAllowList is empty
+THEN COMMIT MUST commit nothing
+AND MUST still emit a COMMIT_RECORD.
 
 ---
 
 # ELIGIBILITY RULE (MINIMAL V1)
 
 RULE:
-  Only PROVISIONAL produced objects are eligible for promotion in this stage.
+An effect is eligible for promotion IF AND ONLY IF:
+- effect.type == ArtifactEffect
+- effect.trust == PROVISIONAL
 
 FORBIDDEN:
-  - committing UNTRUSTED objects
-  - re-committing already COMMITTED objects
-  - deriving new objects inside COMMIT (no new execution)
+- committing UNTRUSTED effects
+- re-committing already COMMITTED effects
+- committing non-artifact effects
+- deriving new objects inside COMMIT (no new execution)
 
 ---
 
 # REQUIRED PRECOMMIT GUARD
 
 RULE:
-  COMMIT must not interpret raw input directly.
+COMMIT must not interpret raw input directly.
 
 REQUIRE:
-  A PRECOMMIT_GUARD must run before any promotions are attempted.
+A PRECOMMIT_GUARD must run before any promotions are attempted.
 
 PRECOMMIT_GUARD_OUTPUT:
-  - parsed CommitInput (canonical)
-  - COMMIT_MODE: FULL | PARTIAL
-  - ELIGIBLE_EFFECTS: list of eligible effects to promote
-  - HALT_REASON on failure (fail-closed)
+- parsed CommitInput (canonical)
+- COMMIT_MODE: FULL | PARTIAL
+- COMMIT_ELIGIBLE_EFFECTS: list of effects eligible for promotion in COMMIT
+- RULES_APPLIED: list of governing rules
+- TRACE metadata for auditability
+- HALT_REASON on failure (fail-closed)
 
 RULE:
-  COMMIT_STAGE may only iterate over COMMIT_SET produced by the guard.
+COMMIT_STAGE may only iterate over
+COMMIT_ELIGIBLE_EFFECTS produced by the guard.
 
 ---
 
 # OUTPUTS
 
 OUTPUT:
-  COMMIT_RECORD
-  TRUST_UPDATES
+- COMMIT_RECORD
+- TRUST_UPDATES
 
 COMMIT_RECORD_MUST_CONTAIN:
-  - commit_id
-  - proposal_id
-  - effects_log_id
-  - committed_objects
-  - promotions
-  - timestamp
-  - actor_attribution (system)
-  - approvedEffects
-  - rejectedEffects
-  - justification
+- commit_id
+- proposal_id
+- effects_log_id
+- approvedEffects
+- rejectedEffects
+- promotions
+- justification
+- timestamp
+- actor_attribution (system)
+
+JUSTIFICATION_MUST_CONTAIN:
+- commit_mode (FULL | PARTIAL)
+- rulesApplied
+- inputs (proposalId, allowListCount, commitId)
 
 TRUST_UPDATES_MUST:
-  - promote provisional objects to COMMITTED
-  - update meaning-level state accordingly
+- promote eligible ArtifactEffects from PROVISIONAL → COMMITTED
+- update meaning-level state atomically
 
-NOTE: justification.mode - FULL ignores allowlist, PARTIAL uses it
+NOTE:
+FULL mode ignores allowlist.
+PARTIAL mode uses allowlist.
 
 ---
 
 # PROMOTION RECORDS
 
 RULE:
-  Every committed object MUST have a corresponding promotion record.
+Every approved effect MUST have a corresponding promotion record.
 
 PROMOTION_1_TO_1_RULE:
-  For each committedObject:
-    - exactly one TrustPromotionRecord exists
+For each approvedEffect:
+- exactly one TrustPromotionRecord exists
 
 TrustPromotionRecord MUST include:
-  - objectId
-  - from: PROVISIONAL
-  - to: COMMITTED
-  - stage: COMMIT
-  - proposalId
-  - effectsLogId
-  - commitId
-  - reason
+- objectId
+- from: PROVISIONAL
+- to: COMMITTED
+- stage: COMMIT
+- proposalId
+- effectsLogId
+- commitId
+- reason
+
+---
+
+# POST-COMMIT BEHAVIOR
+
+RULE:
+COMMIT MUST NOT directly trigger new pipelines or actions.
+
+INSTEAD:
+- Downstream pipelines MAY observe COMMIT_RECORDS
+- New work MUST be introduced as new PROPOSALS
+- All downstream execution re-enters governance from intake
+
+RATIONALE:
+Commit establishes truth.
+It does not schedule work.
 
 ---
 
 # RESPONSIBILITIES
 
 THIS_STAGE_MUST:
-  - commit only approved effects
-  - escalate trust explicitly
-  - update system meaning atomically
-  - record irreversible decisions
+- commit only approved ArtifactEffects
+- escalate trust explicitly
+- update system meaning atomically
+- record irreversible decisions
 
 THIS_STAGE_MUST_NOT:
-  - execute new actions
-  - reinterpret validation
-  - bypass constraints
-  - create meaning outside justification
+- execute new actions
+- reinterpret validation
+- bypass constraints
+- create meaning outside justification
 
 RULE:
-  Commit is decisive and final.
+Commit is decisive and final.
 
 ---
 
 # FAILURE BEHAVIOR
 
 FAILURE_ALLOWED_ONLY_IF:
-  - preconditions are unmet
-  - inconsistency detected
-  - atomicity cannot be guaranteed
+- preconditions are unmet
+- inconsistency detected
+- atomicity cannot be guaranteed
 
 FAILURE_MODE:
-  HARD STOP
+HARD STOP
 
 FAILURE_MEANS:
-  - no trust is escalated
-  - provisional state remains intact
+- no trust is escalated
+- provisional state remains intact
 
 ---
 
 # STAGE INVARIANTS
 
 INVARIANT_1:
-  Commit is atomic at the meaning level.
+Commit is atomic at the meaning level.
 
 INVARIANT_2:
-  Commit is irreversible at the trust boundary.
+Commit is irreversible at the trust boundary.
 
 INVARIANT_3:
-  Commit is the only creator of COMMITTED meaning.
+Commit is the only creator of COMMITTED meaning.
 
 ---
 
 # TRUST MODEL
 
 TRUST_LEVEL:
-  TRUSTED
+COMMITTED
 
 RULE:
-  After commit, the system must act
-  as if the committed meaning is true.
+After commit, the system MUST act
+as if the committed meaning is true.
 
 ---
 
 # AUDITABILITY
 
 AUDIT_REQUIREMENT:
-  The system MUST be able to answer:
-    - what became trusted?
-    - why was it allowed?
-    - who approved it?
-    - how can trust be revoked?
+The system MUST be able to answer:
+- what became trusted?
+- why was it allowed?
+- which rules applied?
+- who approved it?
+- how can trust be revoked?
 
 ---
 
 # ONE LINE SPINE
 
 STATEMENT:
-  "Commit is where the system agrees
-   to believe what happened."
+"Commit is where the system agrees
+to believe what happened."
 
 ---
 
 # SUPER SIMPLE
 
 SUMMARY:
-  Approve.
-  Promote.
-  Record.
+Approve meaning.
+Promote artifacts.
+Record truth.
 
 END
