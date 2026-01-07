@@ -1,3 +1,4 @@
+import { errorResultFactory } from "#/rna/pipelines/pipeline-utils";
 import { ArtifactEffect } from "#/types/domain/effects/effects.types";
 import {
   EffectDecisionMode,
@@ -6,21 +7,14 @@ import {
 import { PrecommitRule } from "#types/rna/pipeline/ingestion/commit/commit.rules";
 import { CommitInputSchema } from "#types/rna/pipeline/ingestion/commit/commit.schemas";
 import {
+  CommitInput,
   GuardPrecommitResult,
   PrecommitTrace,
 } from "#types/rna/pipeline/ingestion/commit/commit.types";
 
-const makeErrorResult = ({
-  code,
-  message,
-  trace,
-}: {
-  code: string;
-  message: string;
-  trace: PrecommitTrace;
-}) => ({ ok: false as false, code, message, trace });
+const errorResult = errorResultFactory<PrecommitTrace>();
 
-export function guardPrecommit(input: unknown): GuardPrecommitResult {
+export function guardPrecommit(input: CommitInput): GuardPrecommitResult {
   const parsed = CommitInputSchema.safeParse(input);
 
   if (!parsed.success) {
@@ -32,7 +26,7 @@ export function guardPrecommit(input: unknown): GuardPrecommitResult {
         ? "FULL"
         : "UNKNOWN";
 
-    return makeErrorResult({
+    return errorResult({
       code: "INVALID_COMMIT_INPUT",
       message: "Input invalid",
       trace: {
@@ -58,7 +52,7 @@ export function guardPrecommit(input: unknown): GuardPrecommitResult {
 
   // Minimal safety: ensure everything is linked to the same proposal
   if (revalidation.proposalId !== proposalId) {
-    return makeErrorResult({
+    return errorResult({
       code: "COMMIT_INPUT_MISMATCH",
       message: "revalidation.proposalId does not match proposalId",
       trace: {
@@ -75,7 +69,7 @@ export function guardPrecommit(input: unknown): GuardPrecommitResult {
     });
   }
   if (effectsLog.proposalId !== proposalId) {
-    return makeErrorResult({
+    return errorResult({
       code: "COMMIT_INPUT_MISMATCH",
       message: "effectsLog.proposalId does not match proposalId",
       trace: {
@@ -93,7 +87,7 @@ export function guardPrecommit(input: unknown): GuardPrecommitResult {
   }
 
   if (!["APPROVE_COMMIT", "PARTIAL_COMMIT"].includes(revalidation.outcome)) {
-    return makeErrorResult({
+    return errorResult({
       code: "COMMIT_OUTCOME_UNSUPPORTED",
       message: "partial or full approval required",
       trace: {
@@ -153,7 +147,7 @@ export function guardPrecommit(input: unknown): GuardPrecommitResult {
     revalidation.outcome !== "APPROVE_COMMIT" &&
     unknownAllowListEffects.length
   ) {
-    return makeErrorResult({
+    return errorResult({
       code: "ALLOWLIST_UNKNOWN_OBJECT",
       message: "unknown allowlist object",
       trace: {

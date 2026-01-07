@@ -1,18 +1,30 @@
-// import { guardTrustPromotion } from "#/domain/trust/trustPromotion.guard";
-import type { RevalidationCommitDirective } from "#types/rna/pipeline/ingestion/revalidation/revalidation.types";
-// import { guardPrecommit } from "../precommit.guard";
+import type {
+  RevalidationDirectiveReady,
+  RevalidationInput,
+} from "#types/rna/pipeline/ingestion/revalidation/revalidation.types";
+import { guardRevalidation } from "./revalidation.guard";
 
-export function revalidationStage(input: unknown): RevalidationCommitDirective {
-  // const result = guardPrecommit(input);
+export function revalidationStage(
+  input: RevalidationInput
+): RevalidationDirectiveReady {
+  const result = guardRevalidation(input);
 
-  // if (!result.ok) {
-  //   throw new Error(`${result.code}: ${result.message}`);
-  // }
+  if (!result.ok) {
+    throw new Error(`${result.code}: ${result.message}`);
+  }
 
-  // const { ok, data } = result;
+  const { data } = result;
 
   // const commitId = `commit_${Date.now()}`;
-  // const proposalId = data.proposalId;
+  const { proposalId, effectsLog } = data;
 
-  return { proposalId: "", outcome: "REJECT_COMMIT", commitAllowList: [] };
+  return {
+    proposalId,
+    revalidation: {
+      proposalId,
+      outcome: "REJECT_COMMIT",
+      commitAllowList: [],
+    },
+    effectsLog,
+  };
 }
