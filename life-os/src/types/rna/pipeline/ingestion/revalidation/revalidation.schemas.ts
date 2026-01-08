@@ -7,6 +7,7 @@ export const RevalidationCommitDirectiveSchema = z.object({
   proposalId: z.string().min(1),
   outcome: z.enum(COMMIT_OUTCOMES),
   commitAllowList: z.string().array().default([]),
+  rulesApplied: z.string().array().default([]),
 });
 
 export const RevalidationInputSchema = z.object({

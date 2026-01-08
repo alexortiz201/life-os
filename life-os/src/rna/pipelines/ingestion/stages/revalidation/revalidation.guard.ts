@@ -41,6 +41,7 @@ export function guardRevalidation(
         proposalId: "",
         outcome: "APPROVE_COMMIT",
         commitAllowList: [],
+        rulesApplied: [] satisfies RevalidationRule[],
       },
     },
   };
