@@ -30,12 +30,18 @@ export function guardRevalidation(
     });
   }
 
+  const { proposalId, effectsLog } = parsed.data;
+
   return {
     ok: true,
     data: {
-      proposalId: "",
-      outcome: "APPROVE_COMMIT",
-      commitAllowList: [],
+      proposalId,
+      effectsLog,
+      revalidation: {
+        proposalId: "",
+        outcome: "APPROVE_COMMIT",
+        commitAllowList: [],
+      },
     },
   };
 }
