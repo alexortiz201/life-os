@@ -10,6 +10,7 @@ function makeInput(overrides?: Partial<any>): CommitInput {
       proposalId: "proposal_1",
       outcome: "APPROVE_COMMIT",
       commitAllowList: ["note_1", "report_1"],
+      rulesApplied: [],
     },
     effectsLog: {
       effectsLogId: "effects_1",

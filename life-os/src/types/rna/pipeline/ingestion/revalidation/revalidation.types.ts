@@ -1,15 +1,17 @@
 import z from "zod";
-
-import { CommitOutcome } from "#types/rna/pipeline/ingestion/commit/commitDecision.constants";
-import { ExecutionEffectsLogSchema } from "#types/rna/pipeline/ingestion/execution/execution.schemas";
-import {
+import type { CommitOutcome } from "#types/rna/pipeline/ingestion/commit/commitDecision.constants";
+import type {
   EffectDecisionModeOrUnknown,
   GuardResult,
   StageGuardTrace,
 } from "#types/rna/pipeline/pipeline.types";
 
-import { RevalidationCommitDirectiveSchema } from "./revalidation.schemas";
-import { RevalidationRule } from "./revalidation.rules";
+import { ExecutionEffectsLogSchema } from "#types/rna/pipeline/ingestion/execution/execution.schemas";
+import {
+  RevalidationCommitDirectiveSchema,
+  RevalidationInputSchema,
+} from "./revalidation.schemas";
+import type { RevalidationRule } from "./revalidation.rules";
 
 export type AllowedModes = ["FULL"] | ["FULL", "PARTIAL"];
 
@@ -17,30 +19,13 @@ export type CommitPolicy = {
   allowedModes: AllowedModes;
 };
 
-export type RevalidationDecision = {
-  proposalId: string;
-  validationDecisionId: string;
-  executionPlanId: string;
-  revisionId: string;
-  commitPolicy: CommitPolicy;
-  outcome: CommitOutcome;
-};
-
 export type RevalidationCommitDirective = z.infer<
   typeof RevalidationCommitDirectiveSchema
 >;
 
-type EffectsLog = z.infer<typeof ExecutionEffectsLogSchema>;
+export type RevalidationInput = z.infer<typeof RevalidationInputSchema>;
 
-export type RevalidationInput = {
-  proposalId: string;
-  revisionId: string;
-  validationDecision: string;
-  executionPlanId: string;
-  executionPlan: Array<string>;
-  executionResult: Array<string>;
-  effectsLog: EffectsLog;
-};
+type EffectsLog = z.infer<typeof ExecutionEffectsLogSchema>;
 
 export type RevalidationDirectiveReady = {
   proposalId: string;
