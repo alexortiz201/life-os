@@ -1,7 +1,6 @@
 import { RevalidationInputSchema } from "#types/rna/pipeline/ingestion/revalidation/revalidation.schemas";
 import type {
   GuardRevalidationResult,
-  RevalidationInput,
   RevalidationTrace,
 } from "#types/rna/pipeline/ingestion/revalidation/revalidation.types";
 import { errorResultFactory } from "#/rna/pipelines/pipeline-utils";
@@ -10,14 +9,93 @@ import { isProvisionalArtifactEffect } from "#/domain/effects/effects.guards";
 
 const errorResult = errorResultFactory<RevalidationTrace>();
 
-function policyAllowsPartial(allowedModes: ["FULL"] | ["FULL", "PARTIAL"]) {
-  return allowedModes.length === 2 && allowedModes[1] === "PARTIAL";
+function policyAllowsPartial(
+  allowedModes: readonly ["FULL"] | readonly ["FULL", "PARTIAL"]
+): boolean {
+  // tuple-union safe check
+  return allowedModes.length === 2;
 }
 
-export function guardRevalidation(
-  input: RevalidationInput
-): GuardRevalidationResult {
-  const parsed = RevalidationInputSchema.safeParse(input);
+/**
+ * Minimal runtime narrowing so we can safely pluck from `unknown`.
+ * (We still Zod-validate the "candidate" as the real contract.)
+ */
+function isObject(x: unknown): x is Record<string, any> {
+  return typeof x === "object" && x !== null;
+}
+
+export function guardRevalidation(env: unknown): GuardRevalidationResult {
+  // ---------
+  // 0) Narrow unknown -> something we can safely optional-chain
+  // ---------
+  if (!isObject(env)) {
+    return errorResult({
+      code: "INVALID_REVALIDATION_INPUT",
+      message: "Input invalid",
+      trace: {
+        mode: "UNKNOWN",
+        rulesApplied: ["PARSE_FAILED"] satisfies RevalidationRule[],
+      },
+    });
+  }
+
+  const ids = isObject(env.ids) ? env.ids : undefined;
+  const stages = isObject(env.stages) ? env.stages : undefined;
+  const proposalId = typeof ids?.proposalId === "string" ? ids.proposalId : "";
+
+  if (!proposalId || !stages) {
+    return errorResult({
+      code: "INVALID_REVALIDATION_INPUT",
+      message: "Input invalid",
+      trace: {
+        mode: "UNKNOWN",
+        proposalId: proposalId || undefined,
+        rulesApplied: ["PARSE_FAILED"] satisfies RevalidationRule[],
+      },
+    });
+  }
+
+  const validation = stages.validation;
+  const execution = stages.execution;
+
+  // must exist as objects to proceed
+  if (!isObject(validation) || !isObject(execution)) {
+    return errorResult({
+      code: "INVALID_REVALIDATION_INPUT",
+      message: "Input invalid",
+      trace: {
+        mode: "UNKNOWN",
+        proposalId,
+        rulesApplied: ["PARSE_FAILED"] satisfies RevalidationRule[],
+      },
+    });
+  }
+
+  // ---------
+  // 1) Pluck what we can (fail-closed happens via Zod below)
+  // ---------
+  const commitPolicy =
+    validation.hasRun === true ? (validation as any).commitPolicy : undefined;
+
+  // Prefer canonical effectsLog if you store it on execution stage
+  const effectsLog =
+    execution.hasRun === true ? (execution as any).effectsLog : undefined;
+
+  const candidate = {
+    proposalId,
+    revisionId: ids?.snapshotId,
+    validationDecision:
+      validation.hasRun === true
+        ? (validation as any).validationId
+        : "validation_unknown",
+    executionPlanId: ids?.planningId ?? "planning_unknown",
+    executionPlan: [],
+    executionResult: [],
+    commitPolicy,
+    effectsLog,
+  };
+
+  const parsed = RevalidationInputSchema.safeParse(candidate);
 
   if (!parsed.success) {
     return errorResult({
@@ -25,25 +103,27 @@ export function guardRevalidation(
       message: "Input invalid",
       trace: {
         mode: "UNKNOWN",
-        proposalId: (input as any)?.proposalId,
-        effectsLogDeclaredProposalId: (input as any)?.effectsLog?.proposalId,
-        effectsLogId: (input as any)?.effectsLog?.effectsLogId,
-        allowListCount:
-          (input as any)?.revalidation?.commitAllowList?.length ?? 0,
+        proposalId,
+        effectsLogDeclaredProposalId: (effectsLog as any)?.proposalId,
+        effectsLogId: (effectsLog as any)?.effectsLogId ?? ids?.effectsLogId,
+        allowListCount: 0,
         rulesApplied: ["PARSE_FAILED"] satisfies RevalidationRule[],
       },
     });
   }
 
-  const { proposalId, effectsLog, commitPolicy } = parsed.data;
+  const { effectsLog: parsedEffectsLog, commitPolicy: parsedCommitPolicy } =
+    parsed.data;
 
-  // Drift surrogate: proposalId mismatch with effectsLog.proposalId
-  if (effectsLog.proposalId !== proposalId) {
+  // ---------
+  // 2) Drift check (now meaningful)
+  // ---------
+  if (parsedEffectsLog.proposalId !== proposalId) {
     return {
       ok: true,
       data: {
         proposalId,
-        effectsLog,
+        effectsLog: parsedEffectsLog,
         revalidation: {
           proposalId,
           outcome: "REJECT_COMMIT",
@@ -54,13 +134,15 @@ export function guardRevalidation(
     };
   }
 
-  // Compute “needs PARTIAL” if any non-ARTIFACT effects exist
-  const hasNonArtifact = effectsLog.producedEffects.some(
-    (e: any) => e?.effectType && e.effectType !== "ARTIFACT"
+  // ---------
+  // 3) PARTIAL requirement: any non-ARTIFACT produced effect
+  // ---------
+  const hasNonArtifact = parsedEffectsLog.producedEffects.some(
+    (e) => e.effectType !== "ARTIFACT"
   );
 
   if (hasNonArtifact) {
-    if (!policyAllowsPartial(commitPolicy.allowedModes)) {
+    if (!policyAllowsPartial(parsedCommitPolicy.allowedModes)) {
       return errorResult({
         code: "PARTIAL_NOT_ALLOWED",
         message:
@@ -68,8 +150,8 @@ export function guardRevalidation(
         trace: {
           mode: "PARTIAL",
           proposalId,
-          effectsLogDeclaredProposalId: effectsLog.proposalId,
-          effectsLogId: effectsLog.effectsLogId,
+          effectsLogDeclaredProposalId: parsedEffectsLog.proposalId,
+          effectsLogId: parsedEffectsLog.effectsLogId,
           rulesApplied: [
             "NON_ARTIFACT_EFFECTS_PRESENT",
             "PARTIAL_NOT_ALLOWED_BY_POLICY",
@@ -78,7 +160,7 @@ export function guardRevalidation(
       });
     }
 
-    const allow = effectsLog.producedEffects
+    const allow = parsedEffectsLog.producedEffects
       .filter(isProvisionalArtifactEffect)
       .map((e) => e.objectId);
 
@@ -86,7 +168,7 @@ export function guardRevalidation(
       ok: true,
       data: {
         proposalId,
-        effectsLog,
+        effectsLog: parsedEffectsLog,
         revalidation: {
           proposalId,
           outcome: "PARTIAL_COMMIT",
@@ -99,12 +181,14 @@ export function guardRevalidation(
     };
   }
 
-  // Otherwise: full approval
+  // ---------
+  // 4) Full approval otherwise
+  // ---------
   return {
     ok: true,
     data: {
       proposalId,
-      effectsLog,
+      effectsLog: parsedEffectsLog,
       revalidation: {
         proposalId,
         outcome: "APPROVE_COMMIT",

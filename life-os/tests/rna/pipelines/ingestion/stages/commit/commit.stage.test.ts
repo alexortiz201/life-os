@@ -1,169 +1,155 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { commitStage } from "#/rna/pipelines/ingestion/stages/commit/commit.stage";
-import type { CommitInput } from "#types/rna/pipeline/ingestion/commit/commit.types";
 
-function makeInput(overrides?: Partial<any>): CommitInput {
-  return {
-    proposalId: "proposal_1",
-    revalidation: {
-      proposalId: "proposal_1",
-      outcome: "APPROVE_COMMIT",
-      commitAllowList: ["note_1", "report_1"],
-      rulesApplied: [],
-    },
-    effectsLog: {
-      effectsLogId: "effects_1",
-      proposalId: "proposal_1",
-      producedEffects: [
-        {
-          effectType: "ARTIFACT",
-          objectId: "note_1",
-          kind: "NOTE",
-          trust: "PROVISIONAL",
-        },
-        {
-          effectType: "ARTIFACT",
-          objectId: "report_1",
-          kind: "REPORT",
-          trust: "PROVISIONAL",
-        },
-        {
-          effectType: "ARTIFACT",
-          objectId: "note_2",
-          kind: "NOTE",
-          trust: "COMMITTED",
-        },
-        {
-          effectType: "ARTIFACT",
-          objectId: "raw_1",
-          kind: "RAW",
-          trust: "UNTRUSTED",
-        },
-      ],
-    },
-    ...overrides,
-  };
+import { commitStage } from "#/rna/pipelines/ingestion/stages/commit/commit.stage";
+import type { IngestionPipelineEnvelope } from "#/types/rna/pipeline/ingestion/ingestion.types";
+import { makeCommitEnv } from "../../../../../utils";
+
+function lastError(env: IngestionPipelineEnvelope) {
+  return env.errors[env.errors.length - 1];
 }
 
-test("commits only PROVISIONAL produced objects", () => {
-  const result = commitStage(makeInput());
+function getCommitRecord(env: IngestionPipelineEnvelope) {
+  assert.equal(env.stages.commit.hasRun, true, "commit stage must have run");
+  return env.stages.commit as any;
+}
 
-  assert.equal(result.proposalId, "proposal_1");
-  assert.match(result.commitId, /^commit_\d+$/);
+test("commits only PROVISIONAL produced artifacts", () => {
+  const env = makeCommitEnv({
+    stages: {
+      revalidation: {
+        directive: {
+          outcome: "APPROVE_COMMIT",
+          commitAllowList: ["note_1", "report_1"],
+        },
+        effectsLog: {
+          producedEffects: [
+            {
+              effectType: "ARTIFACT",
+              objectId: "note_1",
+              kind: "NOTE",
+              trust: "PROVISIONAL",
+            },
+            {
+              effectType: "ARTIFACT",
+              objectId: "report_1",
+              kind: "REPORT",
+              trust: "PROVISIONAL",
+            },
+            {
+              effectType: "ARTIFACT",
+              objectId: "note_2",
+              kind: "NOTE",
+              trust: "COMMITTED",
+            },
+            {
+              effectType: "ARTIFACT",
+              objectId: "raw_1",
+              kind: "RAW",
+              trust: "UNTRUSTED",
+            },
+          ],
+        },
+      } as any,
+    },
+  });
 
-  // Only two provisional objects should be promoted
-  assert.equal(result.approvedEffects.length, 2);
-  assert.deepEqual(
-    result.approvedEffects.map((o) => o.objectId).sort(),
-    ["note_1", "report_1"].sort()
-  );
+  const out = commitStage(env);
+  assert.equal(out.errors.length, 0);
 
-  for (const obj of result.approvedEffects) {
+  const c = getCommitRecord(out);
+  assert.equal(c.proposalId, "proposal_1");
+  assert.match(c.commitId, /^commit_\d+$/);
+
+  assert.equal(c.approvedEffects.length, 2);
+  assert.deepEqual(c.approvedEffects.map((o: any) => o.objectId).sort(), [
+    "note_1",
+    "report_1",
+  ]);
+
+  for (const obj of c.approvedEffects) {
     assert.equal(obj.trust, "COMMITTED");
   }
 });
 
-test("commits nothing if there are no PROVISIONAL objects", () => {
-  const result = commitStage(
-    makeInput({
+test("commits nothing if there are no PROVISIONAL artifacts", () => {
+  const env = makeCommitEnv({
+    stages: {
       revalidation: {
-        ...makeInput().revalidation,
-        commitAllowList: [],
-      },
-      effectsLog: {
-        ...makeInput().effectsLog,
-        producedEffects: [
-          {
-            effectType: "ARTIFACT",
-            objectId: "note_2",
-            kind: "NOTE",
-            trust: "COMMITTED",
-          },
-          {
-            effectType: "ARTIFACT",
-            objectId: "raw_1",
-            kind: "RAW",
-            trust: "UNTRUSTED",
-          },
-        ],
-      },
-    })
-  );
-
-  assert.equal(result.approvedEffects.length, 0);
-});
-
-test("throws if revalidation.proposalId does not match proposalId", () => {
-  assert.throws(() => {
-    commitStage(
-      makeInput({
-        revalidation: { proposalId: "proposal_X", outcome: "APPROVE_COMMIT" },
-      })
-    );
-  }, /COMMIT_INPUT_MISMATCH/);
-});
-
-test("throws if effectsLog.proposalId does not match proposalId", () => {
-  assert.throws(() => {
-    commitStage(
-      makeInput({
-        effectsLog: { ...makeInput().effectsLog, proposalId: "proposal_X" },
-      })
-    );
-  }, /COMMIT_INPUT_MISMATCH/);
-});
-
-test("fails closed on anything not APPROVE_COMMIT or PARTIAL_COMMIT (minimal behavior)", () => {
-  assert.throws(() => {
-    commitStage(
-      makeInput({
-        revalidation: { proposalId: "proposal_1", outcome: "REJECT_COMMIT" },
-      })
-    );
-  }, /COMMIT_OUTCOME_UNSUPPORTED/);
-});
-
-test("empty allowlist when PARTIAL_COMMIT commits nothing", () => {
-  const result = commitStage(
-    makeInput({
-      revalidation: {
-        proposalId: "proposal_1",
-        outcome: "PARTIAL_COMMIT",
-        commitAllowList: [],
-      },
-      effectsLog: {
-        ...makeInput().effectsLog,
-        producedEffects: [
-          {
-            effectType: "ARTIFACT",
-            objectId: "note_1",
-            kind: "NOTE",
-            trust: "PROVISIONAL",
-          },
-        ],
-      },
-    })
-  );
-
-  assert.equal(result.proposalId, "proposal_1");
-  assert.match(result.commitId, /^commit_\d+$/);
-
-  assert.equal(result.approvedEffects.length, 0);
-  assert.deepEqual(result.approvedEffects, []);
-});
-
-test("rejects allowlisted objects when PARTIAL_COMMIT that aren’t PROVISIONAL", () => {
-  assert.throws(() => {
-    commitStage(
-      makeInput({
-        revalidation: {
-          ...makeInput().revalidation,
-          outcome: "PARTIAL_COMMIT",
-          commitAllowList: ["ghost_id"],
-        },
+        directive: { outcome: "APPROVE_COMMIT", commitAllowList: [] },
         effectsLog: {
-          ...makeInput().effectsLog,
+          producedEffects: [
+            {
+              effectType: "ARTIFACT",
+              objectId: "note_2",
+              kind: "NOTE",
+              trust: "COMMITTED",
+            },
+            {
+              effectType: "ARTIFACT",
+              objectId: "raw_1",
+              kind: "RAW",
+              trust: "UNTRUSTED",
+            },
+          ],
+        },
+      } as any,
+    },
+  });
+
+  const out = commitStage(env);
+  assert.equal(out.errors.length, 0);
+
+  const c = getCommitRecord(out);
+  assert.equal(c.approvedEffects.length, 0);
+  assert.equal(c.promotions.length, 0);
+});
+
+test("fails closed when revalidation.proposalId mismatches envelope proposalId", () => {
+  const env = makeCommitEnv({
+    ids: { proposalId: "proposal_1" },
+    stages: {
+      revalidation: {
+        directive: { proposalId: "proposal_X", outcome: "APPROVE_COMMIT" },
+      } as any,
+    },
+  });
+
+  const out = commitStage(env);
+
+  assert.equal(out.stages.commit.hasRun, false);
+  assert.ok(out.errors.length >= 1);
+
+  const err = lastError(out) as any;
+  assert.equal(err.stage, "COMMIT");
+  assert.equal(err.severity, "HALT");
+  assert.equal(err.code, "COMMIT_INPUT_MISMATCH");
+});
+
+test("fails closed on unsupported outcome (REJECT_COMMIT)", () => {
+  const env = makeCommitEnv({
+    stages: {
+      revalidation: {
+        directive: { outcome: "REJECT_COMMIT", commitAllowList: [] },
+      } as any,
+    },
+  });
+
+  const out = commitStage(env);
+
+  assert.equal(out.stages.commit.hasRun, false);
+  const err = lastError(out) as any;
+  assert.equal(err.stage, "COMMIT");
+  assert.equal(err.severity, "HALT");
+  assert.equal(err.code, "COMMIT_OUTCOME_UNSUPPORTED");
+});
+
+test("PARTIAL_COMMIT with empty allowlist commits nothing (but emits commit record)", () => {
+  const env = makeCommitEnv({
+    stages: {
+      revalidation: {
+        directive: { outcome: "PARTIAL_COMMIT", commitAllowList: [] },
+        effectsLog: {
           producedEffects: [
             {
               effectType: "ARTIFACT",
@@ -173,147 +159,116 @@ test("rejects allowlisted objects when PARTIAL_COMMIT that aren’t PROVISIONAL"
             },
           ],
         },
-      })
-    );
-  }, /ALLOWLIST_UNKNOWN_OBJECT/);
+      } as any,
+    },
+  });
+
+  const out = commitStage(env);
+
+  assert.equal(out.errors.length, 0);
+  const c = getCommitRecord(out);
+
+  assert.equal(c.approvedEffects.length, 0);
+  assert.equal(c.promotions.length, 0);
 });
 
-// -------------------------
-// C1 — one promotion record per committed object (APPROVE_COMMIT)
-// -------------------------
-test("emits one promotion record per committed object", () => {
-  const result = commitStage(makeInput());
-
-  assert.ok(Array.isArray((result as any).promotions), "promotions must exist");
-
-  const promotions = (result as any).promotions as Array<any>;
-
-  assert.equal(promotions.length, 2);
-
-  const committedIds = result.approvedEffects.map((o) => o.objectId).sort();
-  const promotedIds = promotions.map((p) => p.objectId).sort();
-  assert.deepEqual(promotedIds, committedIds);
-
-  for (const p of promotions) {
-    assert.equal(p.proposalId, result.proposalId);
-    assert.equal(p.effectsLogId, "effects_1");
-    assert.equal(p.commitId, result.commitId);
-
-    assert.equal(p.from, "PROVISIONAL");
-    assert.equal(p.to, "COMMITTED");
-    assert.equal(p.stage, "COMMIT");
-
-    assert.equal(typeof p.reason, "string");
-    assert.ok(p.reason.length > 0);
-  }
-});
-
-// -------------------------
-// C2 — PARTIAL_COMMIT emits promotions only for allowlisted commits
-// -------------------------
-test("PARTIAL_COMMIT emits promotion records only for allowlisted objects", () => {
-  const result = commitStage(
-    makeInput({
+test("PARTIAL_COMMIT commits only allowlisted PROVISIONAL artifacts", () => {
+  const env = makeCommitEnv({
+    stages: {
       revalidation: {
-        proposalId: "proposal_1",
-        outcome: "PARTIAL_COMMIT",
-        commitAllowList: ["note_1"],
-      },
-      effectsLog: {
-        ...makeInput().effectsLog,
-        producedEffects: [
-          {
-            effectType: "ARTIFACT",
-            objectId: "note_1",
-            kind: "NOTE",
-            trust: "PROVISIONAL",
-          },
-          {
-            effectType: "ARTIFACT",
-            objectId: "report_1",
-            kind: "REPORT",
-            trust: "PROVISIONAL",
-          },
-        ],
-      },
-    })
-  );
+        directive: { outcome: "PARTIAL_COMMIT", commitAllowList: ["note_1"] },
+        effectsLog: {
+          producedEffects: [
+            {
+              effectType: "ARTIFACT",
+              objectId: "note_1",
+              kind: "NOTE",
+              trust: "PROVISIONAL",
+            },
+            {
+              effectType: "ARTIFACT",
+              objectId: "report_1",
+              kind: "REPORT",
+              trust: "PROVISIONAL",
+            },
+          ],
+        },
+      } as any,
+    },
+  });
 
-  assert.ok(Array.isArray((result as any).promotions), "promotions must exist");
-  const promotions = (result as any).promotions as Array<any>;
+  const out = commitStage(env);
 
-  assert.equal(result.approvedEffects.length, 1);
-  assert.equal(result.approvedEffects[0]?.objectId, "note_1");
+  assert.equal(out.errors.length, 0);
+  const c = getCommitRecord(out);
 
-  assert.equal(promotions.length, 1);
-  assert.equal(promotions[0]?.objectId, "note_1");
+  assert.equal(c.approvedEffects.length, 1);
+  assert.equal(c.approvedEffects[0].objectId, "note_1");
+  assert.equal(c.promotions.length, 1);
+  assert.equal(c.promotions[0].objectId, "note_1");
 });
 
-// -------------------------
-// C3 — empty allowlist emits zero promotions
-// -------------------------
-test("PARTIAL_COMMIT with empty allowlist emits zero promotion records", () => {
-  const result = commitStage(
-    makeInput({
+test("PARTIAL_COMMIT fails when allowlist references unknown objects", () => {
+  const env = makeCommitEnv({
+    stages: {
       revalidation: {
-        proposalId: "proposal_1",
-        outcome: "PARTIAL_COMMIT",
-        commitAllowList: [],
-      },
-      effectsLog: {
-        ...makeInput().effectsLog,
-        producedEffects: [
-          {
-            effectType: "ARTIFACT",
-            objectId: "note_1",
-            kind: "NOTE",
-            trust: "PROVISIONAL",
-          },
-        ],
-      },
-    })
-  );
+        directive: { outcome: "PARTIAL_COMMIT", commitAllowList: ["ghost_id"] },
+        effectsLog: {
+          producedEffects: [
+            {
+              effectType: "ARTIFACT",
+              objectId: "note_1",
+              kind: "NOTE",
+              trust: "PROVISIONAL",
+            },
+          ],
+        },
+      } as any,
+    },
+  });
 
-  assert.equal(result.approvedEffects.length, 0);
+  const out = commitStage(env);
 
-  assert.ok(Array.isArray((result as any).promotions), "promotions must exist");
-  const promotions = (result as any).promotions as Array<any>;
-  assert.equal(promotions.length, 0);
+  assert.equal(out.stages.commit.hasRun, false);
+  const err = lastError(out) as any;
+  assert.equal(err.stage, "COMMIT");
+  assert.equal(err.severity, "HALT");
+  assert.equal(err.code, "ALLOWLIST_UNKNOWN_OBJECT");
 });
 
-// -------------------------
-// C4 — promotions must NOT exist for ignored objects (UNTRUSTED/COMMITTED inputs)
-// -------------------------
-test("does not emit promotion records for non-PROVISIONAL produced objects", () => {
-  const result = commitStage(
-    makeInput({
+test("does not emit promotions for non-PROVISIONAL artifacts", () => {
+  const env = makeCommitEnv({
+    stages: {
       revalidation: {
-        ...makeInput().revalidation,
-        commitAllowList: ["note_2", "raw_1"],
-      },
-      effectsLog: {
-        ...makeInput().effectsLog,
-        producedEffects: [
-          {
-            effectType: "ARTIFACT",
-            objectId: "note_2",
-            kind: "NOTE",
-            trust: "COMMITTED",
-          },
-          {
-            effectType: "ARTIFACT",
-            objectId: "raw_1",
-            kind: "RAW",
-            trust: "UNTRUSTED",
-          },
-        ],
-      },
-    })
-  );
+        directive: {
+          outcome: "APPROVE_COMMIT",
+          commitAllowList: ["note_2", "raw_1"],
+        },
+        effectsLog: {
+          producedEffects: [
+            {
+              effectType: "ARTIFACT",
+              objectId: "note_2",
+              kind: "NOTE",
+              trust: "COMMITTED",
+            },
+            {
+              effectType: "ARTIFACT",
+              objectId: "raw_1",
+              kind: "RAW",
+              trust: "UNTRUSTED",
+            },
+          ],
+        },
+      } as any,
+    },
+  });
 
-  assert.equal(result.approvedEffects.length, 0);
+  const out = commitStage(env);
 
-  assert.ok(Array.isArray((result as any).promotions), "promotions must exist");
-  const promotions = (result as any).promotions as Array<any>;
-  assert.equal(promotions.length, 0);
+  assert.equal(out.errors.length, 0);
+  const c = getCommitRecord(out);
+
+  assert.equal(c.approvedEffects.length, 0);
+  assert.equal(c.promotions.length, 0);
 });

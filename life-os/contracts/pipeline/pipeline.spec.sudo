@@ -218,8 +218,6 @@ PROVISIONAL EFFECTS MEAN:
 RULE:
   Execution may change the world.
   Execution must not change belief.
-
-RULE:
   Execution outputs are provisional until commit.
 
 HALT ON:

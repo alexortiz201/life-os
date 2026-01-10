@@ -1,34 +1,108 @@
 import { guardTrustPromotion } from "#/domain/trust/trustPromotion.guard";
+import type { IngestionPipelineEnvelope } from "#/types/rna/pipeline/ingestion/ingestion.types";
+import { appendError, hasHaltingErrors } from "#/rna/pipelines/envelope-utils";
 
-import type {
-  CommitInput,
-  CommitRecord,
-} from "#types/rna/pipeline/ingestion/commit/commit.types";
-
+import type { CommitRecord } from "#types/rna/pipeline/ingestion/commit/commit.types";
 import { guardPrecommit } from "./precommit.guard";
 
-export function commitStage(input: CommitInput): CommitRecord {
-  const result = guardPrecommit(input);
+export function commitStage(
+  env: IngestionPipelineEnvelope
+): IngestionPipelineEnvelope {
+  // 0) fail closed if earlier stage produced HALT errors
+  if (hasHaltingErrors(env)) return env;
 
-  if (!result.ok) {
-    throw new Error(`${result.code}: ${result.message}`);
+  // 1) prereqs
+  if (!env.ids.snapshotId) {
+    return appendError(env, {
+      stage: "COMMIT",
+      severity: "HALT",
+      code: "COMMIT_PREREQ_MISSING",
+      message: "Missing snapshotId required for commit.",
+      trace: {
+        proposalId: env.ids.proposalId,
+        snapshotId: env.ids.snapshotId,
+      },
+      at: Date.now(),
+    });
   }
 
-  const { ok, data } = result;
+  if (!env.ids.effectsLogId) {
+    return appendError(env, {
+      stage: "COMMIT",
+      severity: "HALT",
+      code: "COMMIT_PREREQ_MISSING",
+      message: "Missing effectsLogId required for commit.",
+      trace: {
+        proposalId: env.ids.proposalId,
+        effectsLogId: env.ids.effectsLogId,
+      },
+      at: Date.now(),
+    });
+  }
 
-  const commitId = `commit_${Date.now()}`;
+  if (!env.stages.revalidation.hasRun) {
+    return appendError(env, {
+      stage: "COMMIT",
+      severity: "HALT",
+      code: "COMMIT_PREREQ_MISSING",
+      message: "Revalidation stage has not run.",
+      trace: {
+        proposalId: env.ids.proposalId,
+        revalidationHasRun: false,
+      },
+      at: Date.now(),
+    });
+  }
+
+  if (!env.ids.revalidationId) {
+    return appendError(env, {
+      stage: "COMMIT",
+      severity: "HALT",
+      code: "COMMIT_PREREQ_MISSING",
+      message: "Missing revalidationId required for commit.",
+      trace: {
+        proposalId: env.ids.proposalId,
+        revalidationId: env.ids.revalidationId,
+      },
+      at: Date.now(),
+    });
+  }
+
+  // 2) run guard
+  const result = guardPrecommit(env);
+
+  if (!result.ok) {
+    return appendError(env, {
+      stage: "COMMIT",
+      severity: "HALT",
+      code: result.code,
+      message: result.message,
+      trace: result.trace,
+      at: Date.now(),
+    });
+  }
+
+  const { data } = result;
+
+  // 3) build commit record
+  const ranAt = Date.now();
+  const commitId = `commit_${ranAt}`;
   const proposalId = data.proposalId;
+
   const approvedEffects: CommitRecord["approvedEffects"] = [];
   const rejectedEffects: CommitRecord["rejectedEffects"] = data.rejectedEffects;
+
   const justification: CommitRecord["justification"] = {
     mode: data.mode,
     rulesApplied: data.rulesApplied,
     inputs: [{ commitId, proposalId, allowListCount: data.allowListCount }],
   };
+
   const promotions: CommitRecord["promotions"] = [];
 
-  if (ok && data.mode === "PARTIAL" && !data.commitEligibleEffects.length) {
-    return {
+  // If PARTIAL with empty allowlist -> commit nothing, still emit record + stage output
+  if (data.mode === "PARTIAL" && data.commitEligibleEffects.length === 0) {
+    const record: CommitRecord = {
       commitId,
       proposalId,
       approvedEffects,
@@ -36,11 +110,34 @@ export function commitStage(input: CommitInput): CommitRecord {
       promotions,
       justification,
     };
+
+    return {
+      ...env,
+      ids: {
+        ...env.ids,
+        commitId,
+      },
+      stages: {
+        ...env.stages,
+        commit: {
+          hasRun: true,
+          ranAt,
+          observed: {
+            proposalId: env.ids.proposalId,
+            snapshotId: env.ids.snapshotId,
+            revalidationId: env.ids.revalidationId,
+            effectsLogId: env.ids.effectsLogId,
+          },
+          ...record,
+        },
+      },
+    };
   }
 
   const effectsLogId = data.effectsLogId;
 
   for (const obj of data.commitEligibleEffects) {
+    // defensive; guard already filtered to artifacts
     if (obj.effectType !== "ARTIFACT") continue;
 
     const reason = "Commit stage promotion of provisional execution outputs.";
@@ -52,6 +149,7 @@ export function commitStage(input: CommitInput): CommitRecord {
     });
 
     if (!guard.ok) {
+      // internal invariant breach (still safe to throw)
       throw new Error(`${guard.code}: ${guard.message}`);
     }
 
@@ -60,6 +158,7 @@ export function commitStage(input: CommitInput): CommitRecord {
       kind: obj.kind,
       trust: "COMMITTED",
     });
+
     promotions.push({
       objectId: obj.objectId,
       from: "PROVISIONAL",
@@ -72,12 +171,34 @@ export function commitStage(input: CommitInput): CommitRecord {
     });
   }
 
-  return {
+  const record: CommitRecord = {
     commitId,
     proposalId,
     approvedEffects,
     rejectedEffects,
     promotions,
     justification,
+  };
+
+  return {
+    ...env,
+    ids: {
+      ...env.ids,
+      commitId,
+    },
+    stages: {
+      ...env.stages,
+      commit: {
+        hasRun: true,
+        ranAt,
+        observed: {
+          proposalId: env.ids.proposalId,
+          snapshotId: env.ids.snapshotId,
+          revalidationId: env.ids.revalidationId,
+          effectsLogId: env.ids.effectsLogId,
+        },
+        ...record,
+      },
+    },
   };
 }

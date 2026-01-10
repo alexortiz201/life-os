@@ -1,84 +1,154 @@
 import { errorResultFactory } from "#/rna/pipelines/pipeline-utils";
-import { ArtifactEffect } from "#/types/domain/effects/effects.types";
-import {
+import type { IngestionPipelineEnvelope } from "#/types/rna/pipeline/ingestion/ingestion.types";
+
+import type { ArtifactEffect } from "#/types/domain/effects/effects.types";
+import type {
   EffectDecisionMode,
   EffectDecisionModeOrUnknown,
 } from "#/types/rna/pipeline/pipeline.types";
-import { PrecommitRule } from "#types/rna/pipeline/ingestion/commit/commit.rules";
+
+import type { PrecommitRule } from "#types/rna/pipeline/ingestion/commit/commit.rules";
 import { CommitInputSchema } from "#types/rna/pipeline/ingestion/commit/commit.schemas";
-import {
-  CommitInput,
+import type {
   GuardPrecommitResult,
   PrecommitTrace,
 } from "#types/rna/pipeline/ingestion/commit/commit.types";
 
 const errorResult = errorResultFactory<PrecommitTrace>();
 
-export function guardPrecommit(input: CommitInput): GuardPrecommitResult {
-  const parsed = CommitInputSchema.safeParse(input);
+function isObject(x: unknown): x is Record<string, unknown> {
+  return typeof x === "object" && x !== null;
+}
+
+export function guardPrecommit(env: unknown): GuardPrecommitResult {
+  // 0) fail closed on non-object
+  if (!isObject(env)) {
+    return errorResult({
+      code: "INVALID_COMMIT_INPUT",
+      message: "Input invalid",
+      trace: {
+        mode: "UNKNOWN",
+        rulesApplied: ["PARSE_FAILED"] satisfies PrecommitRule[],
+      },
+    });
+  }
+
+  const ids = isObject((env as any).ids) ? (env as any).ids : undefined;
+  const stages = isObject((env as any).stages)
+    ? (env as any).stages
+    : undefined;
+
+  const proposalId =
+    typeof ids?.proposalId === "string"
+      ? (ids.proposalId as string)
+      : undefined;
+
+  const revalidationStage = stages?.revalidation;
+
+  // need at least proposalId + revalidation stage
+  if (!proposalId || !isObject(revalidationStage)) {
+    return errorResult({
+      code: "INVALID_COMMIT_INPUT",
+      message: "Input invalid",
+      trace: {
+        mode: "UNKNOWN",
+        proposalId,
+        rulesApplied: ["PARSE_FAILED"] satisfies PrecommitRule[],
+      },
+    });
+  }
+
+  // We only accept commit inputs once revalidation has run
+  if ((revalidationStage as any).hasRun !== true) {
+    return errorResult({
+      code: "INVALID_COMMIT_INPUT",
+      message: "Input invalid",
+      trace: {
+        mode: "UNKNOWN",
+        proposalId,
+        rulesApplied: ["PARSE_FAILED"] satisfies PrecommitRule[],
+      },
+    });
+  }
+
+  // Pluck canonical commit inputs directly from revalidation stage output
+  const revalidation =
+    (revalidationStage as any).directive ??
+    (revalidationStage as any).revalidation;
+
+  const effectsLog = (revalidationStage as any).effectsLog;
+
+  const mode: EffectDecisionModeOrUnknown =
+    revalidation?.outcome === "PARTIAL_COMMIT"
+      ? "PARTIAL"
+      : revalidation?.outcome === "APPROVE_COMMIT"
+      ? "FULL"
+      : "UNKNOWN";
+
+  // Candidate is ONLY a schema-shaped view of what we plucked from env
+  const candidate = {
+    proposalId,
+    revalidation,
+    effectsLog,
+  };
+
+  const parsed = CommitInputSchema.safeParse(candidate);
 
   if (!parsed.success) {
-    const revalidation = (input as any)?.revalidation;
-    const mode: EffectDecisionModeOrUnknown =
-      revalidation?.outcome === "PARTIAL_COMMIT"
-        ? "PARTIAL"
-        : revalidation?.outcome === "APPROVE_COMMIT"
-        ? "FULL"
-        : "UNKNOWN";
-
     return errorResult({
       code: "INVALID_COMMIT_INPUT",
       message: "Input invalid",
       trace: {
         mode,
-        proposalId: (input as any)?.proposalId,
+        proposalId,
         revalidationDeclaredProposalId: revalidation?.proposalId,
-        effectsLogDeclaredProposalId: (input as any)?.effectsLog?.proposalId,
-        effectsLogId: (input as any)?.effectsLog?.effectsLogId,
+        effectsLogDeclaredProposalId: effectsLog?.proposalId,
+        effectsLogId: effectsLog?.effectsLogId ?? ids?.effectsLogId,
         allowListCount: revalidation?.commitAllowList?.length ?? 0,
         rulesApplied: ["PARSE_FAILED"] satisfies PrecommitRule[],
       },
     });
   }
 
-  const data = parsed.data;
-  const { revalidation, effectsLog, proposalId } = data;
-  const mode: EffectDecisionModeOrUnknown =
-    revalidation.outcome === "PARTIAL_COMMIT"
+  const { proposalId: pid, revalidation: rv, effectsLog: el } = parsed.data;
+
+  const decidedMode: EffectDecisionModeOrUnknown =
+    rv.outcome === "PARTIAL_COMMIT"
       ? "PARTIAL"
-      : revalidation.outcome === "APPROVE_COMMIT"
+      : rv.outcome === "APPROVE_COMMIT"
       ? "FULL"
       : "UNKNOWN";
 
-  // Minimal safety: ensure everything is linked to the same proposal
-  if (revalidation.proposalId !== proposalId) {
+  // Minimal safety: ensure everything is linked to same proposal
+  if (rv.proposalId !== pid) {
     return errorResult({
       code: "COMMIT_INPUT_MISMATCH",
       message: "revalidation.proposalId does not match proposalId",
       trace: {
-        mode,
-        proposalId,
-        revalidationDeclaredProposalId: revalidation.proposalId,
-        effectsLogDeclaredProposalId: effectsLog.proposalId,
-        effectsLogId: effectsLog.effectsLogId,
-        allowListCount: revalidation.commitAllowList.length,
+        mode: decidedMode,
+        proposalId: pid,
+        revalidationDeclaredProposalId: rv.proposalId,
+        effectsLogDeclaredProposalId: el.proposalId,
+        effectsLogId: el.effectsLogId,
+        allowListCount: rv.commitAllowList.length,
         rulesApplied: [
           "PROPOSAL_ID_MISMATCH_REVALIDATION",
         ] satisfies PrecommitRule[],
       },
     });
   }
-  if (effectsLog.proposalId !== proposalId) {
+
+  if (el.proposalId !== pid) {
     return errorResult({
       code: "COMMIT_INPUT_MISMATCH",
       message: "effectsLog.proposalId does not match proposalId",
       trace: {
-        mode,
-        proposalId,
-        revalidationDeclaredProposalId: revalidation.proposalId,
-        effectsLogDeclaredProposalId: effectsLog.proposalId,
-        effectsLogId: effectsLog.effectsLogId,
-        allowListCount: revalidation.commitAllowList.length,
+        mode: decidedMode,
+        proposalId: pid,
+        revalidationDeclaredProposalId: rv.proposalId,
+        effectsLogDeclaredProposalId: el.proposalId,
+        effectsLogId: el.effectsLogId,
+        allowListCount: rv.commitAllowList.length,
         rulesApplied: [
           "PROPOSAL_ID_MISMATCH_EFFECTS_LOG",
         ] satisfies PrecommitRule[],
@@ -86,37 +156,34 @@ export function guardPrecommit(input: CommitInput): GuardPrecommitResult {
     });
   }
 
-  if (!["APPROVE_COMMIT", "PARTIAL_COMMIT"].includes(revalidation.outcome)) {
+  if (!["APPROVE_COMMIT", "PARTIAL_COMMIT"].includes(rv.outcome)) {
     return errorResult({
       code: "COMMIT_OUTCOME_UNSUPPORTED",
       message: "partial or full approval required",
       trace: {
-        mode,
-        proposalId,
-        revalidationDeclaredProposalId: revalidation.proposalId,
-        effectsLogDeclaredProposalId: effectsLog.proposalId,
-        effectsLogId: effectsLog.effectsLogId,
-        allowListCount: revalidation.commitAllowList.length,
+        mode: decidedMode,
+        proposalId: pid,
+        revalidationDeclaredProposalId: rv.proposalId,
+        effectsLogDeclaredProposalId: el.proposalId,
+        effectsLogId: el.effectsLogId,
+        allowListCount: rv.commitAllowList.length,
         rulesApplied: ["OUTCOME_UNSUPPORTED"] satisfies PrecommitRule[],
       },
     });
   }
 
-  const effectsLogId = effectsLog.effectsLogId;
   const commitReadyData = {
-    mode: mode as EffectDecisionMode,
-    proposalId,
-    effectsLogId,
-    allowListCount: revalidation.commitAllowList.length,
-    commitEligibleEffects: [],
+    mode: decidedMode as EffectDecisionMode,
+    proposalId: pid,
+    effectsLogId: el.effectsLogId,
+    allowListCount: rv.commitAllowList.length,
+    commitEligibleEffects: [] as ArtifactEffect[],
     rejectedEffects: [],
     rulesApplied: [] satisfies PrecommitRule[],
   };
 
-  if (
-    revalidation.outcome === "PARTIAL_COMMIT" &&
-    !revalidation.commitAllowList.length
-  ) {
+  // PARTIAL + empty allowlist => commit nothing
+  if (rv.outcome === "PARTIAL_COMMIT" && rv.commitAllowList.length === 0) {
     return {
       ok: true,
       data: {
@@ -128,54 +195,51 @@ export function guardPrecommit(input: CommitInput): GuardPrecommitResult {
     };
   }
 
-  const provisionalEffects: ArtifactEffect[] = [];
-  const producedEffectsIds = effectsLog.producedEffects.reduce((acc, o) => {
-    if (o.effectType === "ARTIFACT") {
-      if (o.trust === "PROVISIONAL") provisionalEffects.push(o);
-
-      acc.push(o.objectId);
+  // Eligible = provisional ARTIFACT effects only
+  const provisionalArtifacts: ArtifactEffect[] = [];
+  const producedArtifactIds = el.producedEffects.reduce((acc, eff) => {
+    if (eff.effectType === "ARTIFACT") {
+      if (eff.trust === "PROVISIONAL") provisionalArtifacts.push(eff);
+      acc.push(eff.objectId);
     }
-
     return acc;
   }, [] as string[]);
-  const producedEffectsIdsSet = new Set(producedEffectsIds);
-  const unknownAllowListEffects = revalidation.commitAllowList.filter(
-    (s) => !producedEffectsIdsSet.has(s)
-  );
 
-  if (
-    revalidation.outcome !== "APPROVE_COMMIT" &&
-    unknownAllowListEffects.length
-  ) {
-    return errorResult({
-      code: "ALLOWLIST_UNKNOWN_OBJECT",
-      message: "unknown allowlist object",
-      trace: {
-        mode,
-        proposalId,
-        revalidationDeclaredProposalId: revalidation.proposalId,
-        effectsLogDeclaredProposalId: effectsLog.proposalId,
-        effectsLogId: effectsLog.effectsLogId,
-        allowListCount: revalidation.commitAllowList.length,
-        rulesApplied: [
-          "PARTIAL_ALLOWLIST_HAS_UNKNOWN_IDS",
-        ] satisfies PrecommitRule[],
-      },
-    });
-  }
+  // In PARTIAL mode, allowlist must reference known produced ARTIFACT ids
+  if (rv.outcome === "PARTIAL_COMMIT") {
+    const producedSet = new Set(producedArtifactIds);
+    const unknownAllowList = rv.commitAllowList.filter(
+      (id) => !producedSet.has(id)
+    );
 
-  if (revalidation.outcome === "PARTIAL_COMMIT") {
-    const commitAllowListSet = new Set(revalidation.commitAllowList);
-    const allowListEffects = provisionalEffects.filter((o) =>
-      commitAllowListSet.has(o.objectId)
+    if (unknownAllowList.length) {
+      return errorResult({
+        code: "ALLOWLIST_UNKNOWN_OBJECT",
+        message: "unknown allowlist object",
+        trace: {
+          mode: decidedMode,
+          proposalId: pid,
+          revalidationDeclaredProposalId: rv.proposalId,
+          effectsLogDeclaredProposalId: el.proposalId,
+          effectsLogId: el.effectsLogId,
+          allowListCount: rv.commitAllowList.length,
+          rulesApplied: [
+            "PARTIAL_ALLOWLIST_HAS_UNKNOWN_IDS",
+          ] satisfies PrecommitRule[],
+        },
+      });
+    }
+
+    const allowSet = new Set(rv.commitAllowList);
+    const allowListEffects = provisionalArtifacts.filter((o) =>
+      allowSet.has(o.objectId)
     );
 
     return {
       ok: true,
       data: {
         ...commitReadyData,
-        commitEligibleEffects: [...allowListEffects],
-        rejectedEffects: [],
+        commitEligibleEffects: allowListEffects,
         rulesApplied: [
           "PARTIAL_COMMIT_USE_ALLOWLIST",
         ] satisfies PrecommitRule[],
@@ -183,12 +247,12 @@ export function guardPrecommit(input: CommitInput): GuardPrecommitResult {
     };
   }
 
+  // FULL = all provisional artifacts; allowlist ignored
   return {
     ok: true,
     data: {
       ...commitReadyData,
-      commitEligibleEffects: [...provisionalEffects],
-      rejectedEffects: [],
+      commitEligibleEffects: provisionalArtifacts,
       rulesApplied: [
         "FULL_COMMIT_ALL_PROVISIONAL_EFFECTS",
         "FULL_IGNORES_ALLOWLIST",

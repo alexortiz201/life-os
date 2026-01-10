@@ -17,3 +17,19 @@ export type StageGuardTrace<
   proposalId: string;
   rulesApplied: TRule[];
 }>;
+
+export type PipelineStageError<TStageName, TStageErrorSeverity> = {
+  stage: TStageName;
+  severity: TStageErrorSeverity;
+  code: string;
+  message: string;
+  trace?: unknown;
+  at: number; // timestamp
+};
+
+export type PipelineEnvelope<TIds, TStages, TErrors, TMeta = {}> = {
+  ids: TIds;
+  stages: TStages;
+  errors: TErrors[];
+  meta?: TMeta;
+};

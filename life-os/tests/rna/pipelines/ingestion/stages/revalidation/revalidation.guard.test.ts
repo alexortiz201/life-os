@@ -2,26 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { guardRevalidation } from "#/rna/pipelines/ingestion/stages/revalidation/revalidation.guard";
-import type { RevalidationInput } from "#types/rna/pipeline/ingestion/revalidation/revalidation.types";
-import { eventNames } from "node:cluster";
-
-function makeInput(overrides?: Partial<RevalidationInput>): RevalidationInput {
-  return {
-    proposalId: "proposal_1",
-    revisionId: "rev_1",
-    validationDecision: "validation_decision_1",
-    executionPlanId: "plan_1",
-    executionPlan: ["step_1"],
-    executionResult: ["ok"],
-    commitPolicy: { allowedModes: ["FULL"] },
-    effectsLog: {
-      effectsLogId: "effects_1",
-      proposalId: "proposal_1",
-      producedEffects: [],
-    } as any,
-    ...overrides,
-  };
-}
+import { makeEnv } from "../../../../../utils";
 
 test("returns ok:false INVALID_REVALIDATION_INPUT when input shape is wrong", () => {
   const result = guardRevalidation({ nope: true } as any);
@@ -36,15 +17,21 @@ test("returns ok:false INVALID_REVALIDATION_INPUT when input shape is wrong", ()
 });
 
 test("returns ok:true REJECT_COMMIT when proposalId mismatches effectsLog.proposalId (drift surrogate)", () => {
-  const result = guardRevalidation(
-    makeInput({
-      effectsLog: {
-        effectsLogId: "effects_1",
-        proposalId: "proposal_X",
-        producedEffects: [],
+  const env = makeEnv({
+    stages: {
+      execution: {
+        ...(makeEnv().stages.execution as any),
+        proposalId: "proposal_1",
+        effectsLog: {
+          effectsLogId: "effects_1",
+          proposalId: "proposal_X",
+          producedEffects: [],
+        },
       } as any,
-    })
-  );
+    },
+  });
+
+  const result = guardRevalidation(env);
 
   assert.equal(result.ok, true);
   if (result.ok) {
@@ -54,28 +41,37 @@ test("returns ok:true REJECT_COMMIT when proposalId mismatches effectsLog.propos
 });
 
 test("FULL-only policy fails closed if PARTIAL would be required (non-artifact effects present)", () => {
-  const result = guardRevalidation(
-    makeInput({
-      commitPolicy: { allowedModes: ["FULL"] },
-      effectsLog: {
-        effectsLogId: "effects_1",
+  const env = makeEnv({
+    stages: {
+      validation: {
+        ...(makeEnv().stages.validation as any),
+        commitPolicy: { allowedModes: ["FULL"] as const },
+      } as any,
+      execution: {
+        ...(makeEnv().stages.execution as any),
         proposalId: "proposal_1",
-        producedEffects: [
-          {
-            effectType: "EVENT",
-            eventName: "TRIGGER_PIPELINE",
-            trust: "PROVISIONAL",
-          },
-          {
-            effectType: "ARTIFACT",
-            objectId: "note_1",
-            kind: "NOTE",
-            trust: "PROVISIONAL",
-          },
-        ],
-      },
-    })
-  );
+        effectsLog: {
+          effectsLogId: "effects_1",
+          proposalId: "proposal_1",
+          producedEffects: [
+            {
+              effectType: "EVENT",
+              eventName: "TRIGGER_PIPELINE",
+              trust: "PROVISIONAL",
+            },
+            {
+              effectType: "ARTIFACT",
+              objectId: "note_1",
+              kind: "NOTE",
+              trust: "PROVISIONAL",
+            },
+          ],
+        },
+      } as any,
+    },
+  });
+
+  const result = guardRevalidation(env);
 
   assert.equal(result.ok, false);
   if (!result.ok) {
@@ -90,34 +86,43 @@ test("FULL-only policy fails closed if PARTIAL would be required (non-artifact e
 });
 
 test("PARTIAL allowed produces PARTIAL_COMMIT and allowlist of provisional ARTIFACT ids", () => {
-  const result = guardRevalidation(
-    makeInput({
-      commitPolicy: { allowedModes: ["FULL", "PARTIAL"] },
-      effectsLog: {
-        effectsLogId: "effects_1",
+  const env = makeEnv({
+    stages: {
+      validation: {
+        ...(makeEnv().stages.validation as any),
+        commitPolicy: { allowedModes: ["FULL", "PARTIAL"] as const },
+      } as any,
+      execution: {
+        ...(makeEnv().stages.execution as any),
         proposalId: "proposal_1",
-        producedEffects: [
-          {
-            effectType: "EVENT",
-            eventName: "TRIGGER_PIPELINE",
-            trust: "PROVISIONAL",
-          },
-          {
-            effectType: "ARTIFACT",
-            objectId: "note_1",
-            kind: "NOTE",
-            trust: "PROVISIONAL",
-          },
-          {
-            effectType: "ARTIFACT",
-            objectId: "note_2",
-            kind: "NOTE",
-            trust: "COMMITTED",
-          },
-        ],
-      },
-    })
-  );
+        effectsLog: {
+          effectsLogId: "effects_1",
+          proposalId: "proposal_1",
+          producedEffects: [
+            {
+              effectType: "EVENT",
+              eventName: "TRIGGER_PIPELINE",
+              trust: "PROVISIONAL",
+            },
+            {
+              effectType: "ARTIFACT",
+              objectId: "note_1",
+              kind: "NOTE",
+              trust: "PROVISIONAL",
+            },
+            {
+              effectType: "ARTIFACT",
+              objectId: "note_2",
+              kind: "NOTE",
+              trust: "COMMITTED",
+            },
+          ],
+        },
+      } as any,
+    },
+  });
+
+  const result = guardRevalidation(env);
 
   assert.equal(result.ok, true);
   if (result.ok) {
@@ -132,23 +137,32 @@ test("PARTIAL allowed produces PARTIAL_COMMIT and allowlist of provisional ARTIF
 });
 
 test("no drift + no non-artifact effects => APPROVE_COMMIT", () => {
-  const result = guardRevalidation(
-    makeInput({
-      commitPolicy: { allowedModes: ["FULL"] },
-      effectsLog: {
-        effectsLogId: "effects_1",
-        proposalId: "proposal_1",
-        producedEffects: [
-          {
-            effectType: "ARTIFACT",
-            objectId: "note_1",
-            kind: "NOTE",
-            trust: "PROVISIONAL",
-          },
-        ],
+  const env = makeEnv({
+    stages: {
+      validation: {
+        ...(makeEnv().stages.validation as any),
+        commitPolicy: { allowedModes: ["FULL"] as const },
       } as any,
-    })
-  );
+      execution: {
+        ...(makeEnv().stages.execution as any),
+        proposalId: "proposal_1",
+        effectsLog: {
+          effectsLogId: "effects_1",
+          proposalId: "proposal_1",
+          producedEffects: [
+            {
+              effectType: "ARTIFACT",
+              objectId: "note_1",
+              kind: "NOTE",
+              trust: "PROVISIONAL",
+            },
+          ],
+        },
+      } as any,
+    },
+  });
+
+  const result = guardRevalidation(env);
 
   assert.equal(result.ok, true);
   if (result.ok) {
