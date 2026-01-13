@@ -5,6 +5,8 @@ import { appendError, hasHaltingErrors } from "#/rna/pipelines/envelope-utils";
 import type { CommitRecord } from "#types/rna/pipeline/ingestion/commit/commit.types";
 import { guardPreCommit, guardCommit } from "./commit.guard";
 
+export const STAGE = "COMMIT";
+
 export function commitStage(
   env: IngestionPipelineEnvelope
 ): IngestionPipelineEnvelope {
@@ -21,7 +23,7 @@ export function commitStage(
 
   if (!result.ok) {
     return appendError(env, {
-      stage: "COMMIT",
+      stage: STAGE,
       severity: "HALT",
       code: result.code,
       message: result.message,

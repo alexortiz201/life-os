@@ -9,6 +9,7 @@ import type {
   RevalidationTrace,
 } from "#types/rna/pipeline/ingestion/revalidation/revalidation.types";
 import { RevalidationInputSchema } from "#types/rna/pipeline/ingestion/revalidation/revalidation.schemas";
+import { STAGE } from "./revalidation.stage";
 
 const errorResult = errorResultFactory<RevalidationTrace>();
 
@@ -208,7 +209,7 @@ export function guardPreRevalidation(env: IngestionPipelineEnvelope) {
     return {
       ok: false,
       env: appendError(env, {
-        stage: "REVALIDATION",
+        stage: STAGE,
         severity: "HALT",
         code: "REVALIDATION_PREREQ_MISSING",
         message: "Execution stage has not run.",
@@ -223,7 +224,7 @@ export function guardPreRevalidation(env: IngestionPipelineEnvelope) {
     return {
       ok: false,
       env: appendError(env, {
-        stage: "REVALIDATION",
+        stage: STAGE,
         severity: "HALT",
         code: "REVALIDATION_PREREQ_MISSING",
         message: "Validation stage has not run (commitPolicy missing).",
@@ -238,7 +239,7 @@ export function guardPreRevalidation(env: IngestionPipelineEnvelope) {
     return {
       ok: false,
       env: appendError(env, {
-        stage: "REVALIDATION",
+        stage: STAGE,
         severity: "HALT",
         code: "REVALIDATION_PREREQ_MISSING",
         message: "Missing commitPolicy on validation stage output.",
@@ -252,7 +253,7 @@ export function guardPreRevalidation(env: IngestionPipelineEnvelope) {
     return {
       ok: false,
       env: appendError(env, {
-        stage: "REVALIDATION",
+        stage: STAGE,
         severity: "HALT",
         code: "REVALIDATION_PREREQ_MISSING",
         message:
@@ -270,7 +271,7 @@ export function guardPreRevalidation(env: IngestionPipelineEnvelope) {
     return {
       ok: false,
       env: appendError(env, {
-        stage: "REVALIDATION",
+        stage: STAGE,
         severity: "HALT",
         code: "REVALIDATION_PREREQ_MISSING",
         message: "Missing effectsLogId required for revalidation.",

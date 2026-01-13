@@ -2,6 +2,8 @@ import type { IngestionPipelineEnvelope } from "#types/rna/pipeline/ingestion/in
 import { guardPreRevalidation, guardRevalidation } from "./revalidation.guard";
 import { appendError, hasHaltingErrors } from "#/rna/pipelines/envelope-utils";
 
+export const STAGE = "REVALIDATION";
+
 export function revalidationStage(
   env: IngestionPipelineEnvelope
 ): IngestionPipelineEnvelope {
@@ -18,7 +20,7 @@ export function revalidationStage(
 
   if (!result.ok) {
     return appendError(env, {
-      stage: "REVALIDATION",
+      stage: STAGE,
       severity: "HALT",
       code: result.code,
       message: result.message,

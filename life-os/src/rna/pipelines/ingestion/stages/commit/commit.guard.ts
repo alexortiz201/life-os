@@ -15,6 +15,8 @@ import type {
 } from "#types/rna/pipeline/ingestion/commit/commit.types";
 import { appendError } from "#/rna/pipelines/envelope-utils";
 
+import { STAGE } from "./commit.stage";
+
 const errorResult = errorResultFactory<CommitTrace>();
 
 function isObject(x: unknown): x is Record<string, unknown> {
@@ -267,7 +269,7 @@ export function guardPreCommit(env: IngestionPipelineEnvelope) {
     return {
       ok: false,
       env: appendError(env, {
-        stage: "COMMIT",
+        stage: STAGE,
         severity: "HALT",
         code: "COMMIT_PREREQ_MISSING",
         message: "Missing snapshotId required for commit.",
@@ -284,7 +286,7 @@ export function guardPreCommit(env: IngestionPipelineEnvelope) {
     return {
       ok: false,
       env: appendError(env, {
-        stage: "COMMIT",
+        stage: STAGE,
         severity: "HALT",
         code: "COMMIT_PREREQ_MISSING",
         message: "Missing effectsLogId required for commit.",
@@ -301,7 +303,7 @@ export function guardPreCommit(env: IngestionPipelineEnvelope) {
     return {
       ok: false,
       env: appendError(env, {
-        stage: "COMMIT",
+        stage: STAGE,
         severity: "HALT",
         code: "COMMIT_PREREQ_MISSING",
         message: "Revalidation stage has not run.",
@@ -318,7 +320,7 @@ export function guardPreCommit(env: IngestionPipelineEnvelope) {
     return {
       ok: false,
       env: appendError(env, {
-        stage: "COMMIT",
+        stage: STAGE,
         severity: "HALT",
         code: "COMMIT_PREREQ_MISSING",
         message: "Missing revalidationId required for commit.",
