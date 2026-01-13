@@ -10,17 +10,18 @@ import type {
 import type { PrecommitRule } from "#types/rna/pipeline/ingestion/commit/commit.rules";
 import { CommitInputSchema } from "#types/rna/pipeline/ingestion/commit/commit.schemas";
 import type {
-  GuardPrecommitResult,
-  PrecommitTrace,
+  GuardCommitResult,
+  CommitTrace,
 } from "#types/rna/pipeline/ingestion/commit/commit.types";
+import { appendError } from "#/rna/pipelines/envelope-utils";
 
-const errorResult = errorResultFactory<PrecommitTrace>();
+const errorResult = errorResultFactory<CommitTrace>();
 
 function isObject(x: unknown): x is Record<string, unknown> {
   return typeof x === "object" && x !== null;
 }
 
-export function guardPrecommit(env: unknown): GuardPrecommitResult {
+export function guardCommit(env: unknown): GuardCommitResult {
   // 0) fail closed on non-object
   if (!isObject(env)) {
     return errorResult({
@@ -258,5 +259,80 @@ export function guardPrecommit(env: unknown): GuardPrecommitResult {
         "FULL_IGNORES_ALLOWLIST",
       ] satisfies PrecommitRule[],
     },
+  };
+}
+
+export function guardPreCommit(env: IngestionPipelineEnvelope) {
+  if (!env.ids.snapshotId) {
+    return {
+      ok: false,
+      env: appendError(env, {
+        stage: "COMMIT",
+        severity: "HALT",
+        code: "COMMIT_PREREQ_MISSING",
+        message: "Missing snapshotId required for commit.",
+        trace: {
+          proposalId: env.ids.proposalId,
+          snapshotId: env.ids.snapshotId,
+        },
+        at: Date.now(),
+      }),
+    };
+  }
+
+  if (!env.ids.effectsLogId) {
+    return {
+      ok: false,
+      env: appendError(env, {
+        stage: "COMMIT",
+        severity: "HALT",
+        code: "COMMIT_PREREQ_MISSING",
+        message: "Missing effectsLogId required for commit.",
+        trace: {
+          proposalId: env.ids.proposalId,
+          effectsLogId: env.ids.effectsLogId,
+        },
+        at: Date.now(),
+      }),
+    };
+  }
+
+  if (!env.stages.revalidation.hasRun) {
+    return {
+      ok: false,
+      env: appendError(env, {
+        stage: "COMMIT",
+        severity: "HALT",
+        code: "COMMIT_PREREQ_MISSING",
+        message: "Revalidation stage has not run.",
+        trace: {
+          proposalId: env.ids.proposalId,
+          revalidationHasRun: false,
+        },
+        at: Date.now(),
+      }),
+    };
+  }
+
+  if (!env.ids.revalidationId) {
+    return {
+      ok: false,
+      env: appendError(env, {
+        stage: "COMMIT",
+        severity: "HALT",
+        code: "COMMIT_PREREQ_MISSING",
+        message: "Missing revalidationId required for commit.",
+        trace: {
+          proposalId: env.ids.proposalId,
+          revalidationId: env.ids.revalidationId,
+        },
+        at: Date.now(),
+      }),
+    };
+  }
+
+  return {
+    ok: true,
+    env,
   };
 }

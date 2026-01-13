@@ -71,7 +71,7 @@ export type CommitReady = {
   rejectedEffects: Array<RejectedEffect>;
 };
 
-export type PrecommitTrace = StageGuardTrace<
+export type CommitTrace = StageGuardTrace<
   EffectDecisionModeOrUnknown,
   PrecommitRule
 > &
@@ -82,4 +82,4 @@ export type PrecommitTrace = StageGuardTrace<
     allowListCount: number;
   }>;
 
-export type GuardPrecommitResult = GuardResult<CommitReady, PrecommitTrace>;
+export type GuardCommitResult = GuardResult<CommitReady, CommitTrace>;

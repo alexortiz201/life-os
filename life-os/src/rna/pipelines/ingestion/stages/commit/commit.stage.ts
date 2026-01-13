@@ -3,7 +3,7 @@ import type { IngestionPipelineEnvelope } from "#/types/rna/pipeline/ingestion/i
 import { appendError, hasHaltingErrors } from "#/rna/pipelines/envelope-utils";
 
 import type { CommitRecord } from "#types/rna/pipeline/ingestion/commit/commit.types";
-import { guardPrecommit } from "./precommit.guard";
+import { guardPreCommit, guardCommit } from "./commit.guard";
 
 export function commitStage(
   env: IngestionPipelineEnvelope
@@ -12,64 +12,12 @@ export function commitStage(
   if (hasHaltingErrors(env)) return env;
 
   // 1) prereqs
-  if (!env.ids.snapshotId) {
-    return appendError(env, {
-      stage: "COMMIT",
-      severity: "HALT",
-      code: "COMMIT_PREREQ_MISSING",
-      message: "Missing snapshotId required for commit.",
-      trace: {
-        proposalId: env.ids.proposalId,
-        snapshotId: env.ids.snapshotId,
-      },
-      at: Date.now(),
-    });
-  }
+  const preReqResult = guardPreCommit(env);
 
-  if (!env.ids.effectsLogId) {
-    return appendError(env, {
-      stage: "COMMIT",
-      severity: "HALT",
-      code: "COMMIT_PREREQ_MISSING",
-      message: "Missing effectsLogId required for commit.",
-      trace: {
-        proposalId: env.ids.proposalId,
-        effectsLogId: env.ids.effectsLogId,
-      },
-      at: Date.now(),
-    });
-  }
-
-  if (!env.stages.revalidation.hasRun) {
-    return appendError(env, {
-      stage: "COMMIT",
-      severity: "HALT",
-      code: "COMMIT_PREREQ_MISSING",
-      message: "Revalidation stage has not run.",
-      trace: {
-        proposalId: env.ids.proposalId,
-        revalidationHasRun: false,
-      },
-      at: Date.now(),
-    });
-  }
-
-  if (!env.ids.revalidationId) {
-    return appendError(env, {
-      stage: "COMMIT",
-      severity: "HALT",
-      code: "COMMIT_PREREQ_MISSING",
-      message: "Missing revalidationId required for commit.",
-      trace: {
-        proposalId: env.ids.proposalId,
-        revalidationId: env.ids.revalidationId,
-      },
-      at: Date.now(),
-    });
-  }
+  if (!preReqResult.ok) return preReqResult.env;
 
   // 2) run guard
-  const result = guardPrecommit(env);
+  const result = guardCommit(env);
 
   if (!result.ok) {
     return appendError(env, {

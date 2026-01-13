@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { guardPrecommit } from "#/rna/pipelines/ingestion/stages/commit/precommit.guard";
+import { guardCommit } from "#/rna/pipelines/ingestion/stages/commit/commit.guard";
 import type { IngestionPipelineEnvelope } from "#/types/rna/pipeline/ingestion/ingestion.types";
 import { makeCommitEnv } from "../../../../../utils"; // adjust relative import if needed
 
@@ -18,7 +18,7 @@ function ids(x: any): string[] {
 }
 
 test("INVALID_COMMIT_INPUT when input shape is wrong", () => {
-  const result = guardPrecommit({ nope: true } as any);
+  const result = guardCommit({ nope: true } as any);
 
   assert.equal(result.ok, false);
   if (!result.ok) {
@@ -42,7 +42,7 @@ test("COMMIT_INPUT_MISMATCH when revalidation.proposalId does not match proposal
     } as any,
   });
 
-  const result = guardPrecommit(env);
+  const result = guardCommit(env);
 
   assert.equal(result.ok, false);
   if (!result.ok) {
@@ -64,7 +64,7 @@ test("COMMIT_INPUT_MISMATCH when effectsLog.proposalId does not match proposalId
     } as any,
   });
 
-  const result = guardPrecommit(env);
+  const result = guardCommit(env);
 
   assert.equal(result.ok, false);
   if (!result.ok) {
@@ -86,7 +86,7 @@ test("COMMIT_OUTCOME_UNSUPPORTED when outcome is not APPROVE_COMMIT or PARTIAL_C
     } as any,
   });
 
-  const result = guardPrecommit(env);
+  const result = guardCommit(env);
 
   assert.equal(result.ok, false);
   if (!result.ok) {
@@ -108,7 +108,7 @@ test("APPROVE_COMMIT returns FULL mode and commitEligibleEffects includes all PR
     } as any,
   });
 
-  const result = guardPrecommit(env);
+  const result = guardCommit(env);
 
   assert.equal(result.ok, true);
   if (result.ok) {
@@ -134,7 +134,7 @@ test("PARTIAL_COMMIT with empty allowlist returns ok and empty commitEligibleEff
     } as any,
   });
 
-  const result = guardPrecommit(env);
+  const result = guardCommit(env);
 
   assert.equal(result.ok, true);
   if (result.ok) {
@@ -168,7 +168,7 @@ test("ALLOWLIST_UNKNOWN_OBJECT when PARTIAL_COMMIT allowlist references an id no
     } as any,
   });
 
-  const result = guardPrecommit(env);
+  const result = guardCommit(env);
 
   assert.equal(result.ok, false);
   if (!result.ok) {
@@ -219,7 +219,7 @@ test("PARTIAL_COMMIT selects only allowlisted PROVISIONAL artifacts (filters COM
     } as any,
   });
 
-  const result = guardPrecommit(env);
+  const result = guardCommit(env);
 
   assert.equal(result.ok, true);
   if (result.ok) {

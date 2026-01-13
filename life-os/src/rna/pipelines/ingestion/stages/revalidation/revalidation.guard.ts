@@ -1,11 +1,14 @@
-import { RevalidationInputSchema } from "#types/rna/pipeline/ingestion/revalidation/revalidation.schemas";
+import { isProvisionalArtifactEffect } from "#/domain/effects/effects.guards";
+import { errorResultFactory } from "#/rna/pipelines/pipeline-utils";
+import { appendError } from "#/rna/pipelines/envelope-utils";
+
+import type { RevalidationRule } from "#types/rna/pipeline/ingestion/revalidation/revalidation.rules";
+import type { IngestionPipelineEnvelope } from "#types/rna/pipeline/ingestion/ingestion.types";
 import type {
   GuardRevalidationResult,
   RevalidationTrace,
 } from "#types/rna/pipeline/ingestion/revalidation/revalidation.types";
-import { errorResultFactory } from "#/rna/pipelines/pipeline-utils";
-import type { RevalidationRule } from "#types/rna/pipeline/ingestion/revalidation/revalidation.rules";
-import { isProvisionalArtifactEffect } from "#/domain/effects/effects.guards";
+import { RevalidationInputSchema } from "#types/rna/pipeline/ingestion/revalidation/revalidation.schemas";
 
 const errorResult = errorResultFactory<RevalidationTrace>();
 
@@ -196,5 +199,92 @@ export function guardRevalidation(env: unknown): GuardRevalidationResult {
         rulesApplied: [] satisfies RevalidationRule[],
       },
     },
+  };
+}
+
+export function guardPreRevalidation(env: IngestionPipelineEnvelope) {
+  const execution = env.stages.execution;
+  if (!execution.hasRun) {
+    return {
+      ok: false,
+      env: appendError(env, {
+        stage: "REVALIDATION",
+        severity: "HALT",
+        code: "REVALIDATION_PREREQ_MISSING",
+        message: "Execution stage has not run.",
+        trace: { proposalId: env.ids.proposalId, executionHasRun: false },
+        at: Date.now(),
+      }),
+    };
+  }
+
+  const validation = env.stages.validation;
+  if (!validation.hasRun) {
+    return {
+      ok: false,
+      env: appendError(env, {
+        stage: "REVALIDATION",
+        severity: "HALT",
+        code: "REVALIDATION_PREREQ_MISSING",
+        message: "Validation stage has not run (commitPolicy missing).",
+        trace: { proposalId: env.ids.proposalId, validationHasRun: false },
+        at: Date.now(),
+      }),
+    };
+  }
+
+  // commitPolicy should be produced by validation (source of truth)
+  if (!(validation as any).commitPolicy) {
+    return {
+      ok: false,
+      env: appendError(env, {
+        stage: "REVALIDATION",
+        severity: "HALT",
+        code: "REVALIDATION_PREREQ_MISSING",
+        message: "Missing commitPolicy on validation stage output.",
+        trace: { proposalId: env.ids.proposalId },
+        at: Date.now(),
+      }),
+    };
+  }
+
+  if (!env.ids.snapshotId) {
+    return {
+      ok: false,
+      env: appendError(env, {
+        stage: "REVALIDATION",
+        severity: "HALT",
+        code: "REVALIDATION_PREREQ_MISSING",
+        message:
+          "Missing snapshotId (meaning version) required for revalidation.",
+        trace: {
+          proposalId: env.ids.proposalId,
+          snapshotId: env.ids.snapshotId,
+        },
+        at: Date.now(),
+      }),
+    };
+  }
+
+  if (!env.ids.effectsLogId) {
+    return {
+      ok: false,
+      env: appendError(env, {
+        stage: "REVALIDATION",
+        severity: "HALT",
+        code: "REVALIDATION_PREREQ_MISSING",
+        message: "Missing effectsLogId required for revalidation.",
+        trace: {
+          proposalId: env.ids.proposalId,
+          effectsLogId: env.ids.effectsLogId,
+        },
+        at: Date.now(),
+      }),
+    };
+  }
+
+  return {
+    ok: true,
+    env,
   };
 }

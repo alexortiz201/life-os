@@ -11,3 +11,8 @@ Animator - Produces small animations with the Novelist's outputs
 AGENT_ROLE: INTERPRETIVE | PROPOSING | EXECUTING
 EFFECT_KIND: ARTIFACT | EVENT | NARRATIVE | MEDIA
 TRUST_SCOPE: NONE | PROVISIONAL | COMMITTED
+
+
+## ENCODE NATURAL LAW
+Consider when designing how things already operate in the real world.
+- AGENT -> TEAM -> 1 CAPTAIN -> ETC.

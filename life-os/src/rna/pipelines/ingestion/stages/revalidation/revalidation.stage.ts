@@ -1,5 +1,5 @@
 import type { IngestionPipelineEnvelope } from "#types/rna/pipeline/ingestion/ingestion.types";
-import { guardRevalidation } from "./revalidation.guard";
+import { guardPreRevalidation, guardRevalidation } from "./revalidation.guard";
 import { appendError, hasHaltingErrors } from "#/rna/pipelines/envelope-utils";
 
 export function revalidationStage(
@@ -9,67 +9,9 @@ export function revalidationStage(
   if (hasHaltingErrors(env)) return env;
 
   // 1) prereqs (stage-level, before guard)
-  const execution = env.stages.execution;
-  if (!execution.hasRun) {
-    return appendError(env, {
-      stage: "REVALIDATION",
-      severity: "HALT",
-      code: "REVALIDATION_PREREQ_MISSING",
-      message: "Execution stage has not run.",
-      trace: { proposalId: env.ids.proposalId, executionHasRun: false },
-      at: Date.now(),
-    });
-  }
+  const preReqRes = guardPreRevalidation(env);
 
-  const validation = env.stages.validation;
-  if (!validation.hasRun) {
-    return appendError(env, {
-      stage: "REVALIDATION",
-      severity: "HALT",
-      code: "REVALIDATION_PREREQ_MISSING",
-      message: "Validation stage has not run (commitPolicy missing).",
-      trace: { proposalId: env.ids.proposalId, validationHasRun: false },
-      at: Date.now(),
-    });
-  }
-
-  // commitPolicy should be produced by validation (source of truth)
-  if (!(validation as any).commitPolicy) {
-    return appendError(env, {
-      stage: "REVALIDATION",
-      severity: "HALT",
-      code: "REVALIDATION_PREREQ_MISSING",
-      message: "Missing commitPolicy on validation stage output.",
-      trace: { proposalId: env.ids.proposalId },
-      at: Date.now(),
-    });
-  }
-
-  if (!env.ids.snapshotId) {
-    return appendError(env, {
-      stage: "REVALIDATION",
-      severity: "HALT",
-      code: "REVALIDATION_PREREQ_MISSING",
-      message:
-        "Missing snapshotId (meaning version) required for revalidation.",
-      trace: { proposalId: env.ids.proposalId, snapshotId: env.ids.snapshotId },
-      at: Date.now(),
-    });
-  }
-
-  if (!env.ids.effectsLogId) {
-    return appendError(env, {
-      stage: "REVALIDATION",
-      severity: "HALT",
-      code: "REVALIDATION_PREREQ_MISSING",
-      message: "Missing effectsLogId required for revalidation.",
-      trace: {
-        proposalId: env.ids.proposalId,
-        effectsLogId: env.ids.effectsLogId,
-      },
-      at: Date.now(),
-    });
-  }
+  if (!preReqRes.ok) return preReqRes.env;
 
   // 2) run guard (guard plucks directly from env)
   const result = guardRevalidation(env);
