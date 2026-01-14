@@ -1,8 +1,9 @@
 import { guardTrustPromotion } from "#/domain/trust/trustPromotion.guard";
-import type { IngestionPipelineEnvelope } from "#/types/rna/pipeline/ingestion/ingestion.types";
 import { appendError, hasHaltingErrors } from "#/rna/pipelines/envelope-utils";
 
+import type { IngestionPipelineEnvelope } from "#types/rna/pipeline/ingestion/ingestion.types";
 import type { CommitRecord } from "#types/rna/pipeline/ingestion/commit/commit.types";
+
 import { guardPreCommit, guardCommit } from "./commit.guard";
 
 export const STAGE = "COMMIT";
@@ -154,10 +155,13 @@ export function commitStage(
         hasRun: true,
         ranAt,
         observed: {
-          proposalId: env.ids.proposalId,
           snapshotId: env.ids.snapshotId,
-          revalidationId: env.ids.revalidationId,
+          proposalId: env.ids.proposalId,
+          intakeId: env.ids.intakeId,
+          validationId: env.ids.validationId,
+          planningId: env.ids.planningId,
           effectsLogId: env.ids.effectsLogId,
+          revalidationId: env.ids.revalidationId,
         },
         ...record,
       },

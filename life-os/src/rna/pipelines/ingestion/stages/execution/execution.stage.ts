@@ -2,23 +2,23 @@ import { appendError, hasHaltingErrors } from "#/rna/pipelines/envelope-utils";
 
 import type { IngestionPipelineEnvelope } from "#types/rna/pipeline/ingestion/ingestion.types";
 
-import { guardPreRevalidation, guardRevalidation } from "./revalidation.guard";
+import { guardPreExecution, guardExecution } from "./execution.guard";
 
-export const STAGE = "REVALIDATION";
+export const STAGE = "EXECUTION";
 
-export function revalidationStage(
+export function executionStage(
   env: IngestionPipelineEnvelope
 ): IngestionPipelineEnvelope {
   // 0) fail closed if earlier stage produced HALT errors
   if (hasHaltingErrors(env)) return env;
 
   // 1) prereqs (stage-level, before guard)
-  const preReqRes = guardPreRevalidation(env);
+  const preReqRes = guardPreExecution(env);
 
   if (!preReqRes.ok) return preReqRes.env;
 
   // 2) run guard (guard plucks directly from env)
-  const result = guardRevalidation(env);
+  const result = guardExecution(env);
 
   if (!result.ok) {
     return appendError(env, {
@@ -33,30 +33,28 @@ export function revalidationStage(
 
   // 3) write stage output back into envelope
   const ranAt = Date.now();
-  const revalidationId = `revalidation_${ranAt}`;
-
+  const executionId = `execution_${ranAt}`;
   const observed = {
     snapshotId: env.ids.snapshotId,
     proposalId: env.ids.proposalId,
     intakeId: env.ids.intakeId,
     validationId: env.ids.validationId,
     planningId: env.ids.planningId,
-    effectsLogId: env.ids.effectsLogId,
   };
 
   return {
     ...env,
     ids: {
       ...env.ids,
-      revalidationId,
+      executionId,
     },
     stages: {
       ...env.stages,
-      revalidation: {
+      execution: {
         hasRun: true,
         ranAt,
         observed,
-        revalidationId,
+        executionId,
         ...result.data,
       },
     },
