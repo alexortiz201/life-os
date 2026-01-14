@@ -2,9 +2,9 @@ import { appendError, hasHaltingErrors } from "#/rna/pipelines/envelope-utils";
 
 import type { IngestionPipelineEnvelope } from "#types/rna/pipeline/ingestion/ingestion.types";
 
-import { guardPreExecution, guardExecution } from "./execution.guard";
+import { guardPreExecution } from "./execution.guard";
 
-export const STAGE = "EXECUTION";
+export const STAGE = "EXECUTION" as const;
 
 export function executionStage(
   env: IngestionPipelineEnvelope
@@ -17,29 +17,32 @@ export function executionStage(
 
   if (!preReqRes.ok) return preReqRes.env;
 
-  // 2) run guard (guard plucks directly from env)
-  const result = guardExecution(env);
+  // // 2) run guard (guard plucks directly from env)
+  // const result = guardExecution(env);
 
-  if (!result.ok) {
-    return appendError(env, {
-      stage: STAGE,
-      severity: "HALT",
-      code: result.code,
-      message: result.message,
-      trace: result.trace,
-      at: Date.now(),
-    });
-  }
+  // if (!result.ok) {
+  //   return appendError(env, {
+  //     stage: STAGE,
+  //     severity: "HALT",
+  //     code: result.code,
+  //     message: result.message,
+  //     trace: result.trace,
+  //     at: Date.now(),
+  //   });
+  // }
 
   // 3) write stage output back into envelope
+  // v0: produce effects (stub)
+  const producedEffects = [] as any[]; // replace soon
+
   const ranAt = Date.now();
   const executionId = `execution_${ranAt}`;
-  const observed = {
-    snapshotId: env.ids.snapshotId,
+  const effectsLogId = `effects_${ranAt}`;
+
+  const effectsLog = {
+    effectsLogId,
     proposalId: env.ids.proposalId,
-    intakeId: env.ids.intakeId,
-    validationId: env.ids.validationId,
-    planningId: env.ids.planningId,
+    producedEffects,
   };
 
   return {
@@ -47,16 +50,22 @@ export function executionStage(
     ids: {
       ...env.ids,
       executionId,
+      effectsLogId,
     },
     stages: {
       ...env.stages,
       execution: {
         hasRun: true,
         ranAt,
-        observed,
+        observed: {
+          proposalId: env.ids.proposalId,
+          snapshotId: env.ids.snapshotId,
+          planningId: env.ids.planningId,
+        } as any,
         executionId,
-        ...result.data,
-      },
+        effectsLog,
+        // executionResult: [] // later
+      } as any,
     },
   };
 }
