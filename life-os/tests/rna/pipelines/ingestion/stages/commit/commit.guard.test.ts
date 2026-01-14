@@ -113,7 +113,7 @@ test("APPROVE_COMMIT returns FULL mode and commitEligibleEffects includes all PR
   assert.equal(result.ok, true);
   if (result.ok) {
     assert.equal(result.data.mode, "FULL");
-    assert.deepEqual(ids(result.data.commitEligibleEffects), [
+    assert.deepEqual(ids(result.data.effects.eligible.artifacts), [
       "note_1",
       "report_1",
     ]);
@@ -139,7 +139,7 @@ test("PARTIAL_COMMIT with empty allowlist returns ok and empty commitEligibleEff
   assert.equal(result.ok, true);
   if (result.ok) {
     assert.equal(result.data.mode, "PARTIAL");
-    assert.deepEqual(result.data.commitEligibleEffects, []);
+    assert.deepEqual(result.data.effects.eligible.artifacts, []);
   }
 });
 
@@ -224,7 +224,7 @@ test("PARTIAL_COMMIT selects only allowlisted PROVISIONAL artifacts (filters COM
   assert.equal(result.ok, true);
   if (result.ok) {
     assert.equal(result.data.mode, "PARTIAL");
-    assert.deepEqual(ids(result.data.commitEligibleEffects), [
+    assert.deepEqual(ids(result.data.effects.eligible.artifacts), [
       "note_1",
       "report_1",
     ]);

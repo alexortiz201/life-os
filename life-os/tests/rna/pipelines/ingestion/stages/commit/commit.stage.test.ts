@@ -236,7 +236,7 @@ test("PARTIAL_COMMIT fails when allowlist references unknown objects", () => {
   assert.equal(err.code, "ALLOWLIST_UNKNOWN_OBJECT");
 });
 
-test("does not emit promotions for non-PROVISIONAL artifacts", () => {
+test("does not emit promotions for non-PROVISIONAL artifacts (records rejectedEffects)", () => {
   const env = makeCommitEnv({
     stages: {
       revalidation: {
@@ -271,4 +271,10 @@ test("does not emit promotions for non-PROVISIONAL artifacts", () => {
 
   assert.equal(c.approvedEffects.length, 0);
   assert.equal(c.promotions.length, 0);
+  // coverage: rejectedEffects should be recorded (guardCommit precomputes these)
+  assert.ok(Array.isArray(c.rejectedEffects));
+  assert.deepEqual(c.rejectedEffects.map((e: any) => e.objectId).sort(), [
+    "note_2",
+    "raw_1",
+  ]);
 });

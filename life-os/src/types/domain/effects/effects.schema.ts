@@ -21,6 +21,12 @@ const EventEffectSchema = z.object({
   // eventId: z.string().min(1).optional(),
 });
 
+const UnknownEffectSchema = z.object({
+  effectType: z.literal("UNKNOWN"),
+  trust: TrustLevelSchema,
+  raw: z.unknown().optional(),
+});
+
 /**
  * Legacy support:
  * Your current producedEffects look like: { objectId, kind, trust }
@@ -47,4 +53,4 @@ export const EffectSchema = z.preprocess((val) => {
     };
   }
   return val;
-}, z.discriminatedUnion("effectType", [ArtifactEffectSchema, EventEffectSchema]));
+}, z.discriminatedUnion("effectType", [ArtifactEffectSchema, EventEffectSchema, UnknownEffectSchema]));

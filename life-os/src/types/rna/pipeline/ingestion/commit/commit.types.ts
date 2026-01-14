@@ -6,7 +6,11 @@ import type {
   GuardResult,
   StageGuardTrace,
 } from "#types/rna/pipeline/pipeline.types";
-import type { ArtifactEffect } from "#types/domain/effects/effects.types";
+import type {
+  ArtifactEffect,
+  EffectDispositionBase,
+  EventEffect,
+} from "#types/domain/effects/effects.types";
 import type { TrustLevel } from "#types/domain/trust/trust.types";
 import type { PrecommitRule } from "./commit.rules";
 import { CommitInputSchema } from "./commit.schemas";
@@ -30,14 +34,18 @@ export type ApprovedEffect = {
   trust: "COMMITTED";
 };
 
-export type RejectedEffect = {
-  objectId: string;
-  kind: string;
-  originalTrust: TrustLevel;
+type RejectedEffectKey =
+  | { effectType: "ARTIFACT"; objectId: string; kind: string }
+  | { effectType: "EVENT"; eventName: string };
+
+export type RejectedEffect = RejectedEffectKey & {
   trust: TrustLevel;
+  originalTrust: TrustLevel;
   reasonCode: string;
   reason: string;
 };
+
+export type IgnoredEffect = EffectDispositionBase;
 
 export type Justification = {
   mode: EffectDecisionMode;
@@ -62,13 +70,27 @@ export type CommitRecord = {
 export type CommitInput = z.infer<typeof CommitInputSchema>;
 
 export type CommitReady = {
+  mode: EffectDecisionMode;
   proposalId: string;
   effectsLogId: string;
-  mode: EffectDecisionMode;
-  commitEligibleEffects: Array<ArtifactEffect>;
   allowListCount: number;
+  effects: {
+    eligible: {
+      artifacts: Array<ArtifactEffect>;
+      events: Array<EventEffect>;
+    };
+    rejected: {
+      artifacts: Array<RejectedEffect>;
+      events: Array<RejectedEffect>;
+    };
+    ignored: {
+      artifacts: Array<ArtifactEffect>;
+      events: Array<EventEffect>;
+      unknown: Array<IgnoredEffect>;
+    };
+  };
+
   rulesApplied: PrecommitRule[];
-  rejectedEffects: Array<RejectedEffect>;
 };
 
 export type CommitTrace = StageGuardTrace<

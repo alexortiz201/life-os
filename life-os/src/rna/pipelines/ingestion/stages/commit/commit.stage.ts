@@ -7,6 +7,12 @@ import { guardPreCommit, guardCommit } from "./commit.guard";
 
 export const STAGE = "COMMIT";
 
+const TRUST_PROVISIONAL = "PROVISIONAL";
+const TRUST_COMMMITED = "COMMITTED";
+
+const TRUST_FROM = TRUST_PROVISIONAL;
+const TRUST_TO = TRUST_COMMMITED;
+
 export function commitStage(
   env: IngestionPipelineEnvelope
 ): IngestionPipelineEnvelope {
@@ -40,7 +46,10 @@ export function commitStage(
   const proposalId = data.proposalId;
 
   const approvedEffects: CommitRecord["approvedEffects"] = [];
-  const rejectedEffects: CommitRecord["rejectedEffects"] = data.rejectedEffects;
+  const rejectedEffects: CommitRecord["rejectedEffects"] = [
+    ...data.effects.rejected.artifacts,
+    ...data.effects.rejected.events,
+  ];
 
   const justification: CommitRecord["justification"] = {
     mode: data.mode,
@@ -51,7 +60,7 @@ export function commitStage(
   const promotions: CommitRecord["promotions"] = [];
 
   // If PARTIAL with empty allowlist -> commit nothing, still emit record + stage output
-  if (data.mode === "PARTIAL" && data.commitEligibleEffects.length === 0) {
+  if (data.mode === "PARTIAL" && data.effects.eligible.artifacts.length === 0) {
     const record: CommitRecord = {
       commitId,
       proposalId,
@@ -86,34 +95,37 @@ export function commitStage(
 
   const effectsLogId = data.effectsLogId;
 
-  for (const obj of data.commitEligibleEffects) {
-    // defensive; guard already filtered to artifacts
-    if (obj.effectType !== "ARTIFACT") continue;
-
+  for (const obj of data.effects.eligible.artifacts) {
     const reason = "Commit stage promotion of provisional execution outputs.";
     const guard = guardTrustPromotion({
       from: obj.trust,
-      to: "COMMITTED",
-      stage: "COMMIT",
+      to: TRUST_TO,
+      stage: STAGE,
       reason,
     });
 
     if (!guard.ok) {
-      // internal invariant breach (still safe to throw)
-      throw new Error(`${guard.code}: ${guard.message}`);
+      rejectedEffects.push({
+        ...obj,
+        originalTrust: TRUST_FROM,
+        reasonCode: guard.code,
+        reason: guard.message,
+      });
+
+      continue;
     }
 
     approvedEffects.push({
       objectId: obj.objectId,
       kind: obj.kind,
-      trust: "COMMITTED",
+      trust: TRUST_TO,
     });
 
     promotions.push({
       objectId: obj.objectId,
-      from: "PROVISIONAL",
-      to: "COMMITTED",
-      stage: "COMMIT",
+      from: TRUST_FROM,
+      to: TRUST_TO,
+      stage: STAGE,
       reason,
       effectsLogId,
       commitId,

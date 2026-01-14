@@ -1,7 +1,11 @@
 import { errorResultFactory } from "#/rna/pipelines/pipeline-utils";
 import type { IngestionPipelineEnvelope } from "#/types/rna/pipeline/ingestion/ingestion.types";
 
-import type { ArtifactEffect } from "#/types/domain/effects/effects.types";
+import type {
+  ArtifactEffect,
+  EventEffect,
+  UnknownEffect,
+} from "#/types/domain/effects/effects.types";
 import type {
   EffectDecisionMode,
   EffectDecisionModeOrUnknown,
@@ -12,6 +16,10 @@ import { CommitInputSchema } from "#types/rna/pipeline/ingestion/commit/commit.s
 import type {
   GuardCommitResult,
   CommitTrace,
+  // RejectedEffect,
+  IgnoredEffect,
+  CommitReady,
+  RejectedEffect,
 } from "#types/rna/pipeline/ingestion/commit/commit.types";
 import { appendError } from "#/rna/pipelines/envelope-utils";
 
@@ -175,14 +183,27 @@ export function guardCommit(env: unknown): GuardCommitResult {
     });
   }
 
-  const commitReadyData = {
+  const commitReadyData: CommitReady = {
     mode: decidedMode as EffectDecisionMode,
     proposalId: pid,
     effectsLogId: el.effectsLogId,
     allowListCount: rv.commitAllowList.length,
-    commitEligibleEffects: [] as ArtifactEffect[],
-    rejectedEffects: [],
-    rulesApplied: [] satisfies PrecommitRule[],
+    effects: {
+      eligible: {
+        artifacts: [],
+        events: [],
+      },
+      rejected: {
+        artifacts: [],
+        events: [],
+      },
+      ignored: {
+        artifacts: [],
+        events: [],
+        unknown: [],
+      },
+    },
+    rulesApplied: [],
   };
 
   // PARTIAL + empty allowlist => commit nothing
@@ -199,18 +220,79 @@ export function guardCommit(env: unknown): GuardCommitResult {
   }
 
   // Eligible = provisional ARTIFACT effects only
-  const provisionalArtifacts: ArtifactEffect[] = [];
-  const producedArtifactIds = el.producedEffects.reduce((acc, eff) => {
-    if (eff.effectType === "ARTIFACT") {
-      if (eff.trust === "PROVISIONAL") provisionalArtifacts.push(eff);
-      acc.push(eff.objectId);
-    }
-    return acc;
-  }, [] as string[]);
+  type ProducedEffect = ArtifactEffect | EventEffect | UnknownEffect;
+
+  type Grouped = {
+    all: {
+      artifactIds: string[];
+      eventNames: string[];
+    };
+    provisional: {
+      artifacts: ArtifactEffect[];
+      events: EventEffect[];
+    };
+    rejected: {
+      artifacts: RejectedEffect[];
+      events: RejectedEffect[];
+    };
+    other: {
+      artifacts: ArtifactEffect[];
+      events: EventEffect[];
+      unknown: UnknownEffect[];
+    };
+  };
+
+  const initial: Grouped = {
+    all: { artifactIds: [], eventNames: [] },
+    provisional: { artifacts: [], events: [] },
+    rejected: { artifacts: [], events: [] },
+    other: { artifacts: [], events: [], unknown: [] },
+  };
+
+  const groupedEffects = (el.producedEffects as ProducedEffect[]).reduce(
+    (acc, eff) => {
+      if (eff.effectType === "ARTIFACT") {
+        if (eff.trust === "PROVISIONAL") {
+          acc.provisional.artifacts.push(eff);
+        } else {
+          acc.rejected.artifacts.push({
+            ...eff,
+            originalTrust: eff.trust,
+            reason: "Trust not PROVISIONAL",
+            reasonCode: "NOT_PROVISIONAL",
+          });
+        }
+
+        acc.all.artifactIds.push(eff.objectId);
+        return acc;
+      }
+
+      if (eff.effectType === "EVENT") {
+        if (eff.trust === "PROVISIONAL") {
+          acc.provisional.events.push(eff);
+        } else {
+          acc.rejected.events.push({
+            ...eff,
+            originalTrust: eff.trust,
+            reason: "Trust not PROVISIONAL",
+            reasonCode: "NOT_PROVISIONAL",
+          });
+        }
+
+        acc.all.eventNames.push(eff.eventName);
+        return acc;
+      }
+
+      // ✅ eff is UnknownEffect here (only if UnknownEffect.effectType excludes the literals)
+      acc.other.unknown.push(eff);
+      return acc;
+    },
+    initial
+  );
 
   // In PARTIAL mode, allowlist must reference known produced ARTIFACT ids
   if (rv.outcome === "PARTIAL_COMMIT") {
-    const producedSet = new Set(producedArtifactIds);
+    const producedSet = new Set(groupedEffects.all.artifactIds);
     const unknownAllowList = rv.commitAllowList.filter(
       (id) => !producedSet.has(id)
     );
@@ -234,19 +316,43 @@ export function guardCommit(env: unknown): GuardCommitResult {
     }
 
     const allowSet = new Set(rv.commitAllowList);
-    const allowListEffects = provisionalArtifacts.filter((o) =>
-      allowSet.has(o.objectId)
-    );
+    let allowListEffects: ArtifactEffect[] = [];
+    let allowListRejectedEffects: RejectedEffect[] = [];
+
+    groupedEffects.provisional.artifacts.filter((o) => {
+      if (allowSet.has(o.objectId)) {
+        allowListEffects.push(o);
+      } else {
+        allowListRejectedEffects.push({
+          ...o,
+          originalTrust: o.trust,
+          reason: "Missing from allow list.",
+          reasonCode: "NOT_ALLOWLIST_OBJECT",
+        });
+      }
+    });
 
     return {
       ok: true,
       data: {
         ...commitReadyData,
-        commitEligibleEffects: allowListEffects,
-        rulesApplied: [
-          "PARTIAL_COMMIT_USE_ALLOWLIST",
-        ] satisfies PrecommitRule[],
-      },
+        effects: {
+          eligible: {
+            artifacts: allowListEffects,
+            events: groupedEffects.provisional.events,
+          },
+          rejected: {
+            artifacts: allowListRejectedEffects,
+            events: [],
+          },
+          ignored: {
+            artifacts: groupedEffects.other.artifacts,
+            events: groupedEffects.other.events,
+            unknown: groupedEffects.other.unknown,
+          },
+        },
+        rulesApplied: ["PARTIAL_COMMIT_USE_ALLOWLIST"],
+      } satisfies CommitReady,
     };
   }
 
@@ -255,12 +361,26 @@ export function guardCommit(env: unknown): GuardCommitResult {
     ok: true,
     data: {
       ...commitReadyData,
-      commitEligibleEffects: provisionalArtifacts,
+      effects: {
+        eligible: {
+          artifacts: groupedEffects.provisional.artifacts,
+          events: groupedEffects.provisional.events,
+        },
+        rejected: {
+          artifacts: groupedEffects.rejected.artifacts,
+          events: groupedEffects.rejected.events,
+        },
+        ignored: {
+          artifacts: groupedEffects.other.artifacts,
+          events: groupedEffects.other.events,
+          unknown: groupedEffects.other.unknown,
+        },
+      },
       rulesApplied: [
         "FULL_COMMIT_ALL_PROVISIONAL_EFFECTS",
         "FULL_IGNORES_ALLOWLIST",
-      ] satisfies PrecommitRule[],
-    },
+      ],
+    } satisfies CommitReady,
   };
 }
 
