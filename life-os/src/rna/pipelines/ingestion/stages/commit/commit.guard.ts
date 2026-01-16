@@ -16,7 +16,7 @@ import { CommitInputSchema } from "#/types/rna/pipeline/ingestion/commit/commit.
 import type {
   GuardCommitResult,
   CommitTrace,
-  CommitReady,
+  CommitGuardOutput,
   RejectedEffect,
 } from "#/types/rna/pipeline/ingestion/commit/commit.types";
 import { appendError } from "#/rna/pipelines/envelope-utils";
@@ -181,7 +181,7 @@ export function guardCommit(env: unknown): GuardCommitResult {
     });
   }
 
-  const commitReadyData: CommitReady = {
+  const commitGuardOutputData: CommitGuardOutput = {
     mode: decidedMode as EffectDecisionMode,
     proposalId: pid,
     effectsLogId: el.effectsLogId,
@@ -209,7 +209,7 @@ export function guardCommit(env: unknown): GuardCommitResult {
     return {
       ok: true,
       data: {
-        ...commitReadyData,
+        ...commitGuardOutputData,
         rulesApplied: [
           "PARTIAL_EMPTY_ALLOWLIST_COMMITS_NOTHING",
         ] satisfies PrecommitRule[],
@@ -333,7 +333,7 @@ export function guardCommit(env: unknown): GuardCommitResult {
     return {
       ok: true,
       data: {
-        ...commitReadyData,
+        ...commitGuardOutputData,
         effects: {
           eligible: {
             artifacts: allowListEffects,
@@ -350,7 +350,7 @@ export function guardCommit(env: unknown): GuardCommitResult {
           },
         },
         rulesApplied: ["PARTIAL_COMMIT_USE_ALLOWLIST"],
-      } satisfies CommitReady,
+      } satisfies CommitGuardOutput,
     };
   }
 
@@ -358,7 +358,7 @@ export function guardCommit(env: unknown): GuardCommitResult {
   return {
     ok: true,
     data: {
-      ...commitReadyData,
+      ...commitGuardOutputData,
       effects: {
         eligible: {
           artifacts: groupedEffects.provisional.artifacts,
@@ -378,7 +378,7 @@ export function guardCommit(env: unknown): GuardCommitResult {
         "FULL_COMMIT_ALL_PROVISIONAL_EFFECTS",
         "FULL_IGNORES_ALLOWLIST",
       ],
-    } satisfies CommitReady,
+    } satisfies CommitGuardOutput,
   };
 }
 

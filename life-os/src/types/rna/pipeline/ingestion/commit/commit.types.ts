@@ -71,7 +71,7 @@ export type CommitRecord = {
 
 export type CommitInput = z.infer<typeof CommitInputSchema>;
 
-export type CommitReady = {
+export type CommitGuardOutput = {
   mode: EffectDecisionMode;
   proposalId: string;
   effectsLogId: string;
@@ -91,7 +91,6 @@ export type CommitReady = {
       unknown: Array<IgnoredEffect>;
     };
   };
-
   rulesApplied: PrecommitRule[];
 };
 
@@ -106,4 +105,4 @@ export type CommitTrace = StageGuardTrace<
     allowListCount: number;
   }>;
 
-export type GuardCommitResult = GuardResult<CommitReady, CommitTrace>;
+export type GuardCommitResult = GuardResult<CommitGuardOutput, CommitTrace>;
