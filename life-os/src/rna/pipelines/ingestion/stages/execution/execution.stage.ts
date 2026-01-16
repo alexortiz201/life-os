@@ -1,8 +1,8 @@
 import { appendError, hasHaltingErrors } from "#/rna/pipelines/envelope-utils";
 
-import type { IngestionPipelineEnvelope } from "#types/rna/pipeline/ingestion/ingestion.types";
+import type { IngestionPipelineEnvelope } from "#/types/rna/pipeline/ingestion/ingestion.types";
 
-import { guardPreExecution } from "./execution.guard";
+import { guardPreExecution, guardExecution } from "./execution.guard";
 
 export const STAGE = "EXECUTION" as const;
 
@@ -17,19 +17,19 @@ export function executionStage(
 
   if (!preReqRes.ok) return preReqRes.env;
 
-  // // 2) run guard (guard plucks directly from env)
-  // const result = guardExecution(env);
+  // 2) run guard (guard plucks directly from env)
+  const result = guardExecution(env);
 
-  // if (!result.ok) {
-  //   return appendError(env, {
-  //     stage: STAGE,
-  //     severity: "HALT",
-  //     code: result.code,
-  //     message: result.message,
-  //     trace: result.trace,
-  //     at: Date.now(),
-  //   });
-  // }
+  if (!result.ok) {
+    return appendError(env, {
+      stage: STAGE,
+      severity: "HALT",
+      code: result.code,
+      message: result.message,
+      trace: result.trace,
+      at: Date.now(),
+    });
+  }
 
   // 3) write stage output back into envelope
   // v0: produce effects (stub)

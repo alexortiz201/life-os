@@ -5,13 +5,14 @@ import type {
   EffectDecisionModeOrUnknown,
   GuardResult,
   StageGuardTrace,
-} from "#types/rna/pipeline/pipeline.types";
+} from "#/types/rna/pipeline/pipeline.types";
 import type {
   ArtifactEffect,
-  EffectDispositionBase,
+  IgnoredEffect,
   EventEffect,
-} from "#types/domain/effects/effects.types";
-import type { TrustLevel } from "#types/domain/trust/trust.types";
+  UnknownEffect,
+} from "#/types/domain/effects/effects.types";
+import type { TrustLevel } from "#/types/domain/trust/trust.types";
 import type { PrecommitRule } from "./commit.rules";
 import { CommitInputSchema } from "./commit.schemas";
 
@@ -45,8 +46,6 @@ export type RejectedEffect = RejectedEffectKey & {
   reason: string;
 };
 
-export type IgnoredEffect = EffectDispositionBase;
-
 export type Justification = {
   mode: EffectDecisionMode;
   rulesApplied: PrecommitRule[];
@@ -62,9 +61,12 @@ export type CommitRecord = {
   commitId: string;
   proposalId: string;
   promotions: Array<TrustPromotionRecord>;
-  approvedEffects: Array<ApprovedEffect>;
-  rejectedEffects: Array<RejectedEffect>;
   justification: Justification;
+  effects: {
+    approved: Array<ApprovedEffect>;
+    rejected: Array<RejectedEffect>;
+    ignored: Array<IgnoredEffect>;
+  };
 };
 
 export type CommitInput = z.infer<typeof CommitInputSchema>;

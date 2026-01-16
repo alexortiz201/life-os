@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { COMMIT_OUTCOMES } from "#types/rna/pipeline/ingestion/commit/commitDecision.constants";
-import { ExecutionEffectsLogSchema } from "#types/rna/pipeline/ingestion/execution/execution.schemas";
+import { COMMIT_OUTCOMES } from "#/types/rna/pipeline/ingestion/commit/commitDecision.constants";
+import { ExecutionEffectsLogSchema } from "#/types/rna/pipeline/ingestion/execution/execution.schemas";
 
 export const CommitPolicySchema = z.object({
   allowedModes: z.union([
@@ -18,7 +18,7 @@ export const RevalidationCommitDirectiveSchema = z.object({
 
 export const RevalidationInputSchema = z.object({
   proposalId: z.string().min(1),
-  revisionId: z.string().min(1),
+  snapshotId: z.string().min(1),
   validationDecision: z.string().min(1),
   executionPlanId: z.string().min(1),
   executionPlan: z.string().array().default([]),

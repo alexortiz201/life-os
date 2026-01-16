@@ -13,6 +13,12 @@ CHECKBOXES indicate:
   - not feature completeness
   - not production readiness
 
+GLOBAL ASSERTIONS:
+  - safety precedes capability
+  - observability precedes optimization
+  - explanation precedes automation
+  - trust is earned, not assumed
+
 ---
 
 # PHASE_0: FOUNDATIONS & RESET
@@ -26,6 +32,11 @@ DELIVERABLES:
   [x] Teaching / cache-warm protocol defined
   [x] Learning vs product explicitly unified
   [x] Definition of “mastery” made explicit
+
+SCAFFOLDING TOUCHED:
+  - Problem framing as a first-class activity
+  - Success defined before optimization
+  - Learning artifacts treated as system outputs
 
 EXIT_CRITERIA:
   You can explain:
@@ -53,6 +64,11 @@ DELIVERABLES:
   [x] Authority escalation rules identified
   [x] DNA/RNA/Expression mental model stabilized
 
+SCAFFOLDING TOUCHED:
+  - Ground truth definitions (pre-model)
+  - Semantic stability independent of model choice
+  - Foundations for prompt correctness and refusal reasoning
+
 EXIT_CRITERIA:
   You can change meaning definitions
   without touching execution logic.
@@ -71,6 +87,11 @@ FOCUS:
   Re-validation
   Commit
 
+CORE ASSERTIONS:
+  - execution ≠ belief
+  - belief only occurs at commit
+  - silent corruption is the primary failure mode
+
 DELIVERABLES:
   [x] Proposal intake contract
   [x] Validation contract
@@ -82,6 +103,12 @@ DELIVERABLES:
   [x] Weekly reflection paper-executed
   [x] Phase 2 fundamentals extracted
 
+SCAFFOLDING TOUCHED:
+  - Prompt evaluation boundaries (validation vs execution)
+  - Refusal and constraint modeling
+  - Early agent boundaries (without agents)
+  - Model outputs treated as untrusted inputs
+
 EXIT_CRITERIA:
   You can explain:
     - why execution ≠ belief
@@ -90,7 +117,7 @@ EXIT_CRITERIA:
 
 ---
 
-# PHASE_3: RNA — CONCRETE CONTROL FLOW (CURRENT)
+# PHASE_3: RNA — CONCRETE CONTROL FLOW
 
 GOAL:
   Implement a minimal, correct execution kernel
@@ -108,6 +135,11 @@ DELIVERABLES:
   [ ] Stage-level invariant enforcement
   [ ] Full audit trail wiring
   [ ] One workflow fully runnable (weekly reflection)
+
+SCAFFOLDING TOUCHED:
+  - System observability primitives
+  - Error classification and traceability
+  - Measurement points for latency, correctness, and cost (not optimized)
 
 NON-GOALS:
   - persistence
@@ -140,6 +172,7 @@ DELIVERABLES:
 LEARNING_SIGNAL:
   Specs become executable shapes.
   Safety becomes tangible.
+  Runtime guards revealed invariants that types alone cannot enforce.
 
 EXIT_CRITERIA:
   You can build any stage confidently
@@ -147,7 +180,7 @@ EXIT_CRITERIA:
 
 ---
 
-# PHASE_3B: TRIGGERS & DERIVATION WORKFLOWS  // OPTION B (NEW)
+# PHASE_3B: TRIGGERS & DERIVATION WORKFLOWS  // OPTION B
 
 GOAL:
   Make derivation explicit, auditable, and safe.
@@ -164,9 +197,10 @@ DELIVERABLES:
   [ ] Enforcement that DERIVED meaning always comes from a proposal
   [ ] Audit linkage from source → derived artifacts
 
-LEARNING_SIGNAL:
-  Event-driven systems thinking.
-  No hidden pipelines.
+SCAFFOLDING TOUCHED:
+  - Event-driven reasoning
+  - RAG as a derivation source (not authority)
+  - Retrieval treated as evidence, not truth
 
 EXIT_CRITERIA:
   You can explain:
@@ -219,6 +253,11 @@ DELIVERABLES:
   [ ] Commit history
   [ ] Provenance graphs
 
+SCAFFOLDING TOUCHED:
+  - System monitoring
+  - Error analysis
+  - Explanation quality assessment
+
 EXIT_CRITERIA:
   A human understands system state
   without reading code or guessing.
@@ -266,6 +305,11 @@ DELIVERABLES:
   [ ] Tool failures modeled explicitly
   [ ] Tool outputs treated as untrusted input
 
+SCAFFOLDING TOUCHED:
+  - Model selection as configuration, not logic
+  - Cost and latency tracking hooks
+  - Tool success / failure metrics
+
 EXIT_CRITERIA:
   Tool failures feel boring, not dangerous.
 
@@ -287,6 +331,11 @@ DELIVERABLES:
   [ ] Planning → execution loop
   [ ] Explicit stop conditions
   [ ] Escalation triggers
+
+SCAFFOLDING TOUCHED:
+  - Task completion metrics
+  - Step count and failure classification
+  - Cost per task tracking
 
 EXIT_CRITERIA:
   You trust agents because you know when they stop.
@@ -331,6 +380,11 @@ DELIVERABLES:
   [ ] Adaptive prompting
   [ ] Fundamentals review rotation
   [ ] Explanation quality feedback
+
+SCAFFOLDING TOUCHED:
+  - Prompt quality metrics
+  - Refusal rates
+  - Format compliance tracking
 
 EXIT_CRITERIA:
   The system improves how users reason over time.

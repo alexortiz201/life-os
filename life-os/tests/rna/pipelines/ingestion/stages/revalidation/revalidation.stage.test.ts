@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { revalidationStage } from "#/rna/pipelines/ingestion/stages/revalidation/revalidation.stage";
-import type { IngestionPipelineEnvelope } from "#types/rna/pipeline/ingestion/ingestion.types";
+import type { IngestionPipelineEnvelope } from "#/types/rna/pipeline/ingestion/ingestion.types";
 import { makeEnv } from "../../../../../utils";
 
 function lastError(env: IngestionPipelineEnvelope) {

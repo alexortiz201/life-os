@@ -1,8 +1,8 @@
 import { guardTrustPromotion } from "#/domain/trust/trustPromotion.guard";
 import { appendError, hasHaltingErrors } from "#/rna/pipelines/envelope-utils";
 
-import type { IngestionPipelineEnvelope } from "#types/rna/pipeline/ingestion/ingestion.types";
-import type { CommitRecord } from "#types/rna/pipeline/ingestion/commit/commit.types";
+import type { IngestionPipelineEnvelope } from "#/types/rna/pipeline/ingestion/ingestion.types";
+import type { CommitRecord } from "#/types/rna/pipeline/ingestion/commit/commit.types";
 
 import { guardPreCommit, guardCommit } from "./commit.guard";
 
@@ -46,10 +46,15 @@ export function commitStage(
   const commitId = `commit_${ranAt}`;
   const proposalId = data.proposalId;
 
-  const approvedEffects: CommitRecord["approvedEffects"] = [];
-  const rejectedEffects: CommitRecord["rejectedEffects"] = [
+  const approvedEffects: CommitRecord["effects"]["approved"] = [];
+  const rejectedEffects: CommitRecord["effects"]["rejected"] = [
     ...data.effects.rejected.artifacts,
     ...data.effects.rejected.events,
+  ];
+  const ignoredEffects: CommitRecord["effects"]["ignored"] = [
+    ...data.effects.ignored.artifacts,
+    ...data.effects.ignored.events,
+    ...data.effects.ignored.unknown,
   ];
 
   const justification: CommitRecord["justification"] = {
@@ -65,10 +70,13 @@ export function commitStage(
     const record: CommitRecord = {
       commitId,
       proposalId,
-      approvedEffects,
-      rejectedEffects,
       promotions,
       justification,
+      effects: {
+        approved: approvedEffects,
+        rejected: rejectedEffects,
+        ignored: ignoredEffects,
+      },
     };
 
     return {
@@ -134,15 +142,6 @@ export function commitStage(
     });
   }
 
-  const record: CommitRecord = {
-    commitId,
-    proposalId,
-    approvedEffects,
-    rejectedEffects,
-    promotions,
-    justification,
-  };
-
   return {
     ...env,
     ids: {
@@ -154,6 +153,8 @@ export function commitStage(
       commit: {
         hasRun: true,
         ranAt,
+        commitId,
+        proposalId,
         observed: {
           snapshotId: env.ids.snapshotId,
           proposalId: env.ids.proposalId,
@@ -163,7 +164,13 @@ export function commitStage(
           effectsLogId: env.ids.effectsLogId,
           revalidationId: env.ids.revalidationId,
         },
-        ...record,
+        promotions,
+        justification,
+        effects: {
+          approved: approvedEffects,
+          rejected: rejectedEffects,
+          ignored: ignoredEffects,
+        },
       },
     },
   };

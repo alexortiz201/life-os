@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { TrustLevelSchema } from "#types/domain/trust/trust.schemas";
-import { TRUST_RANK } from "#types/domain/trust/trust.constants";
+import { TrustLevelSchema } from "#/types/domain/trust/trust.schemas";
+import { TRUST_RANK } from "#/types/domain/trust/trust.constants";
 
 import { PipelineStageSchema } from "#/types/rna/pipeline/pipeline.schemas";
 import type { PipelineStage } from "#/types/rna/pipeline/pipeline.types";

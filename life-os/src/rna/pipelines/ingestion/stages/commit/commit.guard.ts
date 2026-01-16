@@ -11,16 +11,14 @@ import type {
   EffectDecisionModeOrUnknown,
 } from "#/types/rna/pipeline/pipeline.types";
 
-import type { PrecommitRule } from "#types/rna/pipeline/ingestion/commit/commit.rules";
-import { CommitInputSchema } from "#types/rna/pipeline/ingestion/commit/commit.schemas";
+import type { PrecommitRule } from "#/types/rna/pipeline/ingestion/commit/commit.rules";
+import { CommitInputSchema } from "#/types/rna/pipeline/ingestion/commit/commit.schemas";
 import type {
   GuardCommitResult,
   CommitTrace,
-  // RejectedEffect,
-  IgnoredEffect,
   CommitReady,
   RejectedEffect,
-} from "#types/rna/pipeline/ingestion/commit/commit.types";
+} from "#/types/rna/pipeline/ingestion/commit/commit.types";
 import { appendError } from "#/rna/pipelines/envelope-utils";
 
 import { STAGE } from "./commit.stage";

@@ -11,8 +11,7 @@
     "rootDir": ".",
     "baseUrl": "src",
     "paths": {
-      "#/*": ["*"],
-      "#types/*": ["types/*"]
+      "#/*": ["*"]
     },
 
     "sourceMap": true,

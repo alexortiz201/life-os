@@ -1,5 +1,5 @@
-import type { IngestionPipelineEnvelope } from "#types/rna/pipeline/ingestion/ingestion.types";
-import type { PipelineStage } from "#types/rna/pipeline/pipeline.types";
+import type { IngestionPipelineEnvelope } from "#/types/rna/pipeline/ingestion/ingestion.types";
+import type { PipelineStage } from "#/types/rna/pipeline/pipeline.types";
 
 type StageErrorSeverity = "HALT" | "WARN";
 type EnvelopeStage = PipelineStage | "ENVELOPE";

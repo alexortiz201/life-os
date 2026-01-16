@@ -1,6 +1,6 @@
 import { appendError, hasHaltingErrors } from "#/rna/pipelines/envelope-utils";
 
-import type { IngestionPipelineEnvelope } from "#types/rna/pipeline/ingestion/ingestion.types";
+import type { IngestionPipelineEnvelope } from "#/types/rna/pipeline/ingestion/ingestion.types";
 
 import { guardPreRevalidation, guardRevalidation } from "./revalidation.guard";
 

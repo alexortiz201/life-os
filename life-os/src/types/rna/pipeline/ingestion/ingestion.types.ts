@@ -1,14 +1,14 @@
-import { Effect } from "#types/domain/effects/effects.types";
+import { Effect } from "#/types/domain/effects/effects.types";
 import {
   PipelineEnvelope,
   PipelineStage,
   PipelineStageError,
-} from "#types/rna/pipeline/pipeline.types";
-import { CommitRecord } from "#types/rna/pipeline/ingestion/commit/commit.types";
+} from "#/types/rna/pipeline/pipeline.types";
+import { CommitRecord } from "#/types/rna/pipeline/ingestion/commit/commit.types";
 import {
   CommitPolicy,
   RevalidationDirectiveReady,
-} from "#types/rna/pipeline/ingestion/revalidation/revalidation.types";
+} from "#/types/rna/pipeline/ingestion/revalidation/revalidation.types";
 
 /**
  * Canonical IDs carried by the envelope.

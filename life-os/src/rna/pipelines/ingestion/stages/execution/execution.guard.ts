@@ -1,18 +1,17 @@
 import { isProvisionalArtifactEffect } from "#/domain/effects/effects.guards";
 import { errorResultFactory } from "#/rna/pipelines/pipeline-utils";
 import { appendError } from "#/rna/pipelines/envelope-utils";
+import type { IngestionPipelineEnvelope } from "#/types/rna/pipeline/ingestion/ingestion.types";
 
-import type { IngestionPipelineEnvelope } from "#types/rna/pipeline/ingestion/ingestion.types";
-
-import type { RevalidationRule } from "#types/rna/pipeline/ingestion/revalidation/revalidation.rules";
+import type { ExecutionRule } from "#/types/rna/pipeline/ingestion/execution/execution.rules";
 import type {
-  GuardRevalidationResult,
-  RevalidationTrace,
-} from "#types/rna/pipeline/ingestion/revalidation/revalidation.types";
-import { RevalidationInputSchema } from "#types/rna/pipeline/ingestion/revalidation/revalidation.schemas";
+  GuardExecutionResult,
+  ExecutionTrace,
+} from "#/types/rna/pipeline/ingestion/execution/execution.types";
+import { ExecutionInputSchema } from "#/types/rna/pipeline/ingestion/execution/execution.schemas";
 import { STAGE } from "./execution.stage";
 
-const errorResult = errorResultFactory<RevalidationTrace>();
+const errorResult = errorResultFactory<ExecutionTrace>();
 
 function policyAllowsPartial(
   allowedModes: readonly ["FULL"] | readonly ["FULL", "PARTIAL"]
@@ -29,183 +28,179 @@ function isObject(x: unknown): x is Record<string, any> {
   return typeof x === "object" && x !== null;
 }
 
-// export function guardExecution(env: unknown): GuardExecutionResult {
-//   // ---------
-//   // 0) Narrow unknown -> something we can safely optional-chain
-//   // ---------
-//   if (!isObject(env)) {
-//     return errorResult({
-//       code: "INVALID_REVALIDATION_INPUT",
-//       message: "Input invalid",
-//       trace: {
-//         mode: "UNKNOWN",
-//         rulesApplied: ["PARSE_FAILED"] satisfies RevalidationRule[],
-//       },
-//     });
-//   }
+export function guardExecution(env: unknown): GuardExecutionResult {
+  // ---------
+  // 0) Narrow unknown -> something we can safely optional-chain
+  // ---------
+  if (!isObject(env)) {
+    return errorResult({
+      code: "INVALID_EXECUTION_INPUT",
+      message: "Input invalid",
+      trace: {
+        mode: "UNKNOWN",
+        rulesApplied: ["PARSE_FAILED"] satisfies ExecutionRule[],
+      },
+    });
+  }
 
-//   const ids = isObject(env.ids) ? env.ids : undefined;
-//   const stages = isObject(env.stages) ? env.stages : undefined;
-//   const proposalId = typeof ids?.proposalId === "string" ? ids.proposalId : "";
+  const ids = isObject(env.ids) ? env.ids : undefined;
+  const stages = isObject(env.stages) ? env.stages : undefined;
+  const proposalId = typeof ids?.proposalId === "string" ? ids.proposalId : "";
 
-//   if (!proposalId || !stages) {
-//     return errorResult({
-//       code: "INVALID_REVALIDATION_INPUT",
-//       message: "Input invalid",
-//       trace: {
-//         mode: "UNKNOWN",
-//         proposalId: proposalId || undefined,
-//         rulesApplied: ["PARSE_FAILED"] satisfies RevalidationRule[],
-//       },
-//     });
-//   }
+  if (!proposalId || !stages) {
+    return errorResult({
+      code: "INVALID_EXECUTION_INPUT",
+      message: "Input invalid",
+      trace: {
+        mode: "UNKNOWN",
+        proposalId: proposalId || undefined,
+        rulesApplied: ["PARSE_FAILED"] satisfies ExecutionRule[],
+      },
+    });
+  }
 
-//   const validation = stages.validation;
-//   const execution = stages.execution;
+  const validation = stages.validation;
+  const planning = stages.planning;
 
-//   // must exist as objects to proceed
-//   if (!isObject(validation) || !isObject(execution)) {
-//     return errorResult({
-//       code: "INVALID_REVALIDATION_INPUT",
-//       message: "Input invalid",
-//       trace: {
-//         mode: "UNKNOWN",
-//         proposalId,
-//         rulesApplied: ["PARSE_FAILED"] satisfies RevalidationRule[],
-//       },
-//     });
-//   }
+  // must exist as objects to proceed
+  if (!isObject(validation) || !isObject(planning)) {
+    return errorResult({
+      code: "INVALID_EXECUTION_INPUT",
+      message: "Input invalid",
+      trace: {
+        mode: "UNKNOWN",
+        proposalId,
+        rulesApplied: ["PARSE_FAILED"] satisfies ExecutionRule[],
+      },
+    });
+  }
 
-//   // ---------
-//   // 1) Pluck what we can (fail-closed happens via Zod below)
-//   // ---------
-//   const commitPolicy =
-//     validation.hasRun === true ? (validation as any).commitPolicy : undefined;
+  // ---------
+  // 1) Pluck what we can (fail-closed happens via Zod below)
+  // ---------
+  const commitPolicy =
+    validation.hasRun === true ? (validation as any).commitPolicy : undefined;
 
-//   // Prefer canonical effectsLog if you store it on execution stage
-//   const effectsLog =
-//     execution.hasRun === true ? (execution as any).effectsLog : undefined;
+  // const effectsLog = planning.hasRun === true ? (planning as any).effectsLog : undefined;
 
-//   const candidate = {
-//     proposalId,
-//     revisionId: ids?.snapshotId,
-//     validationDecision:
-//       validation.hasRun === true
-//         ? (validation as any).validationId
-//         : "validation_unknown",
-//     executionPlanId: ids?.planningId ?? "planning_unknown",
-//     executionPlan: [],
-//     executionResult: [],
-//     commitPolicy,
-//     effectsLog,
-//   };
+  const candidate = {
+    proposalId,
+    snapshotId: ids?.snapshotId,
+    validationDecision:
+      validation.hasRun === true
+        ? (validation as any).validationId
+        : "validation_unknown",
+    planId: ids?.planningId ?? "planning_unknown",
+    plan: planning?.plan ?? [],
+    commitPolicy,
+  };
 
-//   const parsed = RevalidationInputSchema.safeParse(candidate);
+  const parsed = ExecutionInputSchema.safeParse(candidate);
 
-//   if (!parsed.success) {
-//     return errorResult({
-//       code: "INVALID_REVALIDATION_INPUT",
-//       message: "Input invalid",
-//       trace: {
-//         mode: "UNKNOWN",
-//         proposalId,
-//         effectsLogDeclaredProposalId: (effectsLog as any)?.proposalId,
-//         effectsLogId: (effectsLog as any)?.effectsLogId ?? ids?.effectsLogId,
-//         allowListCount: 0,
-//         rulesApplied: ["PARSE_FAILED"] satisfies RevalidationRule[],
-//       },
-//     });
-//   }
+  if (!parsed.success) {
+    return errorResult({
+      code: "INVALID_REVALIDATION_INPUT",
+      message: "Input invalid",
+      trace: {
+        mode: "UNKNOWN",
+        proposalId,
+        snapshotId: ids?.snapshotId,
+        planId: ids?.planningId,
+        allowListCount: 0,
+        rulesApplied: ["PARSE_FAILED"] satisfies ExecutionRule[],
+      },
+    });
+  }
 
-//   const { effectsLog: parsedEffectsLog, commitPolicy: parsedCommitPolicy } =
-//     parsed.data;
+  const { plan, commitPolicy: parsedCommitPolicy } = parsed.data;
 
-//   // ---------
-//   // 2) Drift check (now meaningful)
-//   // ---------
-//   if (parsedEffectsLog.proposalId !== proposalId) {
-//     return {
-//       ok: true,
-//       data: {
-//         proposalId,
-//         effectsLog: parsedEffectsLog,
-//         revalidation: {
-//           proposalId,
-//           outcome: "REJECT_COMMIT",
-//           commitAllowList: [],
-//           rulesApplied: ["DRIFT_DETECTED"] satisfies RevalidationRule[],
-//         },
-//       },
-//     };
-//   }
+  // ---------
+  // 2) Drift check (now meaningful)
+  // ---------
+  if (parsed.data.proposalId !== proposalId) {
+    return {
+      ok: true,
+      data: {
+        proposalId,
+        plan: plan,
+        execution: {
+          proposalId,
+          outcome: "REJECT_EXECUTION",
+          commitAllowList: [],
+          rulesApplied: ["DRIFT_DETECTED"] satisfies ExecutionRule[],
+        },
+      },
+    };
+  }
 
-//   // ---------
-//   // 3) PARTIAL requirement: any non-ARTIFACT produced effect
-//   // ---------
-//   const hasNonArtifact = parsedEffectsLog.producedEffects.some(
-//     (e) => e.effectType !== "ARTIFACT"
-//   );
+  // ---------
+  // 3) PARTIAL requirement: any non-ARTIFACT produced effect
+  // ---------
+  // const hasNonArtifact = parsedEffectsLog.producedEffects.some(
+  //   (e) => e.effectType !== "ARTIFACT"
+  // );
 
-//   if (hasNonArtifact) {
-//     if (!policyAllowsPartial(parsedCommitPolicy.allowedModes)) {
-//       return errorResult({
-//         code: "PARTIAL_NOT_ALLOWED",
-//         message:
-//           "Commit policy forbids PARTIAL but non-artifact effects are present.",
-//         trace: {
-//           mode: "PARTIAL",
-//           proposalId,
-//           effectsLogDeclaredProposalId: parsedEffectsLog.proposalId,
-//           effectsLogId: parsedEffectsLog.effectsLogId,
-//           rulesApplied: [
-//             "NON_ARTIFACT_EFFECTS_PRESENT",
-//             "PARTIAL_NOT_ALLOWED_BY_POLICY",
-//           ] satisfies RevalidationRule[],
-//         },
-//       });
-//     }
+  // if (hasNonArtifact) {
+  //   if (!policyAllowsPartial(parsedCommitPolicy.allowedModes)) {
+  //     return errorResult({
+  //       code: "PARTIAL_NOT_ALLOWED",
+  //       message:
+  //         "Commit policy forbids PARTIAL but non-artifact effects are present.",
+  //       trace: {
+  //         mode: "PARTIAL",
+  //         proposalId,
+  //         effectsLogDeclaredProposalId: parsedEffectsLog.proposalId,
+  //         effectsLogId: parsedEffectsLog.effectsLogId,
+  //         rulesApplied: [
+  //           "NON_ARTIFACT_EFFECTS_PRESENT",
+  //           "PARTIAL_NOT_ALLOWED_BY_POLICY",
+  //         ] satisfies ExecutionRule[],
+  //       },
+  //     });
+  //   }
 
-//     const allow = parsedEffectsLog.producedEffects
-//       .filter(isProvisionalArtifactEffect)
-//       .map((e) => e.objectId);
+  //   const allow = parsedEffectsLog.producedEffects
+  //     .filter(isProvisionalArtifactEffect)
+  //     .map((e) => e.objectId);
 
-//     return {
-//       ok: true,
-//       data: {
-//         proposalId,
-//         effectsLog: parsedEffectsLog,
-//         revalidation: {
-//           proposalId,
-//           outcome: "PARTIAL_COMMIT",
-//           commitAllowList: allow,
-//           rulesApplied: [
-//             "NON_ARTIFACT_EFFECTS_PRESENT",
-//           ] satisfies RevalidationRule[],
-//         },
-//       },
-//     };
-//   }
+  //   return {
+  //     ok: true,
+  //     data: {
+  //       proposalId,
+  //       effectsLog: parsedEffectsLog,
+  //       revalidation: {
+  //         proposalId,
+  //         outcome: "PARTIAL_COMMIT",
+  //         commitAllowList: allow,
+  //         rulesApplied: [
+  //           "NON_ARTIFACT_EFFECTS_PRESENT",
+  //         ] satisfies ExecutionRule[],
+  //       },
+  //     },
+  //   };
+  // }
 
-//   // ---------
-//   // 4) Full approval otherwise
-//   // ---------
-//   return {
-//     ok: true,
-//     data: {
-//       proposalId,
-//       effectsLog: parsedEffectsLog,
-//       revalidation: {
-//         proposalId,
-//         outcome: "APPROVE_COMMIT",
-//         commitAllowList: [],
-//         rulesApplied: [] satisfies RevalidationRule[],
-//       },
-//     },
-//   };
-// }
+  // ---------
+  // 4) Full approval otherwise
+  // ---------
+  return {
+    ok: true,
+    data: {
+      proposalId,
+      plan: planning.plan,
+      execution: {
+        proposalId,
+        outcome: "APPROVE_EXECUTION",
+        commitAllowList: [],
+        rulesApplied: [] satisfies ExecutionRule[],
+      },
+    },
+  };
+}
 
 export function guardPreExecution(env: IngestionPipelineEnvelope) {
   const planning = env.stages.planning;
+
   if (!planning.hasRun) {
     return {
       ok: false,

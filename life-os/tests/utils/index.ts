@@ -52,7 +52,7 @@ export function makeEnv(patch: EnvelopePatch = {}): IngestionPipelineEnvelope {
         observed: { proposalId: "proposal_1", snapshotId: "snap_1" } as any,
         executionId: "exec_1",
         proposalId: "proposal_1",
-        revisionId: "snap_1",
+        snapshotId: "snap_1",
         validationDecision: "validation_decision_1",
         executionPlanId: "plan_1",
         executionPlan: ["step_1"],
@@ -79,7 +79,6 @@ export function makeEnv(patch: EnvelopePatch = {}): IngestionPipelineEnvelope {
   };
 }
 
-////
 export function makeCommitEnv(
   patch: EnvelopePatch = {}
 ): IngestionPipelineEnvelope {

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { TrustLevelSchema } from "#types/domain/trust/trust.schemas";
+import { TrustLevelSchema } from "#/types/domain/trust/trust.schemas";
 
 /**
  * Canonical shapes

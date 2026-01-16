@@ -61,13 +61,13 @@ test("commits only PROVISIONAL produced artifacts", () => {
   assert.equal(c.proposalId, "proposal_1");
   assert.match(c.commitId, /^commit_\d+$/);
 
-  assert.equal(c.approvedEffects.length, 2);
-  assert.deepEqual(c.approvedEffects.map((o: any) => o.objectId).sort(), [
+  assert.equal(c.effects.approved.length, 2);
+  assert.deepEqual(c.effects.approved.map((o: any) => o.objectId).sort(), [
     "note_1",
     "report_1",
   ]);
 
-  for (const obj of c.approvedEffects) {
+  for (const obj of c.effects.approved) {
     assert.equal(obj.trust, "COMMITTED");
   }
 });
@@ -101,7 +101,7 @@ test("commits nothing if there are no PROVISIONAL artifacts", () => {
   assert.equal(out.errors.length, 0);
 
   const c = getCommitRecord(out);
-  assert.equal(c.approvedEffects.length, 0);
+  assert.equal(c.effects.approved.length, 0);
   assert.equal(c.promotions.length, 0);
 });
 
@@ -168,7 +168,7 @@ test("PARTIAL_COMMIT with empty allowlist commits nothing (but emits commit reco
   assert.equal(out.errors.length, 0);
   const c = getCommitRecord(out);
 
-  assert.equal(c.approvedEffects.length, 0);
+  assert.equal(c.effects.approved.length, 0);
   assert.equal(c.promotions.length, 0);
 });
 
@@ -202,8 +202,8 @@ test("PARTIAL_COMMIT commits only allowlisted PROVISIONAL artifacts", () => {
   assert.equal(out.errors.length, 0);
   const c = getCommitRecord(out);
 
-  assert.equal(c.approvedEffects.length, 1);
-  assert.equal(c.approvedEffects[0].objectId, "note_1");
+  assert.equal(c.effects.approved.length, 1);
+  assert.equal(c.effects.approved[0].objectId, "note_1");
   assert.equal(c.promotions.length, 1);
   assert.equal(c.promotions[0].objectId, "note_1");
 });
@@ -269,11 +269,11 @@ test("does not emit promotions for non-PROVISIONAL artifacts (records rejectedEf
   assert.equal(out.errors.length, 0);
   const c = getCommitRecord(out);
 
-  assert.equal(c.approvedEffects.length, 0);
+  assert.equal(c.effects.approved.length, 0);
   assert.equal(c.promotions.length, 0);
   // coverage: rejectedEffects should be recorded (guardCommit precomputes these)
-  assert.ok(Array.isArray(c.rejectedEffects));
-  assert.deepEqual(c.rejectedEffects.map((e: any) => e.objectId).sort(), [
+  assert.ok(Array.isArray(c.effects.rejected));
+  assert.deepEqual(c.effects.rejected.map((e: any) => e.objectId).sort(), [
     "note_2",
     "raw_1",
   ]);

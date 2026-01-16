@@ -183,3 +183,38 @@ Next additions:
 5. Planner – curriculum and rotation planning
 
 Scaling agents works best when behavior is already stable.
+
+## Topics that have to be touched on NOT on the roadmap
+  1. Problem framing and success metrics
+  2. Prompt engineering with systemati tracking
+  3. Model selection and evaluation
+  4. RAG
+  5. Agentic systems
+  6. System monitoring and error analysis
+  7. Deployment and user interface
+  8. (Post deployment) Fine-tuning
+
+## Things need to track for different AI pieces:
+  1. Prompts:
+    - Response quality scores
+    - Format compliance
+    - Refusal rates
+    - Average response length
+  2. RAG:
+    - Retrieval confidence scores
+    - Number of chunks retrieved
+    - Source diversity
+    - Retrieval latency
+  3. Agents:
+    - Task completion rate
+    - Average steps to completion
+    - Tool success rates
+    - Error types
+    - Cost per task
+  4. Overall system:
+    - End-to-end task success
+    - User satisfaction
+    - Latency
+    - Cost per request
+    - Error rate
+    - Uptime

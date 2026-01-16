@@ -2,13 +2,13 @@ import { isProvisionalArtifactEffect } from "#/domain/effects/effects.guards";
 import { errorResultFactory } from "#/rna/pipelines/pipeline-utils";
 import { appendError } from "#/rna/pipelines/envelope-utils";
 
-import type { RevalidationRule } from "#types/rna/pipeline/ingestion/revalidation/revalidation.rules";
-import type { IngestionPipelineEnvelope } from "#types/rna/pipeline/ingestion/ingestion.types";
+import type { RevalidationRule } from "#/types/rna/pipeline/ingestion/revalidation/revalidation.rules";
+import type { IngestionPipelineEnvelope } from "#/types/rna/pipeline/ingestion/ingestion.types";
 import type {
   GuardRevalidationResult,
   RevalidationTrace,
-} from "#types/rna/pipeline/ingestion/revalidation/revalidation.types";
-import { RevalidationInputSchema } from "#types/rna/pipeline/ingestion/revalidation/revalidation.schemas";
+} from "#/types/rna/pipeline/ingestion/revalidation/revalidation.types";
+import { RevalidationInputSchema } from "#/types/rna/pipeline/ingestion/revalidation/revalidation.schemas";
 import { STAGE } from "./revalidation.stage";
 
 const errorResult = errorResultFactory<RevalidationTrace>();
@@ -87,7 +87,7 @@ export function guardRevalidation(env: unknown): GuardRevalidationResult {
 
   const candidate = {
     proposalId,
-    revisionId: ids?.snapshotId,
+    snapshotId: ids?.snapshotId,
     validationDecision:
       validation.hasRun === true
         ? (validation as any).validationId

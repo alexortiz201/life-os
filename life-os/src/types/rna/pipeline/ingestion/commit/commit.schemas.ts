@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-import { RevalidationCommitDirectiveSchema } from "#types/rna/pipeline/ingestion/revalidation/revalidation.schemas";
-import { ExecutionEffectsLogSchema } from "#types/rna/pipeline/ingestion/execution/execution.schemas";
+import { RevalidationCommitDirectiveSchema } from "#/types/rna/pipeline/ingestion/revalidation/revalidation.schemas";
+import { ExecutionEffectsLogSchema } from "#/types/rna/pipeline/ingestion/execution/execution.schemas";
 
 export const CommitInputSchema = z.object({
   proposalId: z.string().min(1),
