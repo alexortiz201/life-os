@@ -1,5 +1,5 @@
 export const PIPELINE_STAGES = [
-  "PROPOSAL_INTAKE",
+  "INTAKE",
   "VALIDATION",
   "PLANNING",
   "EXECUTION",

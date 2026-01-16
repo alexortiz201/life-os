@@ -128,7 +128,7 @@ export function guardRevalidation(env: unknown): GuardRevalidationResult {
       data: {
         proposalId,
         effectsLog: parsedEffectsLog,
-        revalidation: {
+        directive: {
           proposalId,
           outcome: "REJECT_COMMIT",
           commitAllowList: [],
@@ -173,7 +173,7 @@ export function guardRevalidation(env: unknown): GuardRevalidationResult {
       data: {
         proposalId,
         effectsLog: parsedEffectsLog,
-        revalidation: {
+        directive: {
           proposalId,
           outcome: "PARTIAL_COMMIT",
           commitAllowList: allow,
@@ -193,7 +193,7 @@ export function guardRevalidation(env: unknown): GuardRevalidationResult {
     data: {
       proposalId,
       effectsLog: parsedEffectsLog,
-      revalidation: {
+      directive: {
         proposalId,
         outcome: "APPROVE_COMMIT",
         commitAllowList: [],

@@ -1,8 +1,8 @@
 import type { IngestionPipelineEnvelope } from "#/types/rna/pipeline/ingestion/ingestion.types";
 import type { PipelineStage } from "#/types/rna/pipeline/pipeline.types";
 
-type StageErrorSeverity = "HALT" | "WARN";
-type EnvelopeStage = PipelineStage | "ENVELOPE";
+export type StageErrorSeverity = "HALT" | "WARN";
+export type EnvelopeStage = PipelineStage | "ENVELOPE";
 
 export function hasHaltingErrors(
   env: IngestionPipelineEnvelope,

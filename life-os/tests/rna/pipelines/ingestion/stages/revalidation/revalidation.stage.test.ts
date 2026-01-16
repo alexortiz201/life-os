@@ -98,8 +98,8 @@ test("APPROVE_COMMIT when only ARTIFACT effects are present", () => {
 
   const r = out.stages.revalidation as any;
   assert.equal(r.proposalId, "proposal_1");
-  assert.equal(r.revalidation.outcome, "APPROVE_COMMIT");
-  assert.deepEqual(r.revalidation.commitAllowList, []);
+  assert.equal(r.directive.outcome, "APPROVE_COMMIT");
+  assert.deepEqual(r.directive.commitAllowList, []);
 });
 
 test("REJECT_COMMIT on drift (effectsLog.proposalId mismatch)", () => {
@@ -118,10 +118,10 @@ test("REJECT_COMMIT on drift (effectsLog.proposalId mismatch)", () => {
   assert.equal(out.stages.revalidation.hasRun, true);
 
   const r = out.stages.revalidation as any;
-  assert.equal(r.revalidation.outcome, "REJECT_COMMIT");
+  assert.equal(r.directive.outcome, "REJECT_COMMIT");
   assert.ok(
-    Array.isArray(r.revalidation.rulesApplied) &&
-      r.revalidation.rulesApplied.includes("DRIFT_DETECTED")
+    Array.isArray(r.directive.rulesApplied) &&
+      r.directive.rulesApplied.includes("DRIFT_DETECTED")
   );
 });
 
@@ -204,6 +204,6 @@ test("PARTIAL_COMMIT when non-artifact effects exist and policy allows PARTIAL",
   assert.equal(out.stages.revalidation.hasRun, true);
 
   const r = out.stages.revalidation as any;
-  assert.equal(r.revalidation.outcome, "PARTIAL_COMMIT");
-  assert.deepEqual(r.revalidation.commitAllowList.sort(), ["note_1"]);
+  assert.equal(r.directive.outcome, "PARTIAL_COMMIT");
+  assert.deepEqual(r.directive.commitAllowList.sort(), ["note_1"]);
 });

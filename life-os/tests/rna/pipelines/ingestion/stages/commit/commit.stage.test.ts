@@ -278,3 +278,129 @@ test("does not emit promotions for non-PROVISIONAL artifacts (records rejectedEf
     "raw_1",
   ]);
 });
+
+///////////////// Commit Apply Tests
+
+// intentionally skipping since we hard stop at previous stage producing 'HALT'
+// this would work if we decide to continue the pipeline with 'HALT' errors.
+test.skip("REJECT_COMMIT does not include apply state", () => {
+  const env = makeCommitEnv({
+    ids: {
+      proposalId: "test_reject_commit",
+      // effectsLogId: "test_reject_commit",
+    },
+    stages: {
+      revalidation: {
+        directive: {
+          proposalId: "test_reject_commit",
+          commitAllowList: [],
+          outcome: "REJECT_COMMIT",
+          rulesApplied: ["DRIFT_DETECTED"],
+        },
+        effectsLog: {
+          proposalId: "test_reject_commit",
+          producedEffects: [
+            {
+              effectType: "ARTIFACT",
+              objectId: "note_2",
+              kind: "NOTE",
+              trust: "COMMITTED",
+            },
+            {
+              effectType: "ARTIFACT",
+              objectId: "raw_1",
+              kind: "RAW",
+              trust: "UNTRUSTED",
+            },
+          ],
+        },
+      } as any,
+    },
+  });
+
+  const out = commitStage(env);
+  console.log({ c: out, e: out.errors });
+  assert.equal(out.errors.length, 0);
+  assert.equal(out.stages.commit.hasRun, true);
+
+  const c = out.stages.commit as any;
+  assert.equal(c.commit.outcome, "REJECT_COMMIT");
+
+  // 🔒 invariant: apply must not exist
+  assert.equal(c.commit.apply, undefined);
+});
+
+test("HALT in commit stage does not create apply state", () => {
+  const env = makeCommitEnv({
+    stages: {
+      revalidation: {
+        hasRun: false,
+      } as any,
+    },
+  });
+
+  const out = commitStage(env);
+
+  assert.ok(out.errors.length >= 1);
+
+  const err = lastError(out) as any;
+  assert.equal(err.stage, "COMMIT");
+  assert.equal(err.severity, "HALT");
+
+  const c = out.stages.commit as any;
+  assert.equal(c.hasRun, false);
+  assert.equal(c.apply, undefined);
+});
+
+test("APPROVE_COMMIT initializes apply state as PENDING", () => {
+  const env = makeCommitEnv({
+    stages: {
+      revalidation: {
+        directive: {
+          commitAllowList: [],
+          outcome: "APPROVE_COMMIT",
+        },
+      } as any,
+    },
+  });
+
+  const out = commitStage(env);
+
+  assert.equal(out.errors.length, 0);
+  assert.equal(out.stages.commit.hasRun, true);
+
+  const c = out.stages.commit as any;
+
+  assert.equal(c.outcome, "APPROVE_COMMIT");
+  assert.ok(c.apply);
+
+  assert.equal(c.apply.status, "PENDING");
+  assert.equal(c.apply.attempts, 0);
+  assert.equal(c.apply.lastError, undefined);
+  assert.equal(c.apply.appliedAt, undefined);
+});
+
+test("PARTIAL_COMMIT initializes apply state as PENDING", () => {
+  const env = makeCommitEnv({
+    stages: {
+      revalidation: {
+        directive: {
+          outcome: "PARTIAL_COMMIT",
+          commitAllowList: ["note_1"],
+          rulesApplied: ["NON_ARTIFACT_EFFECTS_PRESENT"],
+        },
+      } as any,
+    },
+  });
+
+  const out = commitStage(env);
+
+  assert.equal(out.errors.length, 0);
+  assert.equal(out.stages.commit.hasRun, true);
+
+  const c = out.stages.commit as any;
+
+  assert.equal(c.outcome, "PARTIAL_COMMIT");
+  assert.ok(c.apply);
+  assert.equal(c.apply.status, "PENDING");
+});

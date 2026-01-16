@@ -35,8 +35,8 @@ test("returns ok:true REJECT_COMMIT when proposalId mismatches effectsLog.propos
 
   assert.equal(result.ok, true);
   if (result.ok) {
-    assert.equal(result.data.revalidation.outcome, "REJECT_COMMIT");
-    assert.ok(result.data.revalidation.rulesApplied.includes("DRIFT_DETECTED"));
+    assert.equal(result.data.directive.outcome, "REJECT_COMMIT");
+    assert.ok(result.data.directive.rulesApplied.includes("DRIFT_DETECTED"));
   }
 });
 
@@ -126,10 +126,10 @@ test("PARTIAL allowed produces PARTIAL_COMMIT and allowlist of provisional ARTIF
 
   assert.equal(result.ok, true);
   if (result.ok) {
-    assert.equal(result.data.revalidation.outcome, "PARTIAL_COMMIT");
-    assert.deepEqual(result.data.revalidation.commitAllowList, ["note_1"]);
+    assert.equal(result.data.directive.outcome, "PARTIAL_COMMIT");
+    assert.deepEqual(result.data.directive.commitAllowList, ["note_1"]);
     assert.ok(
-      result.data.revalidation.rulesApplied.includes(
+      result.data.directive.rulesApplied.includes(
         "NON_ARTIFACT_EFFECTS_PRESENT"
       )
     );
@@ -166,7 +166,7 @@ test("no drift + no non-artifact effects => APPROVE_COMMIT", () => {
 
   assert.equal(result.ok, true);
   if (result.ok) {
-    assert.equal(result.data.revalidation.outcome, "APPROVE_COMMIT");
-    assert.deepEqual(result.data.revalidation.commitAllowList, []);
+    assert.equal(result.data.directive.outcome, "APPROVE_COMMIT");
+    assert.deepEqual(result.data.directive.commitAllowList, []);
   }
 });

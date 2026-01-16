@@ -10,11 +10,11 @@ import type {
   ArtifactEffect,
   IgnoredEffect,
   EventEffect,
-  UnknownEffect,
 } from "#/types/domain/effects/effects.types";
 import type { TrustLevel } from "#/types/domain/trust/trust.types";
 import type { PrecommitRule } from "./commit.rules";
 import { CommitInputSchema } from "./commit.schemas";
+import { CommitOutcome } from "./commitDecision.constants";
 
 export type TrustPromotionRecord = {
   objectId: string;
@@ -67,6 +67,7 @@ export type CommitRecord = {
     rejected: Array<RejectedEffect>;
     ignored: Array<IgnoredEffect>;
   };
+  outcome: CommitOutcome;
 };
 
 export type CommitInput = z.infer<typeof CommitInputSchema>;
@@ -92,6 +93,7 @@ export type CommitGuardOutput = {
     };
   };
   rulesApplied: PrecommitRule[];
+  outcome: CommitOutcome;
 };
 
 export type CommitTrace = StageGuardTrace<

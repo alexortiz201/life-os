@@ -202,6 +202,7 @@ export function guardCommit(env: unknown): GuardCommitResult {
       },
     },
     rulesApplied: [],
+    outcome: rv.outcome,
   };
 
   // PARTIAL + empty allowlist => commit nothing

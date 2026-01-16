@@ -109,7 +109,7 @@ PIPELINE:
   TRUST_BOUNDARY:
     - COMMIT promotes approved outputs to COMMITTED
   STAGES:
-    - PROPOSAL_INTAKE
+    - INTAKE
     - VALIDATION
     - PLANNING
     - EXECUTION

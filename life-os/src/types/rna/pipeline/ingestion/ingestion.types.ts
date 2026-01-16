@@ -7,7 +7,7 @@ import {
 import { CommitRecord } from "#/types/rna/pipeline/ingestion/commit/commit.types";
 import {
   CommitPolicy,
-  RevalidationDirectiveReady,
+  RevalidationGuardOutput,
 } from "#/types/rna/pipeline/ingestion/revalidation/revalidation.types";
 
 /**
@@ -73,7 +73,7 @@ type ExecutionStageOutput = StageResult<
 >;
 
 type RevalidationStageOutput = StageResult<
-  { revalidationId: string } & RevalidationDirectiveReady,
+  { revalidationId: string } & RevalidationGuardOutput,
   ObservedIds<"effectsLogId">
 >;
 

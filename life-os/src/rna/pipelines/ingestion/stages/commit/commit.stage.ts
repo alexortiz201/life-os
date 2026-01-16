@@ -45,6 +45,7 @@ export function commitStage(
   const ranAt = Date.now();
   const commitId = `commit_${ranAt}`;
   const proposalId = data.proposalId;
+  const outcome = data.outcome;
 
   const approvedEffects: CommitRecord["effects"]["approved"] = [];
   const rejectedEffects: CommitRecord["effects"]["rejected"] = [
@@ -67,18 +68,6 @@ export function commitStage(
 
   // If PARTIAL with empty allowlist -> commit nothing, still emit record + stage output
   if (data.mode === "PARTIAL" && data.effects.eligible.artifacts.length === 0) {
-    const record: CommitRecord = {
-      commitId,
-      proposalId,
-      promotions,
-      justification,
-      effects: {
-        approved: approvedEffects,
-        rejected: rejectedEffects,
-        ignored: ignoredEffects,
-      },
-    };
-
     return {
       ...env,
       ids: {
@@ -90,13 +79,22 @@ export function commitStage(
         commit: {
           hasRun: true,
           ranAt,
+          commitId,
+          proposalId,
           observed: {
             proposalId: env.ids.proposalId,
             snapshotId: env.ids.snapshotId,
             revalidationId: env.ids.revalidationId,
             effectsLogId: env.ids.effectsLogId,
           },
-          ...record,
+          promotions,
+          justification,
+          effects: {
+            approved: approvedEffects,
+            rejected: rejectedEffects,
+            ignored: ignoredEffects,
+          },
+          outcome,
         },
       },
     };
@@ -142,6 +140,18 @@ export function commitStage(
     });
   }
 
+  const applyInfo =
+    outcome === "REJECT_COMMIT"
+      ? {}
+      : {
+          apply: {
+            status: "PENDING",
+            attempts: 0,
+            lastError: undefined,
+            appliedAt: undefined,
+          },
+        };
+
   return {
     ...env,
     ids: {
@@ -171,6 +181,8 @@ export function commitStage(
           rejected: rejectedEffects,
           ignored: ignoredEffects,
         },
+        outcome,
+        ...applyInfo,
       },
     },
   };

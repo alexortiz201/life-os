@@ -27,9 +27,9 @@ export type RevalidationInput = z.infer<typeof RevalidationInputSchema>;
 
 type EffectsLog = z.infer<typeof ExecutionEffectsLogSchema>;
 
-export type RevalidationDirectiveReady = {
+export type RevalidationGuardOutput = {
   proposalId: string;
-  revalidation: RevalidationCommitDirective;
+  directive: RevalidationCommitDirective;
   effectsLog: EffectsLog;
 };
 
@@ -44,6 +44,6 @@ export type RevalidationTrace = StageGuardTrace<
   }>;
 
 export type GuardRevalidationResult = GuardResult<
-  RevalidationDirectiveReady,
+  RevalidationGuardOutput,
   RevalidationTrace
 >;
