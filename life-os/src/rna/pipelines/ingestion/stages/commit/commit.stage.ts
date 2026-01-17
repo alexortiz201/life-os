@@ -1,5 +1,5 @@
 import { guardTrustPromotion } from "#/domain/trust/trustPromotion.guard";
-import { appendError, hasHaltingErrors } from "#/rna/pipelines/envelope-utils";
+import { appendError, hasHaltingErrors } from "#/rna/envelope/envelope-utils";
 
 import type { IngestionPipelineEnvelope } from "#/types/rna/pipeline/ingestion/ingestion.types";
 import type { CommitRecord } from "#/types/rna/pipeline/ingestion/commit/commit.types";

@@ -19,7 +19,7 @@ import type {
   CommitGuardOutput,
   RejectedEffect,
 } from "#/types/rna/pipeline/ingestion/commit/commit.types";
-import { appendError } from "#/rna/pipelines/envelope-utils";
+import { appendError } from "#/rna/envelope/envelope-utils";
 
 import { STAGE } from "./commit.stage";
 

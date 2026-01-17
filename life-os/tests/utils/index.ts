@@ -26,6 +26,7 @@ export function makeEnv(patch: EnvelopePatch = {}): IngestionPipelineEnvelope {
 
   const base: IngestionPipelineEnvelope = {
     ids: {
+      validationId: "validation_1",
       proposalId: "proposal_1",
       snapshotId: "snap_1",
       effectsLogId: "effects_1",

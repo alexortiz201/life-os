@@ -1,4 +1,4 @@
-import { appendError, hasHaltingErrors } from "#/rna/pipelines/envelope-utils";
+import { appendError, hasHaltingErrors } from "#/rna/envelope/envelope-utils";
 
 import type { IngestionPipelineEnvelope } from "#/types/rna/pipeline/ingestion/ingestion.types";
 

@@ -1,6 +1,6 @@
 import { isProvisionalArtifactEffect } from "#/domain/effects/effects.guards";
 import { errorResultFactory } from "#/rna/pipelines/pipeline-utils";
-import { appendError } from "#/rna/pipelines/envelope-utils";
+import { appendError } from "#/rna/envelope/envelope-utils";
 import type { IngestionPipelineEnvelope } from "#/types/rna/pipeline/ingestion/ingestion.types";
 
 import type { ExecutionRule } from "#/types/rna/pipeline/ingestion/execution/execution.rules";

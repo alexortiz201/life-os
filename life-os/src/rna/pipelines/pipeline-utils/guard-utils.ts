@@ -1,10 +1,15 @@
-import type { z } from "zod";
+import type { keyof, z } from "zod";
 
 // import { errorResultFactory } from "#/rna/pipelines/pipeline-utils";
-import { appendError } from "#/rna/pipelines/envelope-utils";
-import type { IngestionPipelineEnvelope } from "#/types/rna/pipeline/ingestion/ingestion.types";
+import { appendError } from "#/rna/envelope/envelope-utils";
+import type {
+  EnvelopeIds,
+  IngestionPipelineEnvelope,
+} from "#/types/rna/pipeline/ingestion/ingestion.types";
 
-import type { EnvelopeStage } from "#/rna/pipelines/envelope-utils";
+import type { EnvelopeStage } from "#/types/rna/envelope/envelope.types";
+import { ENVELOPE_STAGE_TO_KEY } from "#/types/rna/envelope/envelope.const";
+import { PipelineStage } from "#/types/rna/pipeline/pipeline.types";
 
 /**
  * Minimal runtime narrowing so we can safely pluck from `unknown`.
@@ -64,7 +69,7 @@ export const guardFactory = <
     // const error = errorResultFactory<TTrace & { rulesApplied: TParseRule[] }>();
     const error = (trace: TTrace & { rulesApplied: TParseRule[] }) => ({
       ok: false as const,
-      code: code,
+      code,
       stage: STAGE,
       message,
       trace: { mode: "UNKNOWN" as const, ...trace },
@@ -134,49 +139,160 @@ export const guardFactory = <
 
 type PreGuardOk = { ok: true; env: IngestionPipelineEnvelope };
 type PreGuardFail = { ok: false; env: IngestionPipelineEnvelope };
+type PreGuardResult = PreGuardOk | PreGuardFail;
+
+const assertStageHasRun = ({
+  env,
+  stageToValidate,
+  STAGE,
+  CODE,
+}: {
+  env: IngestionPipelineEnvelope;
+  stageToValidate: PipelineStage;
+  STAGE: PipelineStage;
+  CODE: string;
+}): PreGuardResult => {
+  const stageKey = ENVELOPE_STAGE_TO_KEY[stageToValidate];
+  const stage = env.stages[stageKey];
+
+  if (!stage?.hasRun) {
+    return {
+      ok: false,
+      env: appendError(env, {
+        stage: STAGE,
+        severity: "HALT",
+        code: CODE,
+        message: `${stageKey} stage has not run.`,
+        trace: {
+          proposalId: env.ids.proposalId,
+          // this is fine, but the key becomes string at type level
+          // if you want this typed, see note below
+          [`${stageKey}HasRun`]: false,
+        },
+        at: Date.now(),
+      }),
+    };
+  }
+
+  return { ok: true, env };
+};
+
+export const assertIdExists = ({
+  env,
+  STAGE,
+  CODE,
+  idKey,
+  message,
+}: {
+  env: IngestionPipelineEnvelope;
+  STAGE: PipelineStage;
+  CODE: string;
+  idKey: keyof EnvelopeIds;
+  message?: string;
+}): PreGuardResult => {
+  const value = env.ids[idKey];
+  const exists = typeof value === "string" && value.length > 0;
+
+  if (!exists) {
+    return {
+      ok: false,
+      env: appendError(env, {
+        stage: STAGE,
+        severity: "HALT",
+        code: CODE,
+        message: message ?? `Missing required id: ${String(idKey)}.`,
+        trace: {
+          proposalId: env.ids.proposalId,
+          idKey,
+          value: value ?? undefined,
+        },
+        at: Date.now(),
+      }),
+    };
+  }
+
+  return { ok: true, env };
+};
+
+export const PREV_STAGES_DEPS = {
+  INTAKE: { stages: [], ids: [] },
+  VALIDATION: { stages: [], ids: [] },
+  PLANNING: {
+    stages: ["VALIDATION"],
+    ids: ["proposalId", "validationId", "snapshotId"],
+  },
+  EXECUTION: {
+    stages: ["PLANNING"],
+    ids: ["proposalId", "planningId", "snapshotId"],
+  },
+  REVALIDATION: {
+    stages: ["EXECUTION", "VALIDATION"],
+    ids: ["proposalId", "effectsLogId", "snapshotId"],
+  },
+  COMMIT: { stages: ["REVALIDATION"], ids: ["proposalId"] },
+} as const satisfies Record<
+  PipelineStage,
+  { stages: readonly PipelineStage[]; ids: readonly (keyof EnvelopeIds)[] }
+>;
+
+const assertStageDependencies = ({
+  env,
+  STAGE,
+  CODE,
+}: {
+  env: IngestionPipelineEnvelope;
+  STAGE: PipelineStage;
+  CODE: string;
+}): PreGuardResult => {
+  const stageDeps = PREV_STAGES_DEPS[STAGE];
+  let nextEnv = env;
+
+  for (let stage of stageDeps.stages) {
+    const res = assertStageHasRun({
+      env: nextEnv,
+      stageToValidate: stage,
+      STAGE,
+      CODE,
+    });
+
+    if (!res.ok) return res;
+    nextEnv = res.env;
+  }
+
+  const stageKey = ENVELOPE_STAGE_TO_KEY[STAGE];
+
+  for (let idKey of stageDeps.ids) {
+    const res = assertIdExists({
+      env: nextEnv,
+      STAGE,
+      CODE,
+      idKey,
+      message: `Missing ${String(idKey)} required for ${stageKey}.`,
+    });
+
+    if (!res.ok) return res;
+    nextEnv = res.env;
+  }
+
+  return { ok: true, env: nextEnv };
+};
 
 export const preGuardFactory =
-  <TStage extends EnvelopeStage, TCode extends string>({
+  <TStage extends PipelineStage, TCode extends string>({
     STAGE,
     CODE,
   }: {
     STAGE: TStage;
     CODE: TCode;
   }) =>
-  (env: IngestionPipelineEnvelope): PreGuardOk | PreGuardFail => {
-    const planning = env.stages.planning;
+  (env: IngestionPipelineEnvelope): PreGuardResult => {
+    const depsAssert = assertStageDependencies({
+      env,
+      STAGE,
+      CODE,
+    });
 
-    if (!planning?.hasRun) {
-      return {
-        ok: false,
-        env: appendError(env, {
-          stage: STAGE,
-          severity: "HALT",
-          code: CODE,
-          message: "Planning stage has not run.",
-          trace: { proposalId: env.ids.proposalId, planningHasRun: false },
-          at: Date.now(),
-        }),
-      };
-    }
+    if (!depsAssert.ok) return depsAssert;
 
-    // prereq: snapshotId exists (if you want execution to be pinned to a snapshot)
-    if (!env.ids.snapshotId) {
-      return {
-        ok: false,
-        env: appendError(env, {
-          stage: STAGE,
-          severity: "HALT",
-          code: CODE,
-          message: "Missing snapshotId required for execution.",
-          trace: {
-            proposalId: env.ids.proposalId,
-            snapshotId: env.ids.snapshotId,
-          },
-          at: Date.now(),
-        }),
-      };
-    }
-
-    return { ok: true, env };
+    return { ok: true, env: depsAssert.env };
   };

@@ -14,7 +14,7 @@ import {
  * Canonical IDs carried by the envelope.
  * Some are produced incrementally by stages.
  */
-type EnvelopeIds = {
+export type EnvelopeIds = {
   proposalId: string;
   intakeId?: string;
   validationId?: string;
@@ -82,7 +82,7 @@ type CommitStageOutput = StageResult<
   ObservedIds<"revalidationId" | "effectsLogId">
 >;
 
-type IngestionStages = {
+export type IngestionStages = {
   intake: IntakeStageOutput;
   validation: ValidationStageOutput;
   planning: PlanningStageOutput;
