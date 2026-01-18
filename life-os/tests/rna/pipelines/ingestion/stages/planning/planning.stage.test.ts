@@ -42,7 +42,7 @@ test("appends HALT error when proposalId missing", () => {
   const err = lastError(out) as any;
   assert.equal(err.stage, "PLANNING");
   assert.equal(err.severity, "HALT");
-  assert.equal(err.code, "INVALID_PLANNING_INPUT");
+  assert.equal(err.code, "PLANNING_PREREQ_MISSING");
 });
 
 test("appends HALT error when snapshotId missing (plan must be pinned to a snapshot)", () => {
@@ -62,19 +62,8 @@ test("appends HALT error when snapshotId missing (plan must be pinned to a snaps
 
 test("writes a deterministic, untrusted plan artifact and does not execute", () => {
   const env = makeEnv();
-
-  // Ensure validation looks "approved enough" for planning to proceed.
-  // (Adjust field names if your validation output differs.)
-  (env.stages.validation as any) = {
-    ...(env.stages.validation as any),
-    hasRun: true,
-    // common pattern in your pipeline: validationId exists if hasRun
-    validationId: env.ids.validationId ?? "validation_1",
-    // optionally include commitPolicy if your planning input uses it
-    commitPolicy: { allowedModes: ["FULL"] as const },
-    // If you have an explicit decision field, set it to APPROVE/PARTIAL_APPROVE
-    decision: "APPROVE",
-  };
+  env.stages.execution = { hasRun: false };
+  delete env.ids.effectsLogId;
 
   const out = planningStage(env);
 
@@ -89,7 +78,7 @@ test("writes a deterministic, untrusted plan artifact and does not execute", () 
   const p = out.stages.planning as any;
 
   // Must write plan artifact fields (shape-level expectations)
-  assert.equal(p.planId, out.ids.planningId);
+  assert.equal(p.planningId, out.ids.planningId);
   assert.equal(typeof p.ranAt, "number");
   assert.ok(Array.isArray(p.plan));
 
@@ -147,20 +136,6 @@ test("identical inputs produce identical plans (determinism invariant)", () => {
   const env1 = makeEnv();
   const env2 = clone(env1);
 
-  (env1.stages.validation as any) = {
-    ...(env1.stages.validation as any),
-    hasRun: true,
-    validationId: "validation_1",
-    decision: "APPROVE",
-  };
-
-  (env2.stages.validation as any) = {
-    ...(env2.stages.validation as any),
-    hasRun: true,
-    validationId: "validation_1",
-    decision: "APPROVE",
-  };
-
   const out1 = planningStage(env1);
   const out2 = planningStage(env2);
 
@@ -178,21 +153,9 @@ test("identical inputs produce identical plans (determinism invariant)", () => {
   assert.deepEqual(p1.plan, p2.plan);
 });
 
-test("planning failure fails closed (no advancement / no planId)", () => {
+test("planning failure fails closed (no advancement / no planningId)", () => {
   const env = makeEnv();
-
-  // Force a condition that should make planning unable to produce an explicit plan.
-  // If your implementation relies on a capabilities snapshot, simulate missing capabilities.
-  (env.stages.validation as any) = {
-    ...(env.stages.validation as any),
-    hasRun: true,
-    validationId: "validation_1",
-    decision: "APPROVE",
-  };
-
-  // Underspecified intent surrogate: remove/blank proposal record if present
-  // (Adjust field name to match your envelope; leaving as defensive no-op.)
-  (env as any).proposal = undefined;
+  env.ids.proposalId = "";
 
   const out = planningStage(env);
 

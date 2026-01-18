@@ -13,7 +13,7 @@ export const ExecutionInputSchema = z.object({
   proposalId: z.string().min(1),
   snapshotId: z.string().min(1),
   validationDecision: z.string().min(1),
-  planId: z.string().min(1),
+  planningId: z.string().min(1),
   plan: z.string().array().default([]),
   commitPolicy: CommitPolicySchema,
 });

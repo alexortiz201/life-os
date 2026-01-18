@@ -90,7 +90,7 @@ export function guardExecution(env: unknown): GuardExecutionResult {
       validation.hasRun === true
         ? (validation as any).validationId
         : "validation_unknown",
-    planId: ids?.planningId ?? "planning_unknown",
+    planningId: ids?.planningId ?? "planning_unknown",
     plan: planning?.plan ?? [],
     commitPolicy,
   };
@@ -105,7 +105,7 @@ export function guardExecution(env: unknown): GuardExecutionResult {
         mode: "UNKNOWN",
         proposalId,
         snapshotId: ids?.snapshotId,
-        planId: ids?.planningId,
+        planningId: ids?.planningId,
         allowListCount: 0,
         rulesApplied: ["PARSE_FAILED"] satisfies ExecutionRule[],
       },

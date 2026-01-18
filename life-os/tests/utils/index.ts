@@ -55,7 +55,7 @@ export function makeEnv(patch: EnvelopePatch = {}): IngestionPipelineEnvelope {
         proposalId: "proposal_1",
         snapshotId: "snap_1",
         validationDecision: "validation_decision_1",
-        executionPlanId: "plan_1",
+        executionplanningId: "plan_1",
         executionPlan: ["step_1"],
         executionResult: ["ok"],
         effectsLog: {

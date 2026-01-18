@@ -319,7 +319,7 @@ test.skip("REJECT_COMMIT does not include apply state", () => {
   });
 
   const out = commitStage(env);
-  console.log({ c: out, e: out.errors });
+
   assert.equal(out.errors.length, 0);
   assert.equal(out.stages.commit.hasRun, true);
 

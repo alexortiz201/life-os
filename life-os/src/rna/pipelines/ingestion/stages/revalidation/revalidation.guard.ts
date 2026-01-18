@@ -92,7 +92,7 @@ export function guardRevalidation(env: unknown): GuardRevalidationResult {
       validation.hasRun === true
         ? (validation as any).validationId
         : "validation_unknown",
-    executionPlanId: ids?.planningId ?? "planning_unknown",
+    executionplanningId: ids?.planningId ?? "planning_unknown",
     executionPlan: [],
     executionResult: [],
     commitPolicy,

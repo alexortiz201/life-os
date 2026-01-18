@@ -42,6 +42,23 @@ type GuardResult<
   TData
 > = GuardOk<TData> | GuardError<TStage, TCode, TRule, TTrace>;
 
+export type CandidateInput = {
+  env: IngestionPipelineEnvelope;
+  ids: any;
+  stages: any;
+  proposalId: string;
+};
+
+const hasAllDepStages = (STAGE: EnvelopeStage, stages: any) => {
+  if (STAGE === "ENVELOPE") return { ok: false };
+
+  for (let stage of PREV_STAGES_DEPS[STAGE].stages) {
+    if (!isObject(stages[ENVELOPE_STAGE_TO_KEY[stage]])) return { ok: false };
+  }
+
+  return { ok: true };
+};
+
 export const guardFactory = <
   TStage extends EnvelopeStage,
   TCode extends string,
@@ -54,12 +71,14 @@ export const guardFactory = <
   code,
   parseFailedRule,
   message = "Input invalid",
+  getCandidate = ({}) => ({}),
 }: {
   STAGE: TStage;
   InputSchema: TSchema;
   code: TCode;
   parseFailedRule: TParseRule;
   message?: string;
+  getCandidate: ({}: CandidateInput) => {};
 }) => {
   type Data = z.infer<TSchema>;
 
@@ -67,11 +86,13 @@ export const guardFactory = <
     env: IngestionPipelineEnvelope
   ): GuardResult<TStage, TCode, TParseRule, TTrace, Data> => {
     // const error = errorResultFactory<TTrace & { rulesApplied: TParseRule[] }>();
-    const error = (trace: TTrace & { rulesApplied: TParseRule[] }) => ({
+    const error = (
+      trace: TTrace & { message?: string; rulesApplied: TParseRule[] }
+    ) => ({
       ok: false as const,
       code,
       stage: STAGE,
-      message,
+      message: message ? message : `${STAGE}: Invalid input`,
       trace: { mode: "UNKNOWN" as const, ...trace },
     });
 
@@ -83,44 +104,37 @@ export const guardFactory = <
     }
 
     const ids = isObject((env as any).ids) ? (env as any).ids : undefined;
+    const proposalId =
+      typeof ids?.proposalId === "string" ? ids.proposalId : "";
     const stages = isObject((env as any).stages)
       ? (env as any).stages
       : undefined;
-    const proposalId =
-      typeof ids?.proposalId === "string" ? ids.proposalId : "";
 
-    if (!proposalId || !stages) {
+    if (!ids || !proposalId || !stages) {
       return error({
-        proposalId: proposalId || undefined,
-        rulesApplied: [parseFailedRule],
-      } as any);
-    }
-
-    const validation = stages.validation;
-    const planning = stages.planning;
-
-    if (!isObject(validation) || !isObject(planning)) {
-      return error({
+        // ids,
         proposalId,
         rulesApplied: [parseFailedRule],
       } as any);
     }
 
-    const commitPolicy =
-      validation.hasRun === true ? (validation as any).commitPolicy : undefined;
+    const res = hasAllDepStages(STAGE, stages);
+
+    if (!res.ok) {
+      return error({
+        proposalId,
+        message: `${STAGE}: Missing prereq stage, invalid input.`,
+        rulesApplied: [parseFailedRule],
+      } as any);
+    }
 
     // 1) Candidate for schema validation
-    const candidate = {
+    const candidate = getCandidate({
+      env,
+      ids,
+      stages,
       proposalId,
-      snapshotId: ids?.snapshotId,
-      validationDecision:
-        validation.hasRun === true
-          ? (validation as any).validationId
-          : "validation_unknown",
-      planId: ids?.planningId ?? "planning_unknown",
-      plan: (planning as any)?.plan ?? [],
-      commitPolicy,
-    };
+    });
 
     const parsed = InputSchema.safeParse(candidate);
 
@@ -128,7 +142,8 @@ export const guardFactory = <
       return error({
         proposalId,
         snapshotId: ids?.snapshotId,
-        planId: ids?.planningId,
+        planningId: ids?.planningId,
+        message: `${STAGE}: Schema parsing failed, invalid input.`,
         rulesApplied: [parseFailedRule],
       } as any);
     }

@@ -1,3 +1,4 @@
+import { fingerprint } from "#/domain/encoding/fingerprint";
 import { appendError, hasHaltingErrors } from "#/rna/envelope/envelope-utils";
 
 import type { IngestionPipelineEnvelope } from "#/types/rna/pipeline/ingestion/ingestion.types";
@@ -51,6 +52,13 @@ export function planningStage(
           snapshotId: env.ids.snapshotId,
         } as any,
         planningId,
+        plan: result.data.plan,
+        fingerprint: fingerprint({
+          proposalId: env.ids.proposalId,
+          snapshotId: env.ids.snapshotId,
+          plan: result.data.plan,
+          commitPolicy: result.data.commitPolicy,
+        }),
       } as any,
     },
   };

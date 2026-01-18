@@ -20,7 +20,7 @@ export const RevalidationInputSchema = z.object({
   proposalId: z.string().min(1),
   snapshotId: z.string().min(1),
   validationDecision: z.string().min(1),
-  executionPlanId: z.string().min(1),
+  executionplanningId: z.string().min(1),
   executionPlan: z.string().array().default([]),
   executionResult: z.string().array().default([]),
   commitPolicy: CommitPolicySchema,
