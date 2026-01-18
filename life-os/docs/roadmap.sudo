@@ -83,6 +83,7 @@ GOAL:
 FOCUS:
   Proposals
   Validation
+  Planning
   Execution
   Re-validation
   Commit
@@ -117,17 +118,18 @@ EXIT_CRITERIA:
 
 ---
 
-# PHASE_3: RNA — CONCRETE CONTROL FLOW
+# PHASE_3: RNA — CONCRETE CONTROL FLOW (CURRENT)
 
 GOAL:
   Implement a minimal, correct execution kernel
-  that enforces RNA contracts.
+  that enforces RNA contracts end-to-end.
 
 FOCUS:
   Determinism
   Stage isolation
   Type safety
   Runtime enforcement
+  Tooling portability
 
 DELIVERABLES:
   [ ] In-memory pipeline implementation (TypeScript)
@@ -142,7 +144,7 @@ SCAFFOLDING TOUCHED:
   - Measurement points for latency, correctness, and cost (not optimized)
 
 NON-GOALS:
-  - persistence
+  - persistence (beyond minimal outbox shape)
   - performance
   - UI polish
   - agent swarms
@@ -153,30 +155,147 @@ EXIT_CRITERIA:
 
 ---
 
-# PHASE_3A: MINIMAL IMPLEMENTATION SCAFFOLDING  // OPTION A (NEXT)
+# PHASE_3A: MINIMAL IMPLEMENTATION SCAFFOLDING  // OPTION A (ACTIVE PATH)
 
 GOAL:
-  Make RNA concrete without adding behavior.
+  Make RNA concrete without adding business behavior.
 
 FOCUS:
   Types
   Schemas
   Shape correctness
+  Guard purity (pre-guards vs guards)
+  Deterministic artifacts (fingerprints)
 
 DELIVERABLES:
   [ ] TypeScript interfaces for all pipeline artifacts
   [ ] Zod schemas enforcing contract boundaries
   [ ] Explicit invariant checks at stage boundaries
   [ ] Zero business logic beyond enforcement
+  [ ] Deterministic planning fingerprinting (canonicalize + hash)
+  [ ] Drift tests (runtime invariant not capturable by types)
 
 LEARNING_SIGNAL:
   Specs become executable shapes.
   Safety becomes tangible.
-  Runtime guards revealed invariants that types alone cannot enforce.
+  Runtime guards reveal invariants that types alone cannot enforce.
+  Tool boundaries become explicit and portable.
 
 EXIT_CRITERIA:
   You can build any stage confidently
-  because its contract is enforced by types.
+  because its contract is enforced by types + tests.
+
+---
+
+# PHASE_3A.1: SINGLE WORKFLOW RUNNABLE (WEEKLY REFLECTION)
+
+GOAL:
+  Prove the whole RNA spine works end-to-end in-process.
+
+DELIVERABLES:
+  [ ] A single pipeline run reaches COMMIT deterministically
+  [ ] Envelope captures full audit trail for every stage
+  [ ] Commit produces "approved effects" without applying them
+  [ ] Revalidation blocks drift from becoming committable
+  [ ] Execution produces only untrusted outputs (PROVISIONAL)
+
+RULE:
+  Make it runnable before making it powerful.
+
+EXIT_CRITERIA:
+  You can run weekly reflection locally and inspect:
+    - the plan
+    - the produced effects
+    - the revalidation outcome
+    - the commit decision
+
+---
+
+# PHASE_3A.2: OUTBOX SHAPE + EFFECT APPLIER INTERFACE (NO REAL APPLY)
+
+GOAL:
+  Introduce the apply boundary without implementing behavior.
+
+FOCUS:
+  Outbox pattern
+  Pending effects
+  Explicit apply lifecycle
+
+DELIVERABLES:
+  [ ] OutboxEntry type + schema
+  [ ] Outbox status model: PENDING | APPLIED | FAILED
+  [ ] Commit writes outbox entries with status=PENDING
+  [ ] EffectApplier interface stub (apply/markApplied/markFailed)
+  [ ] Tests proving: commit ≠ apply
+
+RULE:
+  Authority is committed at commit.
+  World mutation happens only at apply.
+
+EXIT_CRITERIA:
+  You can point to the exact boundary where:
+    - authority becomes durable
+    - world mutation begins (apply)
+
+---
+
+# PHASE_3A.3: PORT THE SPINE TO XSTATE (LOCAL ORCHESTRATION UPGRADE)
+
+GOAL:
+  Replace hand-rolled stage control flow with an explicit state machine.
+
+FOCUS:
+  State transitions
+  Guards
+  Actions (writeback)
+  Visualization / debugability
+
+DELIVERABLES:
+  [ ] Ingestion pipeline expressed as an XState machine
+  [ ] Stage gates mapped to XState guards (pre-guards/guards preserved)
+  [ ] Stage writebacks mapped to actions
+  [ ] Same envelope semantics preserved (audit trail intact)
+  [ ] Weekly reflection still runs end-to-end
+
+LEARNING_SIGNAL:
+  See what a state-machine engine gives you "for free"
+  and what invariants remain your responsibility.
+
+EXIT_CRITERIA:
+  You can explain:
+    - what XState abstracts
+    - what it does not abstract
+    - how your contracts stay enforceable
+
+---
+
+# PHASE_3A.4: PORT XSTATE SPINE TO TEMPORAL (DURABLE WORKFLOWS)
+
+GOAL:
+  Upgrade orchestration to production-grade durability and retries.
+
+FOCUS:
+  Deterministic workflows
+  Activities (execution/apply)
+  Replay semantics
+  Observability + operational tooling
+
+DELIVERABLES:
+  [ ] Temporal workflow representing the ingestion spine
+  [ ] Execution and Apply modeled as activities
+  [ ] Outbox consumption integrated (still explicit)
+  [ ] Replay-safe determinism for plan/fingerprints
+  [ ] Tests for drift + commit gating remain unchanged in intent
+
+LEARNING_SIGNAL:
+  Understand durability, retries, and replay constraints
+  by comparing to the hand-rolled + XState versions.
+
+EXIT_CRITERIA:
+  You can explain:
+    - why workflows must be deterministic
+    - what Temporal adds (durability, retries, timers)
+    - what remains domain responsibility (authority, trust)
 
 ---
 
@@ -397,10 +516,12 @@ ALWAYS_ON:
   - Fundamentals review (morning / night)
   - Explanation practice
   - System articulation
+  - Tool awareness: identify which category solves each recurring spine problem
 
 MEASURE_PROGRESS_BY:
   - clarity under pressure
   - safe modification ability
   - comfort with ambiguity
+  - ability to name what orchestration tools abstract away
 
 END
