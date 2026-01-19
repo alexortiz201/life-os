@@ -3,11 +3,7 @@ import assert from "node:assert/strict";
 
 import { validationStage } from "#/rna/pipelines/ingestion/stages/validation/validation.stage";
 import type { IngestionPipelineEnvelope } from "#/types/rna/pipeline/ingestion/ingestion.types";
-import {
-  makeEnv,
-  deleteIds,
-  clearDefaultIdsPastStage,
-} from "../../../../../utils";
+import { makeEnv, clearDefaultIdsPastStage } from "../../../../../utils";
 
 function lastError(env: IngestionPipelineEnvelope) {
   return env.errors[env.errors.length - 1];

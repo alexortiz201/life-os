@@ -22,16 +22,16 @@ export function clearDefaultIdsPastStage(
   stage: string,
   env: IngestionPipelineEnvelope
 ) {
-  if (stage === "validation") deleteIds(env, idsToClear.slice(1));
-  if (stage === "planning") deleteIds(env, idsToClear.slice(2));
-  if (stage === "execution") deleteIds(env, idsToClear.slice(3));
-  if (stage === "revalidation") deleteIds(env, idsToClear.slice(5));
-  if (stage === "commit") deleteIds(env, idsToClear.slice(6));
+  if (stage === "validation") clearIds(env, idsToClear.slice(1));
+  if (stage === "planning") clearIds(env, idsToClear.slice(2));
+  if (stage === "execution") clearIds(env, idsToClear.slice(3));
+  if (stage === "revalidation") clearIds(env, idsToClear.slice(5));
+  if (stage === "commit") clearIds(env, idsToClear.slice(6));
 }
 
-export function deleteIds(env: IngestionPipelineEnvelope, ids: Array<string>) {
+export function clearIds(env: IngestionPipelineEnvelope, ids: Array<string>) {
   for (let id of ids) {
-    if ((env.ids as any)[id]) delete (env.ids as any)[id];
+    if ((env.ids as any)[id]) (env.ids as any)[id] = undefined;
   }
 }
 
