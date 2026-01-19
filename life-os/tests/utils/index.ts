@@ -1,6 +1,7 @@
+import assert from "node:assert";
+
 import { ContextSnapshot } from "#/types/domain/snapshot/snapshot.provider.types";
 import type { IngestionPipelineEnvelope } from "#/types/rna/pipeline/ingestion/ingestion.types";
-import assert from "node:assert";
 
 type EnvelopePatch = {
   ids?: Partial<IngestionPipelineEnvelope["ids"]>;
