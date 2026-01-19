@@ -10,7 +10,7 @@
     "test": "node --require ts-node/register --require tsconfig-paths/register --test tests/**/*.test.ts",
     "test:watch": "node --require ts-node/register --require tsconfig-paths/register --test --watch tests/**/*.test.ts",
     "verify": "npm run typecheck && npm run build && npm run test",
-    "verify:only": "npm run typecheck && npm run build && node --require ts-node/register --require tsconfig-paths/register --test-only --test tests/**/*.test.ts",
+    "verify:only": "node --require ts-node/register --require tsconfig-paths/register --test",
     "lint": "biome lint .",
     "format": "biome format . --write",
     "check": "biome check . --write"

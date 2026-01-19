@@ -13,7 +13,6 @@ export const guardPrePlanning = preGuardFactory({
 const getCandidate = ({ ids, stages, proposalId }: CandidateInput) => {
   const validation = stages.validation;
   const planning = stages.validation;
-  const commitPolicy = (validation as any).commitPolicy ?? undefined;
 
   return {
     proposalId,
@@ -22,7 +21,7 @@ const getCandidate = ({ ids, stages, proposalId }: CandidateInput) => {
       (validation as any).validationId ?? "validation_unknown",
     planningId: ids?.planningId ?? "planning_unknown",
     plan: (planning as any)?.plan ?? [],
-    commitPolicy,
+    commitPolicy: (validation as any).commitPolicy ?? undefined,
   };
 };
 

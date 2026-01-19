@@ -231,7 +231,7 @@ export const assertIdExists = ({
 
 export const PREV_STAGES_DEPS = {
   INTAKE: { stages: [], ids: [] },
-  VALIDATION: { stages: [], ids: [] },
+  VALIDATION: { stages: ["INTAKE"], ids: ["proposalId", "snapshotId"] },
   PLANNING: {
     stages: ["VALIDATION"],
     ids: ["proposalId", "validationId", "snapshotId"],
@@ -306,7 +306,7 @@ export const preGuardFactory =
       STAGE,
       CODE,
     });
-
+    // console.log({ depsAssert });
     if (!depsAssert.ok) return depsAssert;
 
     return { ok: true, env: depsAssert.env };

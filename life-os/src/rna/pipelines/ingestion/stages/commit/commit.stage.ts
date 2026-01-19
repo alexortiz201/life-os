@@ -5,6 +5,7 @@ import type { IngestionPipelineEnvelope } from "#/types/rna/pipeline/ingestion/i
 import type { CommitRecord } from "#/types/rna/pipeline/ingestion/commit/commit.types";
 
 import { guardPreCommit, guardCommit } from "./commit.guard";
+import { getNewId } from "#/domain/identity/id.provider";
 
 export const STAGE = "COMMIT";
 
@@ -43,7 +44,7 @@ export function commitStage(
 
   // 3) build commit record
   const ranAt = Date.now();
-  const commitId = `commit_${ranAt}`;
+  const commitId = getNewId("commit");
   const proposalId = data.proposalId;
   const outcome = data.outcome;
 

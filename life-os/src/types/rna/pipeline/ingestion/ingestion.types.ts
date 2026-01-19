@@ -4,11 +4,11 @@ import {
   PipelineStage,
   PipelineStageError,
 } from "#/types/rna/pipeline/pipeline.types";
+
+import { CommitPolicy } from "#/types/rna/pipeline/ingestion/validation/validation.types";
+import { RevalidationGuardOutput } from "#/types/rna/pipeline/ingestion/revalidation/revalidation.types";
 import { CommitRecord } from "#/types/rna/pipeline/ingestion/commit/commit.types";
-import {
-  CommitPolicy,
-  RevalidationGuardOutput,
-} from "#/types/rna/pipeline/ingestion/revalidation/revalidation.types";
+import { ContextSnapshot } from "#/types/domain/snapshot/snapshot.provider.types";
 
 /**
  * Canonical IDs carried by the envelope.
@@ -102,8 +102,12 @@ type IngestionMeta = Partial<{
   commitPolicy: { allowedModes: ["FULL"] | ["FULL", "PARTIAL"] };
 }>;
 
+type AllowPermissions = "WEEKLY_REFLECTION";
+type AllowKinds = "NOTE";
+
 export type IngestionPipelineEnvelope = PipelineEnvelope<
   EnvelopeIds,
+  ContextSnapshot<AllowPermissions, AllowKinds>,
   IngestionStages,
   PipelineStageError<PipelineStageName, PipelineStageErrorSeverity>,
   IngestionMeta

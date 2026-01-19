@@ -27,8 +27,15 @@ export type PipelineStageError<TStageName, TStageErrorSeverity> = {
   at: number; // timestamp
 };
 
-export type PipelineEnvelope<TIds, TStages, TErrors, TMeta = {}> = {
+export type PipelineEnvelope<
+  TIds,
+  TContextSnapshot,
+  TStages,
+  TErrors,
+  TMeta = {}
+> = {
   ids: TIds;
+  snapshot: TContextSnapshot;
   stages: TStages;
   errors: TErrors[];
   meta?: TMeta;

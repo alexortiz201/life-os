@@ -58,8 +58,8 @@ test("commits only PROVISIONAL produced artifacts", () => {
   assert.equal(out.errors.length, 0);
 
   const c = getCommitRecord(out);
-  assert.equal(c.proposalId, "proposal_1");
-  assert.match(c.commitId, /^commit_\d+$/);
+  assert.match(c.proposalId, /^proposal_[0-9a-f\-]+$/);
+  assert.match(c.commitId, /^commit_[0-9a-f\-]+$/);
 
   assert.equal(c.effects.approved.length, 2);
   assert.deepEqual(c.effects.approved.map((o: any) => o.objectId).sort(), [

@@ -13,12 +13,6 @@ import {
 } from "./revalidation.schemas";
 import type { RevalidationRule } from "./revalidation.rules";
 
-export type AllowedModes = ["FULL"] | ["FULL", "PARTIAL"];
-
-export type CommitPolicy = {
-  allowedModes: AllowedModes;
-};
-
 export type RevalidationCommitDirective = z.infer<
   typeof RevalidationCommitDirectiveSchema
 >;

@@ -1,18 +1,5 @@
+import { ContextSnapshot } from "#/types/domain/snapshot/snapshot.provider.types";
 import type { IngestionPipelineEnvelope } from "#/types/rna/pipeline/ingestion/ingestion.types";
-
-// function deepMerge<T>(base: T, patch: Partial<T>): T {
-//   if (patch === null || patch === undefined) return base;
-//   if (typeof base !== "object" || base === null) return patch as T;
-//   if (typeof patch !== "object" || patch === null) return patch as T;
-
-//   if (Array.isArray(base) || Array.isArray(patch)) return patch as T;
-
-//   const out: any = { ...(base as any) };
-//   for (const [k, v] of Object.entries(patch as any)) {
-//     out[k] = k in out ? deepMerge(out[k], v) : v;
-//   }
-//   return out;
-// }
 
 type EnvelopePatch = {
   ids?: Partial<IngestionPipelineEnvelope["ids"]>;
@@ -20,6 +7,33 @@ type EnvelopePatch = {
   errors?: IngestionPipelineEnvelope["errors"];
   meta?: Partial<NonNullable<IngestionPipelineEnvelope["meta"]>>;
 };
+
+const idsToClear = [
+  "intakeId",
+  "validationId",
+  "planningId",
+  "executionId",
+  "effectsLogId",
+  "revalidationId",
+  "commitId",
+];
+
+export function clearDefaultIdsPastStage(
+  stage: string,
+  env: IngestionPipelineEnvelope
+) {
+  if (stage === "validation") deleteIds(env, idsToClear.slice(1));
+  if (stage === "planning") deleteIds(env, idsToClear.slice(2));
+  if (stage === "execution") deleteIds(env, idsToClear.slice(3));
+  if (stage === "revalidation") deleteIds(env, idsToClear.slice(5));
+  if (stage === "commit") deleteIds(env, idsToClear.slice(6));
+}
+
+export function deleteIds(env: IngestionPipelineEnvelope, ids: Array<string>) {
+  for (let id of ids) {
+    if ((env.ids as any)[id]) delete (env.ids as any)[id];
+  }
+}
 
 export function makeEnv(patch: EnvelopePatch = {}): IngestionPipelineEnvelope {
   const now = Date.now();
@@ -31,8 +45,15 @@ export function makeEnv(patch: EnvelopePatch = {}): IngestionPipelineEnvelope {
       snapshotId: "snap_1",
       effectsLogId: "effects_1",
     },
+    snapshot: { ...makeSnapshot() },
     stages: {
-      intake: { hasRun: false },
+      intake: {
+        hasRun: true,
+        ranAt: now,
+        observed: {} as any,
+        proposalId: "proposal_1",
+        commitPolicy: { allowedModes: ["FULL"] as const },
+      },
 
       // ✅ validation hasRun true by default + commitPolicy lives here
       validation: {
@@ -92,6 +113,7 @@ export function makeCommitEnv(
       effectsLogId: "effects_1",
       revalidationId: "revalidation_1",
     },
+    snapshot: { ...makeSnapshot() },
     stages: {
       intake: { hasRun: false },
       validation: {
@@ -194,4 +216,14 @@ export function makeCommitEnv(
   };
 
   return merged;
+}
+
+export function makeSnapshot() {
+  return {
+    permissions: { actor: "user_1", allow: ["WEEKLY_REFLECTION"] as const },
+    invariantsVersion: "v1",
+    scope: { allowedKinds: ["NOTE"] as const },
+    timestampMs: 0,
+    dependencyVersions: {},
+  } satisfies ContextSnapshot<"WEEKLY_REFLECTION", "NOTE">;
 }
