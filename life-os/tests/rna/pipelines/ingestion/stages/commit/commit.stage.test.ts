@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 
 import { commitStage } from "#/rna/pipelines/ingestion/stages/commit/commit.stage";
 import type { IngestionPipelineEnvelope } from "#/types/rna/pipeline/ingestion/ingestion.types";
-import { makeCommitEnv } from "../../../../../utils";
+import { assertMatchId, makeCommitEnv } from "../../../../../utils";
 
 function lastError(env: IngestionPipelineEnvelope) {
   return env.errors[env.errors.length - 1];
@@ -58,8 +58,8 @@ test("commits only PROVISIONAL produced artifacts", () => {
   assert.equal(out.errors.length, 0);
 
   const c = getCommitRecord(out);
-  assert.match(c.proposalId, /^proposal_[0-9a-f\-]+$/);
-  assert.match(c.commitId, /^commit_[0-9a-f\-]+$/);
+  assertMatchId(c.proposalId, "proposal_");
+  assertMatchId(c.commitId, "commit_");
 
   assert.equal(c.effects.approved.length, 2);
   assert.deepEqual(c.effects.approved.map((o: any) => o.objectId).sort(), [

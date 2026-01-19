@@ -72,7 +72,6 @@ test("guardPreValidation returns ok:true when called on a normal envelope (no pr
   const env = makeEnv();
 
   const result = guardPreValidation(env);
-  console.log({ t: "-------------------", err: result.env.errors });
   assert.equal(result.ok, true);
 
   if (result.ok) {

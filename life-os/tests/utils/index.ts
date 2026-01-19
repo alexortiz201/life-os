@@ -1,5 +1,6 @@
 import { ContextSnapshot } from "#/types/domain/snapshot/snapshot.provider.types";
 import type { IngestionPipelineEnvelope } from "#/types/rna/pipeline/ingestion/ingestion.types";
+import assert from "node:assert";
 
 type EnvelopePatch = {
   ids?: Partial<IngestionPipelineEnvelope["ids"]>;
@@ -33,6 +34,10 @@ export function clearIds(env: IngestionPipelineEnvelope, ids: Array<string>) {
   for (let id of ids) {
     if ((env.ids as any)[id]) (env.ids as any)[id] = undefined;
   }
+}
+
+export function assertMatchId(id: string, prefix: string) {
+  return assert.match(id, new RegExp(`^${prefix}_[0-9a-f\\-]+$`));
 }
 
 export function makeEnv(patch: EnvelopePatch = {}): IngestionPipelineEnvelope {
