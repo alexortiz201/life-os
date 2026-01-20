@@ -111,7 +111,10 @@ test("REJECT or ESCALATE halts the pipeline (no advancement; hasRun remains fals
   // Force a validation outcome by injecting a proposal/context combination
   // that should not be allowed. (Adjust to your actual decision logic later.)
   (env as any).snapshot = {
-    permissions: { actor: "user_1", allow: [] }, // no permissions => should REJECT or ESCALATE
+    permissions: {
+      actor: { actorId: "user_1", actorType: "USER" },
+      allow: [] as const,
+    }, // no permissions => should REJECT or ESCALATE
     invariantsVersion: "v1",
     scope: { allowedKinds: [] },
     timestamp: 1234567890,

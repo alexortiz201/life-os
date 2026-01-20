@@ -1,10 +1,13 @@
 import { IdKind } from "./id.provider.types";
 
 const PREFIX: Record<IdKind, string> = {
+  // kinds
   proposal: "proposal",
   effects: "effects",
   snapshot: "snapshot",
   envelope: "envelope",
+
+  // stages
   intake: "intake",
   validation: "validation",
   planning: "planning",

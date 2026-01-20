@@ -8,6 +8,8 @@ import {
 import { CommitPolicy } from "#/types/rna/pipeline/ingestion/validation/validation.types";
 import { RevalidationGuardOutput } from "#/types/rna/pipeline/ingestion/revalidation/revalidation.types";
 import { CommitRecord } from "#/types/rna/pipeline/ingestion/commit/commit.types";
+import { Permission } from "#/types/domain/permissions/permissions.types";
+import { Kinds } from "#/types/domain/scopes/scopes.types";
 import { ContextSnapshot } from "#/types/domain/snapshot/snapshot.provider.types";
 
 /**
@@ -102,12 +104,10 @@ type IngestionMeta = Partial<{
   commitPolicy: { allowedModes: ["FULL"] | ["FULL", "PARTIAL"] };
 }>;
 
-type AllowPermissions = "WEEKLY_REFLECTION";
-type AllowKinds = "NOTE";
-
+export type IngestionContextSnapshot = ContextSnapshot<Permission, Kinds>;
 export type IngestionPipelineEnvelope = PipelineEnvelope<
   EnvelopeIds,
-  ContextSnapshot<AllowPermissions, AllowKinds>,
+  IngestionContextSnapshot,
   IngestionStages,
   PipelineStageError<PipelineStageName, PipelineStageErrorSeverity>,
   IngestionMeta

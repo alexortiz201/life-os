@@ -1,9 +1,9 @@
 import { z } from "zod";
 
-import { IntakeSchema, IntakeProposalSchema } from "./intake.schemas";
+import { IntakeSchema, IntakeRawProposalSchema } from "./intake.schemas";
 
 export type Intake = z.infer<typeof IntakeSchema>;
-export type IntakeProposal = z.infer<typeof IntakeProposalSchema>;
+export type IntakeRawProposal = z.infer<typeof IntakeRawProposalSchema>;
 
 export type GuardIntakeResult = any;
 export type IntakeTrace = any;

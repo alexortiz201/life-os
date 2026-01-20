@@ -38,7 +38,7 @@ export function clearIds(env: IngestionPipelineEnvelope, ids: Array<string>) {
 }
 
 export function assertMatchId(id: string, prefix: string) {
-  return assert.match(id, new RegExp(`^${prefix}_[0-9a-f\\-]+$`));
+  return assert.match(id, new RegExp(`^${prefix}[0-9a-f\\-]+$`));
 }
 
 export function makeEnv(patch: EnvelopePatch = {}): IngestionPipelineEnvelope {
@@ -226,7 +226,10 @@ export function makeCommitEnv(
 
 export function makeSnapshot() {
   return {
-    permissions: { actor: "user_1", allow: ["WEEKLY_REFLECTION"] as const },
+    permissions: {
+      actor: { actorId: "user_1", actorType: "USER" },
+      allow: ["WEEKLY_REFLECTION"] as const,
+    },
     invariantsVersion: "v1",
     scope: { allowedKinds: ["NOTE"] as const },
     timestampMs: 0,

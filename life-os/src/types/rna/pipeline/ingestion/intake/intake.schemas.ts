@@ -1,20 +1,14 @@
 import { z } from "zod";
-import { ContextSnapshotSchema } from "#/types/domain/snapshot/snapshot.provider.schemas";
+import { IngestionContextSnapshotSchema } from "#/types/domain/snapshot/snapshot.provider.schemas";
+import { makeRawProposalSchema } from "#/types/domain/proposals/proposals.schemas";
+import { KINDS } from "#/types/domain/scopes/scopes.const";
 
-export const IntakeProposalSchema = z.object({
-  intent: z.string().min(1),
-  actor: z.string().min(1),
-  targetEntity: z.string().min(1),
-  targetScope: z.object({ kind: z.string().min(1) }),
-  dependencies: [],
-  impact: z.string().min(1),
-  reversibilityClaim: z.string().min(1),
-});
+export const IntakeRawProposalSchema = makeRawProposalSchema(z.enum(KINDS));
 
 export const IntakeSchema = z.object({
   proposalId: z.string().min(1),
   snapshotId: z.string().min(1),
-  snapshot: ContextSnapshotSchema,
+  snapshot: IngestionContextSnapshotSchema,
   validationDecision: z.string().min(1),
 });
 

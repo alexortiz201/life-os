@@ -1,13 +1,16 @@
-import { ContextSnapshot } from "#/types/domain/snapshot/snapshot.provider.types";
+import { IngestionContextSnapshot } from "#/types/rna/pipeline/ingestion/ingestion.types";
 
-const validSnapshot = {
-  permissions: { actor: "user_1", allow: ["WEEKLY_REFLECTION"] as const },
+const validIngestionSnapshot = {
+  permissions: {
+    actor: { actorId: "user_1", actorType: "USER" },
+    allow: ["WEEKLY_REFLECTION"] as const,
+  },
   invariantsVersion: "v1",
   scope: { allowedKinds: ["NOTE"] as const },
   timestampMs: 1234567890,
   dependencyVersions: {}, //  llm: "none"
-} satisfies ContextSnapshot<"WEEKLY_REFLECTION", "NOTE">;
+} satisfies IngestionContextSnapshot;
 
 export function getContextSnapshot() {
-  return validSnapshot;
+  return validIngestionSnapshot;
 }
