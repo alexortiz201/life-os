@@ -1,29 +1,31 @@
-import { ValidationInputSchema } from "#/types/rna/pipeline/ingestion/validation/validation.schemas";
-import {
-  CandidateInput,
-  guardFactory,
-  preGuardFactory,
-} from "#/rna/pipelines/pipeline-utils/guard-utils";
-import { getContextSnapshot } from "#/domain/snapshot/snapshot.provider";
+import { guardFactory } from "#/rna/pipelines/pipeline-utils/guard-utils";
+import { preGuardFactory } from "#/rna/pipelines/pipeline-utils/preguard-utils";
+
+import { IntakeInputSchema } from "#/types/rna/pipeline/ingestion/intake/intake.schemas";
+import { IntakeEnvelope } from "#/types/rna/pipeline/ingestion/intake/intake.types";
+import type { SchemaParseParams } from "#/types/rna/pipeline/pipeline-utils/guard-utils.types";
 
 export const guardPreIntake = preGuardFactory({
   STAGE: "INTAKE",
   CODE: "INTAKE_PREREQ_MISSING",
 } as const);
 
-const getCandidate = ({ ids, stages, proposalId }: CandidateInput) => ({
+const pluckParams = ({
+  env,
+  ids,
+  stages,
   proposalId,
-  snapshotId: ids?.snapshotId,
-  snapshot: getContextSnapshot(),
-  // validationDecision:
-  //   (stages.validation as any).validationId ?? "validation_unknown",
-  // commitPolicy: (stages.validation as any).commitPolicy ?? undefined,
+}: SchemaParseParams<IntakeEnvelope>) => ({
+  proposalId,
+  ids,
+  rawProposal: env.rawProposal,
+  // context: env.context,
 });
 
 export const guardIntake = guardFactory({
   STAGE: "INTAKE",
-  InputSchema: ValidationInputSchema,
+  InputSchema: IntakeInputSchema,
   code: "INVALID_INTAKE_INPUT",
   parseFailedRule: "PARSE_FAILED",
-  getCandidate,
+  pluckParams,
 });

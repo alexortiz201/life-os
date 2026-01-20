@@ -1,7 +1,9 @@
 import assert from "node:assert";
 
-import { ContextSnapshot } from "#/types/domain/snapshot/snapshot.provider.types";
-import type { IngestionPipelineEnvelope } from "#/types/rna/pipeline/ingestion/ingestion.types";
+import type {
+  IngestionContextSnapshot,
+  IngestionPipelineEnvelope,
+} from "#/types/rna/pipeline/ingestion/ingestion.types";
 
 type EnvelopePatch = {
   ids?: Partial<IngestionPipelineEnvelope["ids"]>;
@@ -24,6 +26,7 @@ export function clearDefaultIdsPastStage(
   stage: string,
   env: IngestionPipelineEnvelope
 ) {
+  if (stage === "intake") clearIds(env, idsToClear.slice(0));
   if (stage === "validation") clearIds(env, idsToClear.slice(1));
   if (stage === "planning") clearIds(env, idsToClear.slice(2));
   if (stage === "execution") clearIds(env, idsToClear.slice(3));
@@ -46,6 +49,7 @@ export function makeEnv(patch: EnvelopePatch = {}): IngestionPipelineEnvelope {
 
   const base: IngestionPipelineEnvelope = {
     ids: {
+      intakeId: "intake_1",
       validationId: "validation_1",
       proposalId: "proposal_1",
       snapshotId: "snap_1",
@@ -57,6 +61,7 @@ export function makeEnv(patch: EnvelopePatch = {}): IngestionPipelineEnvelope {
         hasRun: true,
         ranAt: now,
         observed: {} as any,
+        intakeId: "intake_1",
         proposalId: "proposal_1",
         commitPolicy: { allowedModes: ["FULL"] as const },
       },
@@ -65,7 +70,7 @@ export function makeEnv(patch: EnvelopePatch = {}): IngestionPipelineEnvelope {
       validation: {
         hasRun: true,
         ranAt: now,
-        observed: { proposalId: "proposal_1" } as any,
+        observed: { intakeId: "intake_1", proposalId: "proposal_1" } as any,
         validationId: "validation_1",
         commitPolicy: { allowedModes: ["FULL"] as const },
       } as any,
@@ -234,5 +239,5 @@ export function makeSnapshot() {
     scope: { allowedKinds: ["NOTE"] as const },
     timestampMs: 0,
     dependencyVersions: {},
-  } satisfies ContextSnapshot<"WEEKLY_REFLECTION", "NOTE">;
+  } satisfies IngestionContextSnapshot;
 }

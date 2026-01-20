@@ -11,6 +11,7 @@ import { CommitRecord } from "#/types/rna/pipeline/ingestion/commit/commit.types
 import { Permission } from "#/types/domain/permissions/permissions.types";
 import { Kinds } from "#/types/domain/scopes/scopes.types";
 import { ContextSnapshot } from "#/types/domain/snapshot/snapshot.provider.types";
+import { ProposalRecord } from "#/types/domain/proposals/proposals.schemas";
 
 /**
  * Canonical IDs carried by the envelope.
@@ -57,7 +58,10 @@ type StageResult<TStageState, TObservedIds> =
 /* ===========================
    Stage Outputs
    =========================== */
-type IntakeStageOutput = StageResult<{ intakeId: string }, IntakeObservedIds>;
+type IntakeStageOutput = StageResult<
+  { intakeId: string; proposal: ProposalRecord },
+  IntakeObservedIds
+>;
 
 type ValidationStageOutput = StageResult<
   { validationId: string; commitPolicy: CommitPolicy },

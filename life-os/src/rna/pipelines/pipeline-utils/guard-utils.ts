@@ -1,15 +1,16 @@
-import type { keyof, z } from "zod";
+import type { z } from "zod";
 
 // import { errorResultFactory } from "#/rna/pipelines/pipeline-utils";
-import { appendError } from "#/rna/envelope/envelope-utils";
-import type {
-  EnvelopeIds,
-  IngestionPipelineEnvelope,
-} from "#/types/rna/pipeline/ingestion/ingestion.types";
+// import { appendError } from "#/rna/envelope/envelope-utils";
+import type { IngestionPipelineEnvelope } from "#/types/rna/pipeline/ingestion/ingestion.types";
 
 import type { EnvelopeStage } from "#/types/rna/envelope/envelope.types";
 import { ENVELOPE_STAGE_TO_KEY } from "#/types/rna/envelope/envelope.const";
-import { PipelineStage } from "#/types/rna/pipeline/pipeline.types";
+import { INGESTION_STAGE_DEPS } from "#/types/rna/pipeline/ingestion/ingestion.const";
+import {
+  GuardResult,
+  SchemaParseParams,
+} from "#/types/rna/pipeline/pipeline-utils/guard-utils.types";
 
 /**
  * Minimal runtime narrowing so we can safely pluck from `unknown`.
@@ -19,47 +20,26 @@ function isObject(x: unknown): x is Record<string, any> {
   return typeof x === "object" && x !== null;
 }
 
-type GuardError<
-  TStage extends EnvelopeStage,
-  TCode extends string,
-  TRule extends string,
-  TTrace
-> = {
-  ok: false;
-  code: TCode;
-  stage: TStage;
-  message: string;
-  trace: TTrace & { mode: "UNKNOWN"; rulesApplied: TRule[] };
-};
+const hasAllDepStages = (STAGE: EnvelopeStage, stages: any | undefined) => {
+  if (STAGE === "ENVELOPE") return { ok: false, needsStages: false };
 
-type GuardOk<TData> = { ok: true; data: TData };
+  const depStages = INGESTION_STAGE_DEPS[STAGE].stages;
+  const needsStages = depStages.length > 0;
 
-type GuardResult<
-  TStage extends EnvelopeStage,
-  TCode extends string,
-  TRule extends string,
-  TTrace,
-  TData
-> = GuardOk<TData> | GuardError<TStage, TCode, TRule, TTrace>;
-
-export type CandidateInput = {
-  env: IngestionPipelineEnvelope;
-  ids: any;
-  stages: any;
-  proposalId: string;
-};
-
-const hasAllDepStages = (STAGE: EnvelopeStage, stages: any) => {
-  if (STAGE === "ENVELOPE") return { ok: false };
-
-  for (let stage of PREV_STAGES_DEPS[STAGE].stages) {
-    if (!isObject(stages[ENVELOPE_STAGE_TO_KEY[stage]])) return { ok: false };
+  if (needsStages && !isObject(stages)) {
+    return { ok: false, needsStages };
   }
 
-  return { ok: true };
+  for (let stage of depStages) {
+    const stageKey = ENVELOPE_STAGE_TO_KEY[stage];
+    if (!isObject((stages as any)[stageKey])) return { ok: false, needsStages };
+  }
+
+  return { ok: true, needsStages };
 };
 
 export const guardFactory = <
+  TEnv,
   TStage extends EnvelopeStage,
   TCode extends string,
   TParseRule extends string,
@@ -71,20 +51,18 @@ export const guardFactory = <
   code,
   parseFailedRule,
   message = "Input invalid",
-  getCandidate = ({}) => ({}),
+  pluckParams = (_: SchemaParseParams<TEnv>) => ({}),
 }: {
   STAGE: TStage;
   InputSchema: TSchema;
   code: TCode;
   parseFailedRule: TParseRule;
   message?: string;
-  getCandidate: ({}: CandidateInput) => {};
+  pluckParams: (args: SchemaParseParams<TEnv>) => unknown;
 }) => {
   type Data = z.infer<TSchema>;
 
-  return (
-    env: IngestionPipelineEnvelope
-  ): GuardResult<TStage, TCode, TParseRule, TTrace, Data> => {
+  return (env: TEnv): GuardResult<TStage, TCode, TParseRule, TTrace, Data> => {
     // const error = errorResultFactory<TTrace & { rulesApplied: TParseRule[] }>();
     const error = (
       trace: TTrace & { message?: string; rulesApplied: TParseRule[] }
@@ -110,15 +88,15 @@ export const guardFactory = <
       ? (env as any).stages
       : undefined;
 
-    if (!ids || !proposalId || !stages) {
+    const res = hasAllDepStages(STAGE, stages);
+
+    if (!ids || !proposalId || (res.needsStages && !stages)) {
       return error({
         // ids,
         proposalId,
         rulesApplied: [parseFailedRule],
       } as any);
     }
-
-    const res = hasAllDepStages(STAGE, stages);
 
     if (!res.ok) {
       return error({
@@ -129,20 +107,12 @@ export const guardFactory = <
     }
 
     // 1) Candidate for schema validation
-    const candidate = getCandidate({
-      env,
-      ids,
-      stages,
-      proposalId,
-    });
-
-    const parsed = InputSchema.safeParse(candidate);
+    const schemaInput = pluckParams({ env, ids, stages, proposalId });
+    const parsed = InputSchema.safeParse(schemaInput);
 
     if (!parsed.success) {
       return error({
-        proposalId,
-        snapshotId: ids?.snapshotId,
-        planningId: ids?.planningId,
+        ids,
         message: `${STAGE}: Schema parsing failed, invalid input.`,
         rulesApplied: [parseFailedRule],
       } as any);
@@ -151,163 +121,3 @@ export const guardFactory = <
     return { ok: true as const, data: parsed.data };
   };
 };
-
-type PreGuardOk = { ok: true; env: IngestionPipelineEnvelope };
-type PreGuardFail = { ok: false; env: IngestionPipelineEnvelope };
-type PreGuardResult = PreGuardOk | PreGuardFail;
-
-const assertStageHasRun = ({
-  env,
-  stageToValidate,
-  STAGE,
-  CODE,
-}: {
-  env: IngestionPipelineEnvelope;
-  stageToValidate: PipelineStage;
-  STAGE: PipelineStage;
-  CODE: string;
-}): PreGuardResult => {
-  const stageKey = ENVELOPE_STAGE_TO_KEY[stageToValidate];
-  const stage = env.stages[stageKey];
-
-  if (!stage?.hasRun) {
-    return {
-      ok: false,
-      env: appendError(env, {
-        stage: STAGE,
-        severity: "HALT",
-        code: CODE,
-        message: `${stageKey} stage has not run.`,
-        trace: {
-          proposalId: env.ids.proposalId,
-          // this is fine, but the key becomes string at type level
-          // if you want this typed, see note below
-          [`${stageKey}HasRun`]: false,
-        },
-        at: Date.now(),
-      }),
-    };
-  }
-
-  return { ok: true, env };
-};
-
-export const assertIdExists = ({
-  env,
-  STAGE,
-  CODE,
-  idKey,
-  message,
-}: {
-  env: IngestionPipelineEnvelope;
-  STAGE: PipelineStage;
-  CODE: string;
-  idKey: keyof EnvelopeIds;
-  message?: string;
-}): PreGuardResult => {
-  const value = env.ids[idKey];
-  const exists = typeof value === "string" && value.length > 0;
-
-  if (!exists) {
-    return {
-      ok: false,
-      env: appendError(env, {
-        stage: STAGE,
-        severity: "HALT",
-        code: CODE,
-        message: message ?? `Missing required id: ${String(idKey)}.`,
-        trace: {
-          proposalId: env.ids.proposalId,
-          idKey,
-          value: value ?? undefined,
-        },
-        at: Date.now(),
-      }),
-    };
-  }
-
-  return { ok: true, env };
-};
-
-export const PREV_STAGES_DEPS = {
-  INTAKE: { stages: [], ids: [] },
-  VALIDATION: { stages: ["INTAKE"], ids: ["proposalId", "snapshotId"] },
-  PLANNING: {
-    stages: ["VALIDATION"],
-    ids: ["proposalId", "validationId", "snapshotId"],
-  },
-  EXECUTION: {
-    stages: ["PLANNING"],
-    ids: ["proposalId", "planningId", "snapshotId"],
-  },
-  REVALIDATION: {
-    stages: ["EXECUTION", "VALIDATION"],
-    ids: ["proposalId", "effectsLogId", "snapshotId"],
-  },
-  COMMIT: { stages: ["REVALIDATION"], ids: ["proposalId"] },
-} as const satisfies Record<
-  PipelineStage,
-  { stages: readonly PipelineStage[]; ids: readonly (keyof EnvelopeIds)[] }
->;
-
-const assertStageDependencies = ({
-  env,
-  STAGE,
-  CODE,
-}: {
-  env: IngestionPipelineEnvelope;
-  STAGE: PipelineStage;
-  CODE: string;
-}): PreGuardResult => {
-  const stageDeps = PREV_STAGES_DEPS[STAGE];
-  let nextEnv = env;
-
-  for (let stage of stageDeps.stages) {
-    const res = assertStageHasRun({
-      env: nextEnv,
-      stageToValidate: stage,
-      STAGE,
-      CODE,
-    });
-
-    if (!res.ok) return res;
-    nextEnv = res.env;
-  }
-
-  const stageKey = ENVELOPE_STAGE_TO_KEY[STAGE];
-
-  for (let idKey of stageDeps.ids) {
-    const res = assertIdExists({
-      env: nextEnv,
-      STAGE,
-      CODE,
-      idKey,
-      message: `Missing ${String(idKey)} required for ${stageKey}.`,
-    });
-
-    if (!res.ok) return res;
-    nextEnv = res.env;
-  }
-
-  return { ok: true, env: nextEnv };
-};
-
-export const preGuardFactory =
-  <TStage extends PipelineStage, TCode extends string>({
-    STAGE,
-    CODE,
-  }: {
-    STAGE: TStage;
-    CODE: TCode;
-  }) =>
-  (env: IngestionPipelineEnvelope): PreGuardResult => {
-    const depsAssert = assertStageDependencies({
-      env,
-      STAGE,
-      CODE,
-    });
-    // console.log({ depsAssert });
-    if (!depsAssert.ok) return depsAssert;
-
-    return { ok: true, env: depsAssert.env };
-  };

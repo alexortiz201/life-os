@@ -1,18 +1,14 @@
 import { fingerprint } from "#/domain/encoding/fingerprint";
 import { getNewId } from "#/domain/identity/id.provider";
-import { appendError, hasHaltingErrors } from "#/rna/envelope/envelope-utils";
+import { appendError } from "#/rna/envelope/envelope-utils";
 
 import type { IngestionPipelineEnvelope } from "#/types/rna/pipeline/ingestion/ingestion.types";
+import { IntakeEnvelope } from "#/types/rna/pipeline/ingestion/intake/intake.types";
 import { guardPreIntake, guardIntake } from "./intake.guard";
 
 export const STAGE = "INTAKE" as const;
 
-export function intakeStage(
-  env: IngestionPipelineEnvelope
-): IngestionPipelineEnvelope {
-  // 0) fail closed if earlier stage produced HALT errors
-  if (hasHaltingErrors(env)) return env;
-
+export function intakeStage(env: IntakeEnvelope): IngestionPipelineEnvelope {
   // 1) prereqs (stage-level, before guard)
   const preReqRes = guardPreIntake(env);
 
@@ -31,19 +27,6 @@ export function intakeStage(
       at: Date.now(),
     });
   }
-
-  // if (!env.snapshot.permissions.allow.length) {
-  //   return appendError(env, {
-  //     stage: STAGE,
-  //     severity: "HALT",
-  //     code: "SNAPSHOT_PERMISSION_NOT_ALLOWED",
-  //     message: "Permissions have none allowed",
-  //     trace: {
-  //       snapshot: env.snapshot,
-  //     },
-  //     at: Date.now(),
-  //   });
-  // }
 
   // 3) write stage output back into envelope
   const ranAt = Date.now();
@@ -65,15 +48,10 @@ export function intakeStage(
         observed: {} as any,
         intakeId,
         proposalId,
-        // fingerprint: fingerprint({
-        //   proposalId: env.ids.proposalId,
-        //   snapshotId: env.ids.snapshotId,
-        //   commitPolicy: "FULL",
-        // }),
-        decisionType: "APPROVE", // "APPROVE", "REJECT", "PARTIAL_APPROVE", "ESCALATE"
-        decidedAt: ranAt,
-        justification: true,
-        attribution: [],
+        fingerprint: fingerprint({
+          proposalId: proposalId,
+          intakeId: intakeId,
+        }),
       } as any,
     },
   };

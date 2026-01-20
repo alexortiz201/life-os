@@ -1,16 +1,15 @@
+import { guardFactory } from "#/rna/pipelines/pipeline-utils/guard-utils";
+import { preGuardFactory } from "#/rna/pipelines/pipeline-utils/preguard-utils";
+
 import { PlanningInputSchema } from "#/types/rna/pipeline/ingestion/planning/planning.schemas";
-import {
-  CandidateInput,
-  guardFactory,
-  preGuardFactory,
-} from "#/rna/pipelines/pipeline-utils/guard-utils";
+import type { SchemaParseParams } from "#/types/rna/pipeline/pipeline-utils/guard-utils.types";
 
 export const guardPrePlanning = preGuardFactory({
   STAGE: "PLANNING",
   CODE: "PLANNING_PREREQ_MISSING",
 } as const);
 
-const getCandidate = ({ ids, stages, proposalId }: CandidateInput) => {
+const pluckParams = ({ ids, stages, proposalId }: SchemaParseParams) => {
   const validation = stages.validation;
   const planning = stages.validation;
 
@@ -30,5 +29,5 @@ export const guardPlanning = guardFactory({
   InputSchema: PlanningInputSchema,
   code: "INVALID_PLANNING_INPUT",
   parseFailedRule: "PARSE_FAILED",
-  getCandidate,
+  pluckParams,
 });

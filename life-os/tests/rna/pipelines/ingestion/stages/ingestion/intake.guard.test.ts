@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { guardIntake } from "#/rna/pipelines/ingestion/stages/intake/intake.guard";
-import { makeEnv } from "../../../../../utils";
+import { makeEnv, clearDefaultIdsPastStage } from "../../../../../utils";
 
 test("returns ok:false INVALID_INTAKE_INPUT when input shape is wrong", () => {
   const result = guardIntake({ nope: true } as any);
@@ -21,7 +21,7 @@ test("returns ok:false INVALID_INTAKE_INPUT when input shape is wrong", () => {
 
 test("returns ok:false INVALID_INTAKE_INPUT when proposalId missing", () => {
   const env = makeEnv();
-  (env as any).ids = { ...(env as any).ids, proposalId: "" };
+  clearDefaultIdsPastStage("intake", env);
 
   const result = guardIntake(env as any);
 
@@ -38,7 +38,7 @@ test("returns ok:false INVALID_INTAKE_INPUT when RAW_PROPOSAL missing required f
 
   // Intake input is not yet locked in code; we assert contract intent:
   // RAW_PROPOSAL must exist and contain required structural keys.
-  // Keep this as a "shape enforcement" test for your IntakeInputSchema/getCandidate.
+  // Keep this as a "shape enforcement" test for your IntakeInputSchema/pluckParams.
   (env as any).rawProposal = {
     // missing required fields like INTENT / ACTOR / TARGET_ENTITY / TARGET_SCOPE etc.
   };
@@ -60,9 +60,11 @@ test("returns ok:true when minimal structural RAW_PROPOSAL is present (no semant
   // Intake does not judge semantics; it only requires structurally normalizable input.
   (env as any).rawProposal = {
     intent: "Start weekly reflection workflow",
-    actor: "user_1",
-    targetEntity: "REFLECTION",
-    targetScope: { kind: "WEEKLY_REFLECTION" },
+    actor: { actorId: "user_1", actorType: "USER" },
+    target: {
+      entity: "REFLECTION",
+      scope: { allowedKinds: ["NOTE"] },
+    },
     dependencies: [],
     impact: "LOW",
     reversibilityClaim: "REVERSIBLE",
@@ -71,10 +73,14 @@ test("returns ok:true when minimal structural RAW_PROPOSAL is present (no semant
   const result = guardIntake(env as any);
 
   assert.equal(result.ok, true);
+
   if (result.ok) {
     // We don't assert full normalization here; that's stage responsibility.
     // Guard should at least pass through the candidate/projection used by the schema.
-    assert.equal(typeof (result.data as any).proposalId, "string");
+    assert.equal(
+      typeof (result.data as any).rawProposal.actor.actorId,
+      "string"
+    );
     assert.equal((result.data as any).proposalId, (env as any).ids.proposalId);
   }
 });

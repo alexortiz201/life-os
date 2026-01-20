@@ -3,10 +3,9 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { z } from "zod";
 
-import {
-  guardFactory,
-  preGuardFactory,
-} from "#/rna/pipelines/pipeline-utils/guard-utils";
+import { guardFactory } from "#/rna/pipelines/pipeline-utils/guard-utils";
+import { preGuardFactory } from "#/rna/pipelines/pipeline-utils/preguard-utils";
+
 import type { IngestionPipelineEnvelope } from "#/types/rna/pipeline/ingestion/ingestion.types";
 import { makeEnv } from "../../../utils";
 
@@ -22,7 +21,7 @@ test("guardFactory: returns ok:false when env is not an object (parseFailedRule 
     InputSchema,
     code: "INVALID_PLANNING_INPUT",
     parseFailedRule: "PARSE_FAILED",
-    getCandidate: () => ({ proposalId: "x" }),
+    pluckParams: () => ({ proposalId: "x" }),
   });
 
   const result = guard(null as any);
@@ -44,7 +43,7 @@ test("guardFactory: returns ok:false when ids/stages/proposalId missing (fail cl
     InputSchema,
     code: "INVALID_PLANNING_INPUT",
     parseFailedRule: "PARSE_FAILED",
-    getCandidate: () => ({ proposalId: "x" }),
+    pluckParams: () => ({ proposalId: "x" }),
   });
 
   const env = makeEnv() as any;
@@ -70,7 +69,7 @@ test("guardFactory: returns ok:false when prereq stage object is missing (depend
     InputSchema,
     code: "INVALID_PLANNING_INPUT",
     parseFailedRule: "PARSE_FAILED",
-    getCandidate: ({ proposalId }) => ({ proposalId }),
+    pluckParams: ({ proposalId }) => ({ proposalId }),
   });
 
   const env = makeEnv() as any;
@@ -102,7 +101,7 @@ test("guardFactory: returns ok:false when schema parsing fails (candidate invali
     InputSchema,
     code: "INVALID_PLANNING_INPUT",
     parseFailedRule: "PARSE_FAILED",
-    getCandidate: ({ proposalId }) => ({
+    pluckParams: ({ proposalId }) => ({
       proposalId,
       // snapshotId intentionally missing to fail Zod
     }),
@@ -121,7 +120,7 @@ test("guardFactory: returns ok:false when schema parsing fails (candidate invali
     assert.equal(result.code, "INVALID_PLANNING_INPUT");
     assert.equal(result.stage, "PLANNING");
     assert.equal(result.trace.mode, "UNKNOWN");
-    assert.equal(result.trace.proposalId, env.ids.proposalId);
+    assert.equal(result.trace.ids.proposalId, env.ids.proposalId);
     assert.ok(result.trace.rulesApplied.includes("PARSE_FAILED"));
   }
 });
@@ -137,7 +136,7 @@ test("guardFactory: returns ok:true with parsed data when candidate passes schem
     InputSchema,
     code: "INVALID_PLANNING_INPUT",
     parseFailedRule: "PARSE_FAILED",
-    getCandidate: ({ ids, proposalId }) => ({
+    pluckParams: ({ ids, proposalId }) => ({
       proposalId,
       snapshotId: ids.snapshotId,
     }),
