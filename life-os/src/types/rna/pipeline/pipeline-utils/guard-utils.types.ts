@@ -8,8 +8,13 @@ export type SchemaParseParams<TEnv = IngestionPipelineEnvelope> = {
   proposalId: string;
 };
 
-type GuardError<
-  TStage extends EnvelopeStage,
+export type GuardTrace<TTrace, TParseRule extends string> = TTrace & {
+  mode: "UNKNOWN";
+  rulesApplied: readonly TParseRule[];
+} & Record<string, unknown>;
+
+export type GuardError<
+  TStage,
   TCode extends string,
   TRule extends string,
   TTrace
@@ -18,7 +23,7 @@ type GuardError<
   code: TCode;
   stage: TStage;
   message: string;
-  trace: TTrace & { mode: "UNKNOWN"; rulesApplied: TRule[] };
+  trace: GuardTrace<TTrace, TRule>;
 };
 
 type GuardOk<TData> = { ok: true; data: TData };

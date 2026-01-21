@@ -1,6 +1,6 @@
 import type { z } from "zod";
 
-// import { errorResultFactory } from "#/rna/pipelines/pipeline-utils";
+import { errorResultFactory } from "#/rna/pipelines/pipeline-utils";
 // import { appendError } from "#/rna/envelope/envelope-utils";
 import type { IngestionPipelineEnvelope } from "#/types/rna/pipeline/ingestion/ingestion.types";
 
@@ -38,6 +38,97 @@ const hasAllDepStages = (STAGE: EnvelopeStage, stages: any | undefined) => {
   return { ok: true, needsStages };
 };
 
+type NarrowFail<TParseRule extends string> = {
+  ok: false;
+  reason:
+    | "NOT_OBJECT"
+    | "MISSING_IDS"
+    | "MISSING_PROPOSAL_ID"
+    | "MISSING_STAGES"
+    | "MISSING_DEP_STAGE";
+  traceBase: {
+    proposalId?: string;
+    rulesApplied: readonly TParseRule[];
+    message?: string;
+  } & Record<string, unknown>;
+};
+
+type NarrowOk = {
+  ok: true;
+  ids: any;
+  stages: any;
+  proposalId: string;
+};
+
+type NarrowResult<TParseRule extends string> =
+  | NarrowOk
+  | NarrowFail<TParseRule>;
+
+function narrowGuardInputs<
+  TEnv,
+  TStage extends EnvelopeStage,
+  TParseRule extends string
+>({
+  env,
+  STAGE,
+  parseFailedRule,
+}: {
+  env: TEnv;
+  STAGE: TStage;
+  parseFailedRule: TParseRule;
+}): NarrowResult<TParseRule> {
+  if (!isObject(env)) {
+    return {
+      ok: false,
+      reason: "NOT_OBJECT",
+      traceBase: { rulesApplied: [parseFailedRule] as const },
+    };
+  }
+
+  const ids = isObject((env as any).ids) ? (env as any).ids : undefined;
+  const proposalId = typeof ids?.proposalId === "string" ? ids.proposalId : "";
+  const stages = isObject((env as any).stages)
+    ? (env as any).stages
+    : undefined;
+
+  const dep = hasAllDepStages(STAGE, stages);
+
+  if (!ids) {
+    return {
+      ok: false,
+      reason: "MISSING_IDS",
+      traceBase: { proposalId, rulesApplied: [parseFailedRule] as const },
+    };
+  }
+  if (!proposalId) {
+    return {
+      ok: false,
+      reason: "MISSING_PROPOSAL_ID",
+      traceBase: { proposalId, rulesApplied: [parseFailedRule] as const },
+    };
+  }
+  if (dep.needsStages && !stages) {
+    return {
+      ok: false,
+      reason: "MISSING_STAGES",
+      traceBase: { proposalId, rulesApplied: [parseFailedRule] as const },
+    };
+  }
+  if (!dep.ok) {
+    return {
+      ok: false,
+      reason: "MISSING_DEP_STAGE",
+      traceBase: {
+        proposalId,
+        message: `${STAGE}: Missing prereq stage, invalid input.`,
+        rulesApplied: [parseFailedRule] as const,
+      },
+    };
+  }
+
+  return { ok: true, ids, stages, proposalId };
+}
+
 export const guardFactory = <
   TEnv,
   TStage extends EnvelopeStage,
@@ -51,70 +142,42 @@ export const guardFactory = <
   code,
   parseFailedRule,
   message = "Input invalid",
-  pluckParams = (_: SchemaParseParams<TEnv>) => ({}),
+  pluckParams,
 }: {
   STAGE: TStage;
   InputSchema: TSchema;
   code: TCode;
   parseFailedRule: TParseRule;
   message?: string;
-  pluckParams: (args: SchemaParseParams<TEnv>) => unknown;
+  pluckParams: (args: SchemaParseParams<TEnv>) => z.input<TSchema>;
 }) => {
   type Data = z.infer<TSchema>;
 
+  const error = errorResultFactory<TStage, TCode>({
+    stage: STAGE,
+    code,
+    message,
+  });
+
   return (env: TEnv): GuardResult<TStage, TCode, TParseRule, TTrace, Data> => {
-    // const error = errorResultFactory<TTrace & { rulesApplied: TParseRule[] }>();
-    const error = (
-      trace: TTrace & { message?: string; rulesApplied: TParseRule[] }
-    ) => ({
-      ok: false as const,
-      code,
-      stage: STAGE,
-      message: message ? message : `${STAGE}: Invalid input`,
-      trace: { mode: "UNKNOWN" as const, ...trace },
-    });
+    const narrowed = narrowGuardInputs({ env, STAGE, parseFailedRule });
 
-    // 0) Narrow unknown -> object
-    if (!isObject(env)) {
+    if (!narrowed.ok) {
+      // build a trace that satisfies GuardTrace<TTrace, TParseRule>
       return error({
-        rulesApplied: [parseFailedRule],
-      } as any);
+        ...(narrowed.traceBase as any), // only cast lives here, once
+      }) as any;
     }
 
-    const ids = isObject((env as any).ids) ? (env as any).ids : undefined;
-    const proposalId =
-      typeof ids?.proposalId === "string" ? ids.proposalId : "";
-    const stages = isObject((env as any).stages)
-      ? (env as any).stages
-      : undefined;
+    const { ids, stages, proposalId } = narrowed;
 
-    const res = hasAllDepStages(STAGE, stages);
-
-    if (!ids || !proposalId || (res.needsStages && !stages)) {
-      return error({
-        // ids,
-        proposalId,
-        rulesApplied: [parseFailedRule],
-      } as any);
-    }
-
-    if (!res.ok) {
-      return error({
-        proposalId,
-        message: `${STAGE}: Missing prereq stage, invalid input.`,
-        rulesApplied: [parseFailedRule],
-      } as any);
-    }
-
-    // 1) Candidate for schema validation
     const schemaInput = pluckParams({ env, ids, stages, proposalId });
     const parsed = InputSchema.safeParse(schemaInput);
 
     if (!parsed.success) {
       return error({
-        ids,
         message: `${STAGE}: Schema parsing failed, invalid input.`,
-        rulesApplied: [parseFailedRule],
+        rulesApplied: [parseFailedRule] as const,
       } as any);
     }
 

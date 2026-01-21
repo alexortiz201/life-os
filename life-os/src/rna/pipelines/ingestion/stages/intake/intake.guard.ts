@@ -6,8 +6,8 @@ import { IntakeEnvelope } from "#/types/rna/pipeline/ingestion/intake/intake.typ
 import type { SchemaParseParams } from "#/types/rna/pipeline/pipeline-utils/guard-utils.types";
 
 export const guardPreIntake = preGuardFactory({
-  STAGE: "INTAKE",
-  CODE: "INTAKE_PREREQ_MISSING",
+  STAGE: "INTAKE" as const,
+  CODE: "INTAKE_PREREQ_MISSING" as const,
 } as const);
 
 const pluckParams = ({
@@ -25,7 +25,7 @@ const pluckParams = ({
 export const guardIntake = guardFactory({
   STAGE: "INTAKE",
   InputSchema: IntakeInputSchema,
-  code: "INVALID_INTAKE_INPUT",
-  parseFailedRule: "PARSE_FAILED",
+  code: "INVALID_INTAKE_INPUT" as const,
+  parseFailedRule: "PARSE_FAILED" as const,
   pluckParams,
 });

@@ -38,7 +38,7 @@ export function intakeStage(env: IntakeEnvelope): IngestionPipelineEnvelope {
     ids: {
       ...env.ids,
       intakeId,
-      proposalId,
+      // proposalId,
     },
     stages: {
       ...env.stages,

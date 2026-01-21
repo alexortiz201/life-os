@@ -4,6 +4,7 @@ import type {
   IngestionContextSnapshot,
   IngestionPipelineEnvelope,
 } from "#/types/rna/pipeline/ingestion/ingestion.types";
+import { IntakeRawProposal } from "#/types/rna/pipeline/ingestion/intake/intake.types";
 
 type EnvelopePatch = {
   ids?: Partial<IngestionPipelineEnvelope["ids"]>;
@@ -22,11 +23,61 @@ const idsToClear = [
   "commitId",
 ];
 
+const clearDataPerStage = {
+  intake: {
+    ids: [
+      "intakeId",
+      "validationId",
+      "planningId",
+      "executionId",
+      "revalidationId",
+      "commitId",
+      "proposalId",
+      "snapshotId",
+      "effectsLogId",
+    ],
+    stages: [
+      "intake",
+      "validation",
+      "planning",
+      "execution",
+      "revalidation",
+      "commit",
+    ],
+  },
+  validation: {
+    ids: [
+      "validationId",
+      "planningId",
+      "executionId",
+      "revalidationId",
+      "commitId",
+    ],
+    stages: ["validation", "planning", "execution", "revalidation", "commit"],
+  },
+  planning: {
+    ids: ["planningId", "executionId", "revalidationId", "commitId"],
+    stages: ["planning", "execution", "revalidation", "commit"],
+  },
+  execution: {
+    ids: ["executionId", "revalidationId", "commitId", "effectsLogId"],
+    stages: ["execution", "revalidation", "commit"],
+  },
+  revalidation: {
+    ids: ["revalidationId", "commitId"],
+    stages: ["revalidation", "commit"],
+  },
+  commit: {
+    ids: ["commitId"],
+    stages: ["commit"],
+  },
+};
+
 export function clearDefaultIdsPastStage(
   stage: string,
   env: IngestionPipelineEnvelope
 ) {
-  if (stage === "intake") clearIds(env, idsToClear.slice(0));
+  if (stage === "intake") clearIds(env, clearDataPerStage[stage].ids);
   if (stage === "validation") clearIds(env, idsToClear.slice(1));
   if (stage === "planning") clearIds(env, idsToClear.slice(2));
   if (stage === "execution") clearIds(env, idsToClear.slice(3));
@@ -38,6 +89,28 @@ export function clearIds(env: IngestionPipelineEnvelope, ids: Array<string>) {
   for (let id of ids) {
     if ((env.ids as any)[id]) (env.ids as any)[id] = undefined;
   }
+}
+
+function clearStages(env: IngestionPipelineEnvelope, stages: Array<string>) {
+  for (let stage of stages) {
+    if ((env.stages as any)[stage])
+      (env.stages as any)[stage] = { hasRun: false };
+  }
+}
+
+export function resetStagesUpTo(stage: string, env: IngestionPipelineEnvelope) {
+  if (stage === "intake") {
+    clearIds(env, clearDataPerStage[stage].ids);
+    clearStages(env, clearDataPerStage[stage].stages);
+  }
+
+  if (stage === "validation") clearIds(env, idsToClear.slice(1));
+  if (stage === "planning") clearIds(env, idsToClear.slice(2));
+  if (stage === "execution") clearIds(env, idsToClear.slice(3));
+  if (stage === "revalidation") clearIds(env, idsToClear.slice(5));
+  if (stage === "commit") clearIds(env, idsToClear.slice(6));
+
+  return env;
 }
 
 export function assertMatchId(id: string, prefix: string) {
@@ -240,4 +313,18 @@ export function makeSnapshot() {
     timestampMs: 0,
     dependencyVersions: {},
   } satisfies IngestionContextSnapshot;
+}
+
+export function makeRawProposalSchema() {
+  return {
+    intent: "Start weekly reflection workflow",
+    actor: { actorId: "user_1", actorType: "USER" },
+    target: {
+      entity: "REFLECTION",
+      scope: { allowedKinds: ["NOTE"] as const },
+    },
+    dependencies: ["calendar"],
+    impact: "LOW",
+    reversibilityClaim: "REVERSIBLE",
+  } satisfies IntakeRawProposal;
 }

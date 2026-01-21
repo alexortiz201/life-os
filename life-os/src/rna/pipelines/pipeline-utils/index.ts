@@ -1,17 +1,36 @@
-// import { StageOutput } from "#/types/rna/pipeline/ingestion/ingestion.types";
-// import { PipelineStage } from "#/types/rna/pipeline/pipeline.types";
+import {
+  GuardError,
+  GuardTrace,
+} from "#/types/rna/pipeline/pipeline-utils/guard-utils.types";
 
-export const errorResultFactory =
-  <TTrace>() =>
-  ({
+type ClosuredParams<TStage, TCode> = {
+  code: TCode;
+  message?: string;
+  stage: TStage;
+};
+
+export type ErrorFn<TStage, TCode extends string> = <
+  TTrace extends Record<string, unknown>,
+  TParseRule extends string
+>(
+  trace: GuardTrace<TTrace, TParseRule>
+) => GuardError<TStage, TCode, TParseRule, TTrace>;
+
+type ErrorResultFactory = <TStage, TCode extends string>({
+  stage,
+  code,
+  message,
+}: ClosuredParams<TStage, TCode>) => ErrorFn<TStage, TCode>;
+
+export const errorResultFactory: ErrorResultFactory =
+  ({ stage, code, message }) =>
+  (trace) => ({
+    ok: false as const,
     code,
-    message,
-    trace,
-  }: {
-    code: string;
-    message: string;
-    trace: TTrace;
-  }) => ({ ok: false as const, code, message, trace });
+    stage,
+    message: message ?? `${String(stage)}: Invalid input`,
+    trace: { ...trace },
+  });
 
 // export function assertNoHaltingErrors(
 //   envelope: StageOutput,
