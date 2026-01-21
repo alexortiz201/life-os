@@ -11,8 +11,6 @@ import type {
 import { ExecutionInputSchema } from "#/types/rna/pipeline/ingestion/execution/execution.schemas";
 import { STAGE } from "./execution.stage";
 
-const errorResult = errorResultFactory<ExecutionTrace>();
-
 function policyAllowsPartial(
   allowedModes: readonly ["FULL"] | readonly ["FULL", "PARTIAL"]
 ): boolean {
@@ -29,19 +27,17 @@ function isObject(x: unknown): x is Record<string, any> {
 }
 
 export function guardExecution(env: unknown): GuardExecutionResult {
+  const errorResult = errorResultFactory({
+    stage: STAGE,
+    code: "INVALID_EXECUTION_INPUT" as const,
+    message: "Input invalid",
+  });
+  const rulesApplied = ["PARSE_FAILED"] satisfies ExecutionRule[];
+
   // ---------
   // 0) Narrow unknown -> something we can safely optional-chain
   // ---------
-  if (!isObject(env)) {
-    return errorResult({
-      code: "INVALID_EXECUTION_INPUT",
-      message: "Input invalid",
-      trace: {
-        mode: "UNKNOWN",
-        rulesApplied: ["PARSE_FAILED"] satisfies ExecutionRule[],
-      },
-    });
-  }
+  if (!isObject(env)) return errorResult({ rulesApplied });
 
   const ids = isObject(env.ids) ? env.ids : undefined;
   const stages = isObject(env.stages) ? env.stages : undefined;
@@ -49,13 +45,8 @@ export function guardExecution(env: unknown): GuardExecutionResult {
 
   if (!proposalId || !stages) {
     return errorResult({
-      code: "INVALID_EXECUTION_INPUT",
-      message: "Input invalid",
-      trace: {
-        mode: "UNKNOWN",
-        proposalId: proposalId || undefined,
-        rulesApplied: ["PARSE_FAILED"] satisfies ExecutionRule[],
-      },
+      proposalId: proposalId || undefined,
+      rulesApplied,
     });
   }
 
@@ -65,13 +56,8 @@ export function guardExecution(env: unknown): GuardExecutionResult {
   // must exist as objects to proceed
   if (!isObject(validation) || !isObject(planning)) {
     return errorResult({
-      code: "INVALID_EXECUTION_INPUT",
-      message: "Input invalid",
-      trace: {
-        mode: "UNKNOWN",
-        proposalId,
-        rulesApplied: ["PARSE_FAILED"] satisfies ExecutionRule[],
-      },
+      proposalId: proposalId,
+      rulesApplied,
     });
   }
 
@@ -99,16 +85,10 @@ export function guardExecution(env: unknown): GuardExecutionResult {
 
   if (!parsed.success) {
     return errorResult({
-      code: "INVALID_REVALIDATION_INPUT",
-      message: "Input invalid",
-      trace: {
-        mode: "UNKNOWN",
-        proposalId,
-        snapshotId: ids?.snapshotId,
-        planningId: ids?.planningId,
-        allowListCount: 0,
-        rulesApplied: ["PARSE_FAILED"] satisfies ExecutionRule[],
-      },
+      proposalId,
+      ids,
+      allowListCount: 0,
+      rulesApplied,
     });
   }
 

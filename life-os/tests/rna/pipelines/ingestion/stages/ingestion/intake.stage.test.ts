@@ -28,7 +28,7 @@ function lastError(env: IngestionPipelineEnvelope) {
   return env.errors[env.errors.length - 1];
 }
 
-test.skip("appends HALT error when RAW_PROPOSAL missing (structural invalidity)", () => {
+test("appends HALT error when RAW_PROPOSAL missing (structural invalidity)", () => {
   const env = makeEnv();
 
   (env as any).rawProposal = {};
@@ -45,7 +45,7 @@ test.skip("appends HALT error when RAW_PROPOSAL missing (structural invalidity)"
   assert.equal(err.code, "INVALID_INTAKE_INPUT");
 });
 
-test.skip("does not pre-reject on semantic grounds (intake never judges meaning)", () => {
+test("does not pre-reject on semantic grounds (intake never judges meaning)", () => {
   const env = makeEnv();
 
   // Intentionally "weird" / questionable values, but structurally present.
@@ -69,8 +69,9 @@ test.skip("does not pre-reject on semantic grounds (intake never judges meaning)
   assert.equal(out.stages.intake.hasRun, true);
 
   const s = out.stages.intake as any;
-  assert.equal(typeof s.proposalId, "string");
-  // assert.equal(s.proposalId, env.ids.proposalId); // NEED TO FIX !!!!
+
+  assert.equal(typeof s.observed.proposalId, "string");
+  assert.equal(s.observed.proposalId, env.ids.proposalId);
   assert.ok(typeof s.ranAt === "number");
 });
 
@@ -87,73 +88,69 @@ test("writes PROPOSAL_RECORD with stable id + fingerprint + preserved raw payloa
   const intake = out.stages.intake as any;
 
   // must contain stable id
-  assert.equal(intake.proposalId, env.ids.proposalId);
+  assert.equal(intake.observed.proposalId, env.ids.proposalId);
 
   // must preserve raw intent verbatim (or inside preserved_raw_payload)
-  assert.ok(intake.proposalRecord);
-  assert.deepEqual(
-    intake.proposalRecord.preservedRawPayload ??
-      intake.proposalRecord.rawProposal,
-    (env as any).rawProposal
-  );
+  assert.ok(intake.proposal);
+  assert.deepEqual(intake.proposal.rawProposal, (env as any).rawProposal);
 
   // must have fingerprint
-  assert.equal(typeof intake.proposalRecord.fingerprint, "string");
-  assert.ok(intake.proposalRecord.fingerprint.length > 0);
+  assert.equal(typeof intake.proposal.fingerprint, "string");
+  assert.ok(intake.proposal.fingerprint.length > 0);
 
   // must have canonical ordering / normalized fields (shape-level assertion)
-  assert.ok(
-    typeof intake.proposalRecord === "object" && intake.proposalRecord !== null
-  );
+  assert.ok(typeof intake.proposal === "object" && intake.proposal !== null);
 });
 
-// test("determinism: identical rawProposal inputs produce identical fingerprints", () => {
-//   const env1 = makeEnv();
-//   const env2 = makeEnv();
+test("determinism: identical rawProposal inputs produce identical fingerprints", () => {
+  const env1 = makeEnv();
+  const env2 = makeEnv();
 
-//   // Use same proposalId to isolate fingerprint determinism to normalized input.
-//   env2.ids.proposalId = env1.ids.proposalId;
+  env1.ids.proposalId = "proposal_X";
 
-//   const raw = makeRawProposalSchema();
+  // Use same proposalId to isolate fingerprint determinism to normalized input.
+  env2.ids.proposalId = env1.ids.proposalId;
 
-//   (env1 as any).rawProposal = raw;
-//   (env2 as any).rawProposal = { ...raw };
+  const raw = makeRawProposalSchema();
 
-//   const out1 = intakeStage(env1 as any);
-//   const out2 = intakeStage(env2 as any);
+  (env1 as any).rawProposal = raw;
+  (env2 as any).rawProposal = { ...raw };
 
-//   const fp1 = (out1.stages.intake as any).proposalRecord?.fingerprint;
-//   const fp2 = (out2.stages.intake as any).proposalRecord?.fingerprint;
+  const out1 = intakeStage(env1 as any);
+  const out2 = intakeStage(env2 as any);
 
-//   assert.equal(out1.errors.length, 0);
-//   assert.equal(out2.errors.length, 0);
-//   assert.equal(typeof fp1, "string");
-//   assert.equal(typeof fp2, "string");
-//   assert.equal(fp1, fp2);
-// });
+  const fp1 = (out1.stages.intake as any).proposal?.fingerprint;
+  const fp2 = (out2.stages.intake as any).proposal?.fingerprint;
 
-// test("immutability: if intake stage already hasRun, stage should not overwrite existing record", () => {
-//   const env = makeEnv();
+  assert.equal(out1.errors.length, 0);
+  assert.equal(out2.errors.length, 0);
+  assert.equal(typeof fp1, "string");
+  assert.equal(typeof fp2, "string");
+  assert.equal(fp1, fp2);
+});
 
-//   // Simulate already-run intake
-//   (env.stages.intake as any) = {
-//     ...(env.stages.intake as any),
-//     hasRun: true,
-//     intakeId: env.ids.intakeId,
-//     proposalId: env.ids.proposalId,
-//     proposalRecord: { fingerprint: "fp_1", preservedRawPayload: { a: 1 } },
-//   };
+test("immutability: if intake stage already hasRun, stage should not overwrite existing record", () => {
+  const env = makeEnv();
 
-//   // Provide new rawProposal that would otherwise change fingerprint/record
-//   (env as any).rawProposal = makeRawProposalSchema();
-//   (env as any).rawProposal.intent = "DIFFERENT";
+  // Simulate already-run intake
+  (env.stages.intake as any) = {
+    ...(env.stages.intake as any),
+    hasRun: true,
+    intakeId: env.ids.intakeId,
+    proposalId: env.ids.proposalId,
+    proposal: { fingerprint: "fp_1", rawProposal: { a: 1 } },
+  };
 
-//   const out = intakeStage(env as any);
+  // Provide new rawProposal that would otherwise change fingerprint/record
+  (env as any).rawProposal = makeRawProposalSchema();
+  (env as any).rawProposal.intent = "DIFFERENT";
 
-//   // Expect fail-closed: either no-op OR HALT, but must not silently mutate record.
-//   const intake = out.stages.intake as any;
+  const out = intakeStage(env as any);
 
-//   assert.equal(intake.hasRun, true);
-//   assert.equal(intake.proposalRecord.fingerprint, "fp_1");
-//   assert.deepEqual(intake.proposalRecord.preservedRawPayload, { a: 1 });
-// });
+  // Expect fail-closed: either no-op OR HALT, but must not silently mutate record.
+  const intake = out.stages.intake as any;
+
+  assert.equal(intake.hasRun, true);
+  assert.equal(intake.proposal.fingerprint, "fp_1");
+  assert.deepEqual(intake.proposal.rawProposal, { a: 1 });
+});

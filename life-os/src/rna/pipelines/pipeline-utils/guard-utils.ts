@@ -20,22 +20,62 @@ function isObject(x: unknown): x is Record<string, any> {
   return typeof x === "object" && x !== null;
 }
 
-const hasAllDepStages = (STAGE: EnvelopeStage, stages: any | undefined) => {
-  if (STAGE === "ENVELOPE") return { ok: false, needsStages: false };
+const hasAllDepStages = (STAGE: EnvelopeStage, env: any | undefined) => {
+  if (STAGE === "ENVELOPE") {
+    return { ok: false, needsStages: false, needsIds: false };
+  }
 
-  const depStages = INGESTION_STAGE_DEPS[STAGE].stages;
+  const ok = false;
+  const { stages: depStages, ids: depIds } = INGESTION_STAGE_DEPS[STAGE];
   const needsStages = depStages.length > 0;
+  const needsIds = depIds.length > 0;
 
-  if (needsStages && !isObject(stages)) {
-    return { ok: false, needsStages };
+  if (needsIds && !isObject(env?.ids)) {
+    return {
+      ok,
+      needsStages,
+      needsIds,
+      code: `MISSING_ALL_IDS`,
+      message: `env.ids missing`,
+    };
+  }
+  if (needsStages && !isObject(env?.stages)) {
+    return {
+      ok,
+      needsStages,
+      needsIds,
+      code: `MISSING_ALL_STAGES`,
+      message: `env.stages missing`,
+    };
+  }
+
+  for (let id of depIds) {
+    if (!env.ids[id]) {
+      return {
+        ok,
+        needsStages,
+        needsIds,
+        code: `MISSING_ID`,
+        message: `env.id missing: ${id}`,
+      };
+    }
   }
 
   for (let stage of depStages) {
     const stageKey = ENVELOPE_STAGE_TO_KEY[stage];
-    if (!isObject((stages as any)[stageKey])) return { ok: false, needsStages };
+
+    if (!env.stages[stageKey]) {
+      return {
+        ok,
+        needsStages,
+        needsIds,
+        code: `MISSING_STAGE`,
+        message: `env.stage missing: ${stageKey}`,
+      };
+    }
   }
 
-  return { ok: true, needsStages };
+  return { ok: true, needsStages, needsIds };
 };
 
 type NarrowFail<TParseRule extends string> = {
@@ -86,44 +126,51 @@ function narrowGuardInputs<
   }
 
   const ids = isObject((env as any).ids) ? (env as any).ids : undefined;
-  const proposalId = typeof ids?.proposalId === "string" ? ids.proposalId : "";
   const stages = isObject((env as any).stages)
     ? (env as any).stages
     : undefined;
 
-  const dep = hasAllDepStages(STAGE, stages);
+  const dep = hasAllDepStages(STAGE, env);
+  const rulesApplied = [parseFailedRule] as const;
 
-  if (!ids) {
-    return {
-      ok: false,
-      reason: "MISSING_IDS",
-      traceBase: { proposalId, rulesApplied: [parseFailedRule] as const },
-    };
+  if (dep.needsIds) {
+    if (dep.code === "MISSING_ALL_IDS") {
+      return {
+        ok: false,
+        reason: "MISSING_IDS",
+        traceBase: { ids, rulesApplied },
+      };
+    }
+    if (!ids.proposalId) {
+      return {
+        ok: false,
+        reason: "MISSING_PROPOSAL_ID",
+        traceBase: { proposalId: "", rulesApplied },
+      };
+    }
   }
-  if (!proposalId) {
-    return {
-      ok: false,
-      reason: "MISSING_PROPOSAL_ID",
-      traceBase: { proposalId, rulesApplied: [parseFailedRule] as const },
-    };
-  }
-  if (dep.needsStages && !stages) {
-    return {
-      ok: false,
-      reason: "MISSING_STAGES",
-      traceBase: { proposalId, rulesApplied: [parseFailedRule] as const },
-    };
-  }
-  if (!dep.ok) {
-    return {
-      ok: false,
-      reason: "MISSING_DEP_STAGE",
-      traceBase: {
-        proposalId,
-        message: `${STAGE}: Missing prereq stage, invalid input.`,
-        rulesApplied: [parseFailedRule] as const,
-      },
-    };
+
+  const proposalId = ids.proposalId;
+
+  if (dep.needsStages) {
+    if (dep.code === "MISSING_ALL_STAGES") {
+      return {
+        ok: false,
+        reason: "MISSING_STAGES",
+        traceBase: { proposalId, rulesApplied },
+      };
+    }
+    if (dep.code === "MISSING_STAGE") {
+      return {
+        ok: false,
+        reason: "MISSING_DEP_STAGE",
+        traceBase: {
+          proposalId,
+          message: `${STAGE}: Missing prereq stage, invalid input.`,
+          rulesApplied,
+        },
+      };
+    }
   }
 
   return { ok: true, ids, stages, proposalId };
@@ -176,6 +223,7 @@ export const guardFactory = <
 
     if (!parsed.success) {
       return error({
+        ids,
         message: `${STAGE}: Schema parsing failed, invalid input.`,
         rulesApplied: [parseFailedRule] as const,
       } as any);

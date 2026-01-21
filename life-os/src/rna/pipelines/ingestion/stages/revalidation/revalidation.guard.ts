@@ -4,14 +4,9 @@ import { appendError } from "#/rna/envelope/envelope-utils";
 
 import type { RevalidationRule } from "#/types/rna/pipeline/ingestion/revalidation/revalidation.rules";
 import type { IngestionPipelineEnvelope } from "#/types/rna/pipeline/ingestion/ingestion.types";
-import type {
-  GuardRevalidationResult,
-  RevalidationTrace,
-} from "#/types/rna/pipeline/ingestion/revalidation/revalidation.types";
+import type { GuardRevalidationResult } from "#/types/rna/pipeline/ingestion/revalidation/revalidation.types";
 import { RevalidationInputSchema } from "#/types/rna/pipeline/ingestion/revalidation/revalidation.schemas";
 import { STAGE } from "./revalidation.stage";
-
-const errorResult = errorResultFactory<RevalidationTrace>();
 
 function policyAllowsPartial(
   allowedModes: readonly ["FULL"] | readonly ["FULL", "PARTIAL"]
@@ -29,17 +24,18 @@ function isObject(x: unknown): x is Record<string, any> {
 }
 
 export function guardRevalidation(env: unknown): GuardRevalidationResult {
+  const errorResult = errorResultFactory({
+    stage: STAGE,
+    code: "INVALID_REVALIDATION_INPUT" as const,
+    message: "Input invalid",
+  });
+
   // ---------
   // 0) Narrow unknown -> something we can safely optional-chain
   // ---------
   if (!isObject(env)) {
     return errorResult({
-      code: "INVALID_REVALIDATION_INPUT",
-      message: "Input invalid",
-      trace: {
-        mode: "UNKNOWN",
-        rulesApplied: ["PARSE_FAILED"] satisfies RevalidationRule[],
-      },
+      rulesApplied: ["PARSE_FAILED"] satisfies RevalidationRule[],
     });
   }
 
@@ -49,13 +45,8 @@ export function guardRevalidation(env: unknown): GuardRevalidationResult {
 
   if (!proposalId || !stages) {
     return errorResult({
-      code: "INVALID_REVALIDATION_INPUT",
-      message: "Input invalid",
-      trace: {
-        mode: "UNKNOWN",
-        proposalId: proposalId || undefined,
-        rulesApplied: ["PARSE_FAILED"] satisfies RevalidationRule[],
-      },
+      proposalId: proposalId || undefined,
+      rulesApplied: ["PARSE_FAILED"] satisfies RevalidationRule[],
     });
   }
 
@@ -65,13 +56,8 @@ export function guardRevalidation(env: unknown): GuardRevalidationResult {
   // must exist as objects to proceed
   if (!isObject(validation) || !isObject(execution)) {
     return errorResult({
-      code: "INVALID_REVALIDATION_INPUT",
-      message: "Input invalid",
-      trace: {
-        mode: "UNKNOWN",
-        proposalId,
-        rulesApplied: ["PARSE_FAILED"] satisfies RevalidationRule[],
-      },
+      proposalId,
+      rulesApplied: ["PARSE_FAILED"] satisfies RevalidationRule[],
     });
   }
 
@@ -103,16 +89,11 @@ export function guardRevalidation(env: unknown): GuardRevalidationResult {
 
   if (!parsed.success) {
     return errorResult({
-      code: "INVALID_REVALIDATION_INPUT",
-      message: "Input invalid",
-      trace: {
-        mode: "UNKNOWN",
-        proposalId,
-        effectsLogDeclaredProposalId: (effectsLog as any)?.proposalId,
-        effectsLogId: (effectsLog as any)?.effectsLogId ?? ids?.effectsLogId,
-        allowListCount: 0,
-        rulesApplied: ["PARSE_FAILED"] satisfies RevalidationRule[],
-      },
+      proposalId,
+      effectsLogDeclaredProposalId: (effectsLog as any)?.proposalId,
+      effectsLogId: (effectsLog as any)?.effectsLogId ?? ids?.effectsLogId,
+      allowListCount: 0,
+      rulesApplied: ["PARSE_FAILED"] satisfies RevalidationRule[],
     });
   }
 
@@ -148,19 +129,18 @@ export function guardRevalidation(env: unknown): GuardRevalidationResult {
   if (hasNonArtifact) {
     if (!policyAllowsPartial(parsedCommitPolicy.allowedModes)) {
       return errorResult({
+        proposalId,
+        effectsLogDeclaredProposalId: parsedEffectsLog.proposalId,
+        effectsLogId: parsedEffectsLog.effectsLogId,
+        rulesApplied: [
+          "NON_ARTIFACT_EFFECTS_PRESENT",
+          "PARTIAL_NOT_ALLOWED_BY_POLICY",
+        ] satisfies RevalidationRule[],
+
+        mode: "PARTIAL",
         code: "PARTIAL_NOT_ALLOWED",
         message:
           "Commit policy forbids PARTIAL but non-artifact effects are present.",
-        trace: {
-          mode: "PARTIAL",
-          proposalId,
-          effectsLogDeclaredProposalId: parsedEffectsLog.proposalId,
-          effectsLogId: parsedEffectsLog.effectsLogId,
-          rulesApplied: [
-            "NON_ARTIFACT_EFFECTS_PRESENT",
-            "PARTIAL_NOT_ALLOWED_BY_POLICY",
-          ] satisfies RevalidationRule[],
-        },
       });
     }
 

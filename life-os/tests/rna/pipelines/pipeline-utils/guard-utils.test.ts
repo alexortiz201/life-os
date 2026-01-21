@@ -7,7 +7,15 @@ import { guardFactory } from "#/rna/pipelines/pipeline-utils/guard-utils";
 import { preGuardFactory } from "#/rna/pipelines/pipeline-utils/preguard-utils";
 
 import type { IngestionPipelineEnvelope } from "#/types/rna/pipeline/ingestion/ingestion.types";
-import { makeEnv } from "../../../utils";
+import { makeEnv as makeEnvUtils, resetStagesUpTo } from "../../../utils";
+
+const makeEnv = () => {
+  const env = makeEnvUtils();
+
+  resetStagesUpTo("planning", env);
+
+  return env;
+};
 
 function lastError(env: IngestionPipelineEnvelope) {
   return env.errors[env.errors.length - 1];
@@ -101,10 +109,11 @@ test("guardFactory: returns ok:false when schema parsing fails (candidate invali
     InputSchema,
     code: "INVALID_PLANNING_INPUT",
     parseFailedRule: "PARSE_FAILED",
-    pluckParams: ({ proposalId }) => ({
-      proposalId,
-      // snapshotId intentionally missing to fail Zod
-    }),
+    pluckParams: ({ proposalId }) =>
+      ({
+        proposalId,
+        // snapshotId intentionally missing to fail Zod
+      } as unknown as z.input<typeof InputSchema>),
   });
 
   const env = makeEnv();

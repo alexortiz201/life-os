@@ -9,6 +9,23 @@ import { guardPreIntake, guardIntake } from "./intake.guard";
 export const STAGE = "INTAKE" as const;
 
 export function intakeStage(env: IntakeEnvelope): IngestionPipelineEnvelope {
+  const proposalId = env.ids.proposalId ?? getNewId("proposal");
+
+  env.ids.proposalId = proposalId;
+
+  if (env?.stages?.intake?.hasRun) {
+    return appendError(env, {
+      stage: STAGE,
+      severity: "HALT",
+      code: "STAGE_ALREADY_RAN",
+      message: "Stage has already complete",
+      trace: {
+        info: env.stages["intake"],
+      },
+      at: Date.now(),
+    });
+  }
+
   // 1) prereqs (stage-level, before guard)
   const preReqRes = guardPreIntake(env);
 
@@ -31,28 +48,38 @@ export function intakeStage(env: IntakeEnvelope): IngestionPipelineEnvelope {
   // 3) write stage output back into envelope
   const ranAt = Date.now();
   const intakeId = getNewId("intake");
-  const proposalId = getNewId("proposal");
 
   return {
     ...env,
     ids: {
       ...env.ids,
       intakeId,
-      // proposalId,
     },
     stages: {
       ...env.stages,
       intake: {
         hasRun: true,
         ranAt,
-        observed: {} as any,
+        observed: {
+          proposalId,
+        } as any,
         intakeId,
-        proposalId,
-        fingerprint: fingerprint({
-          proposalId: proposalId,
-          intakeId: intakeId,
-        }),
-      } as any,
+        proposal: {
+          id: proposalId,
+          createdAt: `${ranAt}`,
+          actor: result.data.rawProposal.actor,
+          kind: "PROPOSAL_RECORD",
+          trust: "UNTRUSTED",
+          proposalId,
+          // normalized: string;
+          fingerprint: fingerprint({
+            proposalId: proposalId,
+            actor: result.data.rawProposal.actor,
+          }),
+          intakeTimestamp: `${ranAt}`,
+          rawProposal: result.data.rawProposal,
+        },
+      },
     },
   };
 }

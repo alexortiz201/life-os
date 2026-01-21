@@ -49,9 +49,9 @@ export const ProposalRecordSchema = ArtifactBaseSchema.extend({
   trust: z.literal("UNTRUSTED"),
 
   proposalId: ProposalIdSchema,
-  normalized: RawProposalSchema,
+  // normalized: RawProposalSchema,
   fingerprint: z.string().min(1),
   intakeTimestamp: IsoTimestampSchema,
-  rawPayload: z.unknown(),
+  rawProposal: z.unknown(),
 });
 export type ProposalRecord = z.infer<typeof ProposalRecordSchema>;

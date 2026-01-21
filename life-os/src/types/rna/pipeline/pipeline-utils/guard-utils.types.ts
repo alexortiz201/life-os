@@ -9,8 +9,13 @@ export type SchemaParseParams<TEnv = IngestionPipelineEnvelope> = {
 };
 
 export type GuardTrace<TTrace, TParseRule extends string> = TTrace & {
-  mode: "UNKNOWN";
   rulesApplied: readonly TParseRule[];
+  mode?: "UNKNOWN" | string;
+
+  // override-any-default (runtime override fields)
+  code?: string;
+  stage?: EnvelopeStage;
+  message?: string;
 } & Record<string, unknown>;
 
 export type GuardError<
@@ -20,8 +25,8 @@ export type GuardError<
   TTrace
 > = {
   ok: false;
-  code: TCode;
   stage: TStage;
+  code: TCode;
   message: string;
   trace: GuardTrace<TTrace, TRule>;
 };

@@ -2,8 +2,11 @@ import { PipelineStage } from "../pipeline.types";
 import { EnvelopeIds } from "./ingestion.types";
 
 export const INGESTION_STAGE_DEPS = {
-  INTAKE: { stages: [], ids: [] },
-  VALIDATION: { stages: ["INTAKE"], ids: ["proposalId", "snapshotId"] },
+  INTAKE: { stages: [], ids: ["proposalId"] },
+  VALIDATION: {
+    stages: ["INTAKE"],
+    ids: ["proposalId", "snapshotId", "intakeId"],
+  },
   PLANNING: {
     stages: ["VALIDATION"],
     ids: ["proposalId", "validationId", "snapshotId"],

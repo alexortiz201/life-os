@@ -59,7 +59,7 @@ type StageResult<TStageState, TObservedIds> =
    Stage Outputs
    =========================== */
 type IntakeStageOutput = StageResult<
-  { intakeId: string; proposal: ProposalRecord },
+  { intakeId: string; proposal: ProposalRecord }, // rawProposal: result.data.rawProposal,
   IntakeObservedIds
 >;
 

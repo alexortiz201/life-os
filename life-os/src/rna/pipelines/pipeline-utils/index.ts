@@ -1,36 +1,47 @@
+import { EnvelopeStage } from "#/types/rna/envelope/envelope.types";
 import {
   GuardError,
   GuardTrace,
 } from "#/types/rna/pipeline/pipeline-utils/guard-utils.types";
 
-type ClosuredParams<TStage, TCode> = {
-  code: TCode;
-  message?: string;
-  stage: TStage;
+type FactoryGuardError<
+  TStage,
+  TCode extends string,
+  TRule extends string,
+  TTrace
+> = Omit<GuardError<TStage, TCode, TRule, TTrace>, "stage" | "code"> & {
+  stage: TStage | EnvelopeStage;
+  code: TCode | string;
 };
 
 export type ErrorFn<TStage, TCode extends string> = <
   TTrace extends Record<string, unknown>,
-  TParseRule extends string
+  TRule extends string
 >(
-  trace: GuardTrace<TTrace, TParseRule>
-) => GuardError<TStage, TCode, TParseRule, TTrace>;
+  trace: GuardTrace<TTrace, TRule>
+) => FactoryGuardError<TStage, TCode, TRule, TTrace>;
 
-type ErrorResultFactory = <TStage, TCode extends string>({
-  stage,
-  code,
-  message,
-}: ClosuredParams<TStage, TCode>) => ErrorFn<TStage, TCode>;
+export const errorResultFactory =
+  <TStage, TCode extends string>(defaults: {
+    stage: TStage;
+    code: TCode;
+    message?: string;
+  }) =>
+  (args: any) => {
+    const { stage: s, code: c, message: m, ...trace } = args;
 
-export const errorResultFactory: ErrorResultFactory =
-  ({ stage, code, message }) =>
-  (trace) => ({
-    ok: false as const,
-    code,
-    stage,
-    message: message ?? `${String(stage)}: Invalid input`,
-    trace: { ...trace },
-  });
+    const stage = s ?? defaults.stage;
+    const code = c ?? defaults.code;
+    const message = m ?? defaults.message ?? `${String(stage)}: Invalid input`;
+
+    return {
+      ok: false as const,
+      stage,
+      code,
+      message,
+      trace: { ...trace, mode: trace.mode ?? "UNKNOWN" },
+    };
+  };
 
 // export function assertNoHaltingErrors(
 //   envelope: StageOutput,
