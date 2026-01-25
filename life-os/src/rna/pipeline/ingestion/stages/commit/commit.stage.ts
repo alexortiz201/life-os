@@ -9,7 +9,11 @@ import type { CommitRecord } from "#/rna/pipeline/ingestion/stages/commit/commit
 
 import { guardPreCommit, guardCommit } from "./commit.guard";
 import { getNewId } from "#/domain/identity/id.provider";
-import { makeStageLeft, StageLeft } from "#/platform/pipeline/stage/stage";
+import {
+  makeStageLeft,
+  PipelineStageFn,
+  StageLeft,
+} from "#/platform/pipeline/stage/stage";
 
 export const STAGE = "COMMIT" as const;
 
@@ -19,18 +23,17 @@ const TRUST_COMMMITED = "COMMITTED";
 const TRUST_FROM = TRUST_PROVISIONAL;
 const TRUST_TO = TRUST_COMMMITED;
 
+const left = makeStageLeft<IngestionPipelineEnvelope>(appendError);
+
 export type CommitErrorCode =
   | "INVALID_COMMIT_INPUT"
   | "COMMIT_PREREQ_MISSING"
   | "PARTIAL_NOT_ALLOWED";
 
-const left = makeStageLeft<IngestionPipelineEnvelope>(appendError);
-
-export type CommitStage = (
-  env: IngestionPipelineEnvelope
-) => E.Either<
-  StageLeft<IngestionPipelineEnvelope, typeof STAGE, CommitErrorCode>,
-  IngestionPipelineEnvelope
+export type CommitStage = PipelineStageFn<
+  IngestionPipelineEnvelope,
+  typeof STAGE,
+  CommitErrorCode
 >;
 
 export const commitStage: CommitStage = (env) => {

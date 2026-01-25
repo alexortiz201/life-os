@@ -10,6 +10,12 @@ type HasErrors<TErr> = {
   errors: TErr[];
 };
 
+export type PipelineStageFn<
+  Env,
+  Stage extends PipelineStageName,
+  Code extends string
+> = (env: Env) => E.Either<StageLeft<Env, Stage, Code>, Env>;
+
 export type StageLeft<
   TEnv,
   TStage extends PipelineStageName,
