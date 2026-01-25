@@ -7,10 +7,10 @@ import type { IngestionPipelineEnvelope } from "#/rna/pipeline/ingestion/ingesti
 import type { EnvelopeStage } from "#/rna/envelope/envelope.types";
 import { ENVELOPE_STAGE_TO_KEY } from "#/rna/envelope/envelope.const";
 import { INGESTION_STAGE_DEPS } from "#/rna/pipeline/ingestion/ingestion.const";
-import {
+import type {
   GuardResult,
   SchemaParseParams,
-} from "#/rna/pipeline/pipeline-utils/guard-utils.types";
+} from "#/platform/pipeline/guard/guard.factory.types";
 
 /**
  * Minimal runtime narrowing so we can safely pluck from `unknown`.

@@ -1,10 +1,11 @@
-import assert from "node:assert";
+import * as E from "fp-ts/Either";
+import assert from "node:assert/strict";
 
 import type {
   IngestionContextSnapshot,
   IngestionPipelineEnvelope,
 } from "#/rna/pipeline/ingestion/ingestion.types";
-import { IntakeRawProposal } from "#/rna/pipeline/ingestion/intake/intake.types";
+import { IntakeRawProposal } from "#/rna/pipeline/ingestion/stages/intake/intake.types";
 
 type EnvelopePatch = {
   ids?: Partial<IngestionPipelineEnvelope["ids"]>;
@@ -327,4 +328,18 @@ export function makeRawProposalSchema() {
     impact: "LOW",
     reversibilityClaim: "REVERSIBLE",
   } satisfies IntakeRawProposal;
+}
+
+export function lastError(env: IngestionPipelineEnvelope) {
+  return env.errors[env.errors.length - 1];
+}
+
+export function unwrapRight<L, R>(either: E.Either<L, R>): R {
+  assert.ok(E.isRight(either), "expected Right");
+  return either.right;
+}
+
+export function unwrapLeft<L, R>(either: E.Either<L, R>): L {
+  assert.ok(E.isLeft(either), "expected Left");
+  return either.left;
 }

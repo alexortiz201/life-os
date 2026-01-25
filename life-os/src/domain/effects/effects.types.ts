@@ -1,6 +1,6 @@
 import type { z } from "zod";
 import type { EffectSchema } from "./effects.schema";
-import { TrustLevel } from "../../types/domain/trust/trust.types";
+import { TrustLevel } from "#/domain/trust/trust.types";
 
 export type Effect = z.infer<typeof EffectSchema>;
 

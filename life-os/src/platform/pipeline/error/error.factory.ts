@@ -2,7 +2,7 @@ import { EnvelopeStage } from "#/rna/envelope/envelope.types";
 import {
   GuardError,
   GuardTrace,
-} from "#/rna/pipeline/pipeline-utils/guard-utils.types";
+} from "#/platform/pipeline/guard/guard.factory.types";
 
 type FactoryGuardError<
   TStage,

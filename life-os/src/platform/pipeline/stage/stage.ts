@@ -1,10 +1,10 @@
 import * as E from "fp-ts/Either";
-import { appendError } from "#/rna/envelope/envelope-utils";
+// import { appendError } from "#/rna/envelope/envelope-utils";
 import {
   PipelineStageErrorSeverity,
   PipelineStageName,
 } from "#/rna/pipeline/ingestion/ingestion.types";
-import { PipelineStageError } from "#/rna/pipeline/pipeline.types";
+import { PipelineStageError } from "#/platform/pipeline/pipeline.types";
 
 type HasErrors<TErr> = {
   errors: TErr[];
@@ -46,6 +46,7 @@ export function stageLeft<
     err: PipelineStageError<TStage, TSeverity, TCode>
   ) => TEnv;
 }): E.Either<StageLeft<TEnv, TStage, TCode>, never> {
+  // ✅ tighter
   const at = params.at ?? Date.now();
 
   const nextEnv = params.appendError(params.env, {
@@ -66,6 +67,20 @@ export function stageLeft<
   return E.left({ env: nextEnv, error });
 }
 
+export function leftFromLastError<
+  TEnv extends HasErrors<PipelineStageError<any, any, any>>,
+  TStage extends PipelineStageName,
+  TCode extends string
+>(env: TEnv): E.Either<StageLeft<TEnv, TStage, TCode>, never> {
+  const error = env.errors[env.errors.length - 1] as PipelineStageError<
+    TStage,
+    PipelineStageErrorSeverity,
+    TCode
+  >;
+
+  return E.left({ env, error });
+}
+
 export const makeStageLeft =
   <TEnv extends HasErrors<any>>(appendError: (env: TEnv, err: any) => TEnv) =>
   <
@@ -80,7 +95,7 @@ export const makeStageLeft =
     message: string;
     trace?: unknown;
     at?: number;
-  }) =>
+  }): E.Either<StageLeft<TEnv, TStage, TCode>, never> =>
     stageLeft({
       ...params,
       appendError,

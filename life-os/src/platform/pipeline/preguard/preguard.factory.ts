@@ -5,8 +5,8 @@ import {
   EnvelopeIds,
   IngestionPipelineEnvelope,
 } from "#/rna/pipeline/ingestion/ingestion.types";
-import { PreGuardResult } from "#/rna/pipeline/pipeline-utils/preguard-utils.types";
-import { PipelineStage } from "#/rna/pipeline/pipeline.types";
+import { PreGuardResult } from "#/platform/pipeline/preguard/preguard.factory.types";
+import { PipelineStage } from "#/platform/pipeline/pipeline.types";
 
 const assertStageHasRun = ({
   env,

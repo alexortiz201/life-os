@@ -7,10 +7,10 @@
     "clean": "rm -rf dist",
     "typecheck": "tsc -p tsconfig.json",
     "build": "tsc -p tsconfig.build.json",
-    "test": "node --require ts-node/register --require tsconfig-paths/register --test tests/**/*.test.ts",
-    "test:watch": "node --require ts-node/register --require tsconfig-paths/register --test --watch tests/**/*.test.ts",
+    "test": "node --require ts-node/register --require tsconfig-paths/register --test \"src/**/*.test.ts\" \"tests/**/*.test.ts\"",
+    "test:watch": "node --require ts-node/register --require tsconfig-paths/register --test --watch \"src/**/*.test.ts\" \"tests/**/*.test.ts\"",
     "verify": "npm run typecheck && npm run build && npm run test",
-    "verify:only": "node --require ts-node/register --require tsconfig-paths/register --test",
+    "verify:only": "sh -c 'node --require ts-node/register --require tsconfig-paths/register --test \"$@\"' --",
     "lint": "biome lint .",
     "format": "biome format . --write",
     "check": "biome check . --write"
