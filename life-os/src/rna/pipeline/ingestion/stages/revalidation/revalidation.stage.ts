@@ -5,7 +5,11 @@ import { appendError, hasHaltingErrors } from "#/rna/envelope/envelope-utils";
 import type { IngestionPipelineEnvelope } from "#/rna/pipeline/ingestion/ingestion.types";
 
 import { guardPreRevalidation, guardRevalidation } from "./revalidation.guard";
-import { makeStageLeft, StageLeft } from "#/platform/pipeline/stage/stage";
+import {
+  makeStageLeft,
+  PipelineStageFn,
+  StageLeft,
+} from "#/platform/pipeline/stage/stage";
 
 export const STAGE = "REVALIDATION" as const;
 
@@ -15,11 +19,10 @@ export type RevalidationErrorCode =
 
 const left = makeStageLeft<IngestionPipelineEnvelope>(appendError);
 
-export type RevalidationStage = (
-  env: IngestionPipelineEnvelope
-) => E.Either<
-  StageLeft<IngestionPipelineEnvelope, typeof STAGE, RevalidationErrorCode>,
-  IngestionPipelineEnvelope
+export type RevalidationStage = PipelineStageFn<
+  IngestionPipelineEnvelope,
+  typeof STAGE,
+  RevalidationErrorCode
 >;
 
 export const revalidationStage: RevalidationStage = (env) => {

@@ -78,13 +78,18 @@ export function leftFromLastError<
   TStage extends PipelineStageName,
   TCode extends string
 >(env: TEnv): E.Either<StageLeft<TEnv, TStage, TCode>, never> {
-  const error = env.errors[env.errors.length - 1] as PipelineStageError<
-    TStage,
-    PipelineStageErrorSeverity,
-    TCode
-  >;
-
-  return E.left({ env, error });
+  const error = env.errors.at(-1);
+  if (!error) {
+    throw new Error("leftFromLastError: env.errors is empty");
+  }
+  return E.left({
+    env,
+    error: error as PipelineStageError<
+      TStage,
+      PipelineStageErrorSeverity,
+      TCode
+    >,
+  });
 }
 
 export const makeStageLeft =

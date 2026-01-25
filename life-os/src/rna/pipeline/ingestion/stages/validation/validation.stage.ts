@@ -9,7 +9,11 @@ import { appendError, hasHaltingErrors } from "#/rna/envelope/envelope-utils";
 import type { IngestionPipelineEnvelope } from "#/rna/pipeline/ingestion/ingestion.types";
 import { guardPreValidation, guardValidation } from "./validation.guard";
 
-import { makeStageLeft, StageLeft } from "#/platform/pipeline/stage/stage";
+import {
+  makeStageLeft,
+  PipelineStageFn,
+  StageLeft,
+} from "#/platform/pipeline/stage/stage";
 
 export const STAGE = "VALIDATION" as const;
 
@@ -20,11 +24,10 @@ export type ValidationErrorCode =
 
 const left = makeStageLeft<IngestionPipelineEnvelope>(appendError);
 
-export type ValidationStage = (
-  env: IngestionPipelineEnvelope
-) => E.Either<
-  StageLeft<IngestionPipelineEnvelope, typeof STAGE, ValidationErrorCode>,
-  IngestionPipelineEnvelope
+export type ValidationStage = PipelineStageFn<
+  IngestionPipelineEnvelope,
+  typeof STAGE,
+  ValidationErrorCode
 >;
 
 export const validationStage: ValidationStage = (env) => {

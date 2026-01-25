@@ -6,7 +6,11 @@ import { appendError, hasHaltingErrors } from "#/rna/envelope/envelope-utils";
 import type { IngestionPipelineEnvelope } from "#/rna/pipeline/ingestion/ingestion.types";
 
 import { guardPreExecution, guardExecution } from "./execution.guard";
-import { makeStageLeft, StageLeft } from "#/platform/pipeline/stage/stage";
+import {
+  makeStageLeft,
+  PipelineStageFn,
+  StageLeft,
+} from "#/platform/pipeline/stage/stage";
 
 export const STAGE = "EXECUTION" as const;
 
@@ -16,11 +20,10 @@ export type ExecutionErrorCode =
 
 const left = makeStageLeft<IngestionPipelineEnvelope>(appendError);
 
-export type ExecutionStage = (
-  env: IngestionPipelineEnvelope
-) => E.Either<
-  StageLeft<IngestionPipelineEnvelope, typeof STAGE, ExecutionErrorCode>,
-  IngestionPipelineEnvelope
+export type ExecutionStage = PipelineStageFn<
+  IngestionPipelineEnvelope,
+  typeof STAGE,
+  ExecutionErrorCode
 >;
 
 export const executionStage: ExecutionStage = (env) => {

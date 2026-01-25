@@ -7,7 +7,11 @@ import { appendError, hasHaltingErrors } from "#/rna/envelope/envelope-utils";
 import type { IngestionPipelineEnvelope } from "#/rna/pipeline/ingestion/ingestion.types";
 
 import { guardPrePlanning, guardPlanning } from "./planning.guard";
-import { makeStageLeft, StageLeft } from "#/platform/pipeline/stage/stage";
+import {
+  makeStageLeft,
+  PipelineStageFn,
+  StageLeft,
+} from "#/platform/pipeline/stage/stage";
 
 export const STAGE = "PLANNING" as const;
 
@@ -17,11 +21,10 @@ export type PlanningErrorCode =
 
 const left = makeStageLeft<IngestionPipelineEnvelope>(appendError);
 
-export type PlanningStage = (
-  env: IngestionPipelineEnvelope
-) => E.Either<
-  StageLeft<IngestionPipelineEnvelope, typeof STAGE, PlanningErrorCode>,
-  IngestionPipelineEnvelope
+export type PlanningStage = PipelineStageFn<
+  IngestionPipelineEnvelope,
+  typeof STAGE,
+  PlanningErrorCode
 >;
 
 export const planningStage: PlanningStage = (env) => {
