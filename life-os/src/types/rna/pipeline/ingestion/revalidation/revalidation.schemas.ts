@@ -1,9 +1,9 @@
 import { z } from "zod";
 
-import { COMMIT_OUTCOMES } from "#/types/rna/pipeline/ingestion/commit/commitDecision.constants";
+import { COMMIT_OUTCOMES } from "#/rna/pipeline/ingestion/commit/commitDecision.constants";
 
-import { CommitPolicySchema } from "#/types/rna/pipeline/ingestion/validation/validation.schemas";
-import { ExecutionEffectsLogSchema } from "#/types/rna/pipeline/ingestion/execution/execution.schemas";
+import { CommitPolicySchema } from "#/rna/pipeline/ingestion/validation/validation.schemas";
+import { ExecutionEffectsLogSchema } from "#/rna/pipeline/ingestion/execution/execution.schemas";
 
 export const RevalidationCommitDirectiveSchema = z.object({
   proposalId: z.string().min(1),

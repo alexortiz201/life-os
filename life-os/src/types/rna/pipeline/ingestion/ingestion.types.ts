@@ -1,17 +1,17 @@
-import { Effect } from "#/types/domain/effects/effects.types";
+import { Effect } from "#/domain/effects/effects.types";
 import {
   PipelineEnvelope,
   PipelineStage,
   PipelineStageError,
-} from "#/types/rna/pipeline/pipeline.types";
+} from "#/rna/pipeline/pipeline.types";
 
-import { CommitPolicy } from "#/types/rna/pipeline/ingestion/validation/validation.types";
-import { RevalidationGuardOutput } from "#/types/rna/pipeline/ingestion/revalidation/revalidation.types";
-import { CommitRecord } from "#/types/rna/pipeline/ingestion/commit/commit.types";
-import { Permission } from "#/types/domain/permissions/permissions.types";
-import { Kinds } from "#/types/domain/scopes/scopes.types";
-import { ContextSnapshot } from "#/types/domain/snapshot/snapshot.provider.types";
-import { ProposalRecord } from "#/types/domain/proposals/proposals.schemas";
+import { CommitPolicy } from "#/rna/pipeline/ingestion/validation/validation.types";
+import { RevalidationGuardOutput } from "#/rna/pipeline/ingestion/revalidation/revalidation.types";
+import { CommitRecord } from "#/rna/pipeline/ingestion/commit/commit.types";
+import { Permission } from "#/domain/permissions/permissions.types";
+import { Kinds } from "#/domain/scopes/scopes.types";
+import { ContextSnapshot } from "#/domain/snapshot/snapshot.provider.types";
+import { ProposalRecord } from "#/domain/proposals/proposals.schemas";
 
 /**
  * Canonical IDs carried by the envelope.
@@ -100,8 +100,8 @@ export type IngestionStages = {
 /* ===========================
    Errors & Envelope
    =========================== */
-type PipelineStageErrorSeverity = "HALT" | "WARN";
-type PipelineStageName = PipelineStage | "ENVELOPE";
+export type PipelineStageErrorSeverity = "HALT" | "WARN";
+export type PipelineStageName = PipelineStage | "ENVELOPE";
 
 type IngestionMeta = Partial<{
   // convenience mirrors only (optional)

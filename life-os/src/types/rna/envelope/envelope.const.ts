@@ -1,5 +1,5 @@
-import { PipelineStage } from "#/types/rna/pipeline/pipeline.types";
-import { IngestionStages } from "#/types/rna/pipeline/ingestion/ingestion.types";
+import { PipelineStage } from "#/rna/pipeline/pipeline.types";
+import { IngestionStages } from "#/rna/pipeline/ingestion/ingestion.types";
 import { EnvelopeStage } from "./envelope.types";
 
 export const KEY_TO_ENVELOPE_STAGE: Record<

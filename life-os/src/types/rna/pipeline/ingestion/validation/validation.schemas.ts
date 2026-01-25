@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { IngestionContextSnapshotSchema } from "#/types/domain/snapshot/snapshot.provider.schemas";
+import { IngestionContextSnapshotSchema } from "#/domain/snapshot/snapshot.provider.schemas";
 
 export const CommitPolicySchema = z.object({
   allowedModes: z.union([

@@ -1,23 +1,23 @@
-import { errorResultFactory } from "#/rna/pipelines/pipeline-utils";
-import type { IngestionPipelineEnvelope } from "#/types/rna/pipeline/ingestion/ingestion.types";
+import { errorResultFactory } from "#/platform/pipeline/error/error.factory";
+import type { IngestionPipelineEnvelope } from "#/rna/pipeline/ingestion/ingestion.types";
 
 import type {
   ArtifactEffect,
   EventEffect,
   UnknownEffect,
-} from "#/types/domain/effects/effects.types";
+} from "#/domain/effects/effects.types";
 import type {
   EffectDecisionMode,
   EffectDecisionModeOrUnknown,
-} from "#/types/rna/pipeline/pipeline.types";
+} from "#/rna/pipeline/pipeline.types";
 
-import type { PrecommitRule } from "#/types/rna/pipeline/ingestion/commit/commit.rules";
-import { CommitInputSchema } from "#/types/rna/pipeline/ingestion/commit/commit.schemas";
+import type { PrecommitRule } from "#/rna/pipeline/ingestion/commit/commit.rules";
+import { CommitInputSchema } from "#/rna/pipeline/ingestion/commit/commit.schemas";
 import type {
-  GuardCommitResult,
+  // GuardCommitResult,
   CommitGuardOutput,
   RejectedEffect,
-} from "#/types/rna/pipeline/ingestion/commit/commit.types";
+} from "#/rna/pipeline/ingestion/commit/commit.types";
 import { appendError } from "#/rna/envelope/envelope-utils";
 
 import { STAGE } from "./commit.stage";
@@ -25,6 +25,22 @@ import { STAGE } from "./commit.stage";
 function isObject(x: unknown): x is Record<string, unknown> {
   return typeof x === "object" && x !== null;
 }
+
+type CommitGuardErrorCode =
+  | "INVALID_COMMIT_INPUT"
+  | "COMMIT_INPUT_MISMATCH"
+  | "COMMIT_OUTCOME_UNSUPPORTED"
+  | "ALLOWLIST_UNKNOWN_OBJECT";
+
+export type GuardCommitResult =
+  | { ok: true; data: CommitGuardOutput }
+  | {
+      ok: false;
+      stage: typeof STAGE; // "COMMIT"
+      code: CommitGuardErrorCode; // <-- union, NOT string
+      message: string;
+      trace: unknown; // or your trace type
+    };
 
 export function guardCommit(env: unknown): GuardCommitResult {
   const errorResult = errorResultFactory({

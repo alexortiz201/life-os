@@ -2,7 +2,7 @@ import { fingerprint } from "#/domain/encoding/fingerprint";
 import { getNewId } from "#/domain/identity/id.provider";
 import { appendError, hasHaltingErrors } from "#/rna/envelope/envelope-utils";
 
-import type { IngestionPipelineEnvelope } from "#/types/rna/pipeline/ingestion/ingestion.types";
+import type { IngestionPipelineEnvelope } from "#/rna/pipeline/ingestion/ingestion.types";
 import { guardPreValidation, guardValidation } from "./validation.guard";
 
 export const STAGE = "VALIDATION" as const;

@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { makeRawProposalSchema } from "#/types/domain/proposals/proposals.schemas";
-import { KINDS } from "#/types/domain/scopes/scopes.const";
+import { makeRawProposalSchema } from "#/domain/proposals/proposals.schemas";
+import { KINDS } from "#/domain/scopes/scopes.const";
 
 export const IntakeRawProposalSchema = makeRawProposalSchema(z.enum(KINDS));
 

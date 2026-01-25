@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-import { EffectSchema } from "#/types/domain/effects/effects.schema";
-import { CommitPolicySchema } from "#/types/rna/pipeline/ingestion/validation/validation.schemas";
+import { EffectSchema } from "#/domain/effects/effects.schema";
+import { CommitPolicySchema } from "#/rna/pipeline/ingestion/validation/validation.schemas";
 
 export const ExecutionEffectsLogSchema = z.object({
   effectsLogId: z.string().min(1),

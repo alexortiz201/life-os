@@ -1,4 +1,4 @@
-import { EnvelopeStage } from "#/types/rna/envelope/envelope.types";
+import { EnvelopeStage } from "#/rna/envelope/envelope.types";
 import { IngestionPipelineEnvelope } from "../ingestion/ingestion.types";
 
 export type SchemaParseParams<TEnv = IngestionPipelineEnvelope> = {

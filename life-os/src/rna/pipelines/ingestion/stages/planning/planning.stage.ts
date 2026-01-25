@@ -1,7 +1,7 @@
 import { fingerprint } from "#/domain/encoding/fingerprint";
 import { appendError, hasHaltingErrors } from "#/rna/envelope/envelope-utils";
 
-import type { IngestionPipelineEnvelope } from "#/types/rna/pipeline/ingestion/ingestion.types";
+import type { IngestionPipelineEnvelope } from "#/rna/pipeline/ingestion/ingestion.types";
 
 import { guardPrePlanning, guardPlanning } from "./planning.guard";
 

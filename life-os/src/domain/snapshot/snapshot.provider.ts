@@ -1,4 +1,4 @@
-import { IngestionContextSnapshot } from "#/types/rna/pipeline/ingestion/ingestion.types";
+import { IngestionContextSnapshot } from "#/rna/pipeline/ingestion/ingestion.types";
 
 export function getContextSnapshot(env: any): IngestionContextSnapshot {
   const validIngestionSnapshot = {

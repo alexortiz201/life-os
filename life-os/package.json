@@ -19,6 +19,7 @@
   "type": "commonjs",
   "dependencies": {
     "@epic-web/invariant": "^1.0.0",
+    "fp-ts": "^2.16.11",
     "zod": "^4.3.4"
   },
   "devDependencies": {

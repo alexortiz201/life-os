@@ -1,4 +1,7 @@
 import type { PIPELINE_STAGES } from "./pipeline.constants";
+import * as E from "fp-ts/Either";
+
+export type Stage<E, A> = (env: A) => E.Either<E, A>;
 
 export type PipelineStage = (typeof PIPELINE_STAGES)[number];
 
@@ -18,13 +21,23 @@ export type StageGuardTrace<
   rulesApplied: TRule[];
 }>;
 
-export type PipelineStageError<TStageName, TStageErrorSeverity> = {
+// type StageErrorCode =
+//   | "INVALID_COMMIT_INPUT"
+//   | "COMMIT_PREREQ_MISSING"
+//   | "PARTIAL_NOT_ALLOWED"
+//   | ...;
+
+export type PipelineStageError<
+  TStageName,
+  TStageErrorSeverity,
+  TCode extends string = string
+> = {
   stage: TStageName;
   severity: TStageErrorSeverity;
-  code: string;
+  code: TCode;
   message: string;
   trace?: unknown;
-  at: number; // timestamp
+  at: number;
 };
 
 export type PipelineEnvelope<

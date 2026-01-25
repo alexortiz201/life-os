@@ -1,11 +1,11 @@
 import { isProvisionalArtifactEffect } from "#/domain/effects/effects.guards";
-import { errorResultFactory } from "#/rna/pipelines/pipeline-utils";
+import { errorResultFactory } from "#/platform/pipeline/error/error.factory";
 import { appendError } from "#/rna/envelope/envelope-utils";
 
-import type { RevalidationRule } from "#/types/rna/pipeline/ingestion/revalidation/revalidation.rules";
-import type { IngestionPipelineEnvelope } from "#/types/rna/pipeline/ingestion/ingestion.types";
-import type { GuardRevalidationResult } from "#/types/rna/pipeline/ingestion/revalidation/revalidation.types";
-import { RevalidationInputSchema } from "#/types/rna/pipeline/ingestion/revalidation/revalidation.schemas";
+import type { RevalidationRule } from "#/rna/pipeline/ingestion/revalidation/revalidation.rules";
+import type { IngestionPipelineEnvelope } from "#/rna/pipeline/ingestion/ingestion.types";
+import type { GuardRevalidationResult } from "#/rna/pipeline/ingestion/revalidation/revalidation.types";
+import { RevalidationInputSchema } from "#/rna/pipeline/ingestion/revalidation/revalidation.schemas";
 import { STAGE } from "./revalidation.stage";
 
 function policyAllowsPartial(

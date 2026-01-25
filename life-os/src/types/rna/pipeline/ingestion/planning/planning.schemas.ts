@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { CommitPolicySchema } from "#/types/rna/pipeline/ingestion/validation/validation.schemas";
+import { CommitPolicySchema } from "#/rna/pipeline/ingestion/validation/validation.schemas";
 
 export const PlanningSchema = z.object({
   planningId: z.string().min(1),

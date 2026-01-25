@@ -1,10 +1,10 @@
 import { getContextSnapshot } from "#/domain/snapshot/snapshot.provider";
 
-import { guardFactory } from "#/rna/pipelines/pipeline-utils/guard-utils";
-import { preGuardFactory } from "#/rna/pipelines/pipeline-utils/preguard-utils";
+import { guardFactory } from "#/platform/pipeline/guard/guard.factory";
+import { preGuardFactory } from "#/platform/pipeline/preguard/preguard.factory";
 
-import { ValidationInputSchema } from "#/types/rna/pipeline/ingestion/validation/validation.schemas";
-import type { SchemaParseParams } from "#/types/rna/pipeline/pipeline-utils/guard-utils.types";
+import { ValidationInputSchema } from "#/rna/pipeline/ingestion/validation/validation.schemas";
+import type { SchemaParseParams } from "#/rna/pipeline/pipeline-utils/guard-utils.types";
 
 export const guardPreValidation = preGuardFactory({
   STAGE: "VALIDATION",
