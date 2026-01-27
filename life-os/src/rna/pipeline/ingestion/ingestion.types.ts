@@ -1,4 +1,3 @@
-import { Effect } from "#/domain/effects/effects.types";
 import {
   PipelineEnvelope,
   PipelineStage,
