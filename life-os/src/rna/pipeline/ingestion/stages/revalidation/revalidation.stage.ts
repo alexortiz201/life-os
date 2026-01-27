@@ -6,10 +6,11 @@ import type { IngestionPipelineEnvelope } from "#/rna/pipeline/ingestion/ingesti
 
 import { guardPreRevalidation, guardRevalidation } from "./revalidation.guard";
 import {
+  leftFromLastError,
   makeStageLeft,
   PipelineStageFn,
-  StageLeft,
 } from "#/platform/pipeline/stage/stage";
+import { getNewId } from "#/domain/identity/id.provider";
 
 export const STAGE = "REVALIDATION" as const;
 
@@ -34,16 +35,15 @@ export const revalidationStage: RevalidationStage = (env) => {
 
     // 1) prereqs
     E.chain((env) => {
-      const pre = guardPreRevalidation(env);
+      const pre = guardPreRevalidation(env as any);
+
       return pre.ok
         ? E.right(pre.env)
-        : left({
-            env: pre.env,
-            stage: STAGE,
-            code: "REVALIDATION_PREREQ_MISSING",
-            message: "Revalidation prereqs missing.",
-            trace: { why: "preGuardFactory" },
-          });
+        : leftFromLastError<
+            IngestionPipelineEnvelope,
+            typeof STAGE,
+            RevalidationErrorCode
+          >(pre.env);
     }),
 
     // 2) guard (schema/contract)
@@ -64,7 +64,7 @@ export const revalidationStage: RevalidationStage = (env) => {
     // 3) write stage output
     E.map(({ env, data }) => {
       const ranAt = Date.now();
-      const revalidationId = `revalidation_${ranAt}`;
+      const revalidationId = getNewId("revalidation");
 
       const observed = {
         snapshotId: env.ids.snapshotId,
@@ -74,24 +74,19 @@ export const revalidationStage: RevalidationStage = (env) => {
         planningId: env.ids.planningId,
         effectsLogId: env.ids.effectsLogId,
       };
+      const revalidation = {
+        hasRun: true,
+        ranAt,
+        observed,
+        revalidationId,
+        ...data,
+      } satisfies IngestionPipelineEnvelope["stages"]["revalidation"];
 
       return {
         ...env,
-        ids: {
-          ...env.ids,
-          revalidationId,
-        },
-        stages: {
-          ...env.stages,
-          revalidation: {
-            hasRun: true,
-            ranAt,
-            observed,
-            revalidationId,
-            ...data,
-          },
-        },
-      } as IngestionPipelineEnvelope;
+        ids: { ...env.ids, revalidationId },
+        stages: { ...env.stages, revalidation },
+      };
     })
   );
 };

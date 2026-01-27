@@ -5,13 +5,17 @@ import {
   PipelineStageError,
 } from "#/platform/pipeline/pipeline.types";
 
-import { CommitPolicy } from "#/rna/pipeline/ingestion/stages/validation/validation.types";
+import {
+  CommitPolicy,
+  DecisionType,
+} from "#/rna/pipeline/ingestion/stages/validation/validation.types";
 import { RevalidationGuardOutput } from "#/rna/pipeline/ingestion/stages/revalidation/revalidation.types";
 import { CommitRecord } from "#/rna/pipeline/ingestion/stages/commit/commit.types";
 import { Permission } from "#/domain/permissions/permissions.types";
 import { Kinds } from "#/domain/scopes/scopes.types";
 import { ContextSnapshot } from "#/domain/snapshot/snapshot.provider.types";
 import { ProposalRecord } from "#/domain/proposals/proposals.schemas";
+import { ExecutionEffectsLog } from "#/rna/pipeline/ingestion/stages/execution/execution.types";
 
 /**
  * Canonical IDs carried by the envelope.
@@ -50,6 +54,7 @@ type IntakeObservedIds = Omit<ObservedIds<never>, "snapshotId">;
 type StageResult<TStageState, TObservedIds> =
   | { hasRun: false }
   | ({
+      // ids: Record<keyof TObservedIds, string>;
       hasRun: true;
       ranAt: number;
       observed: TObservedIds;
@@ -58,28 +63,47 @@ type StageResult<TStageState, TObservedIds> =
 /* ===========================
    Stage Outputs
    =========================== */
-type IntakeStageOutput = StageResult<
-  { intakeId: string; proposal: ProposalRecord }, // rawProposal: result.data.rawProposal,
-  IntakeObservedIds
->;
+type IntakeStageState = { intakeId: string; proposal: ProposalRecord };
+type IntakeStageOutput = StageResult<IntakeStageState, IntakeObservedIds>;
 
+type ValidationStageState = {
+  validationId: string;
+  commitPolicy: CommitPolicy;
+  decisionType: DecisionType;
+  decidedAt: number;
+  justification: boolean;
+  attribution: Array<any>;
+  fingerprint: string;
+};
 type ValidationStageOutput = StageResult<
-  { validationId: string; commitPolicy: CommitPolicy },
+  ValidationStageState,
   ObservedIds<"intakeId">
 >;
 
+type PlanningStageState = {
+  planningId: string;
+  plan: string[];
+  fingerprint: string;
+};
 type PlanningStageOutput = StageResult<
-  { planningId: string },
+  PlanningStageState,
   ObservedIds<"validationId">
 >;
 
+type ExecutionStageState = {
+  executionId: string;
+  effectsLog: ExecutionEffectsLog;
+};
 type ExecutionStageOutput = StageResult<
-  { executionId: string; producedEffects: Effect[] },
+  ExecutionStageState,
   ObservedIds<"planningId">
 >;
 
+type RevalidationStageState = {
+  revalidationId: string;
+} & RevalidationGuardOutput;
 type RevalidationStageOutput = StageResult<
-  { revalidationId: string } & RevalidationGuardOutput,
+  RevalidationStageState,
   ObservedIds<"effectsLogId">
 >;
 

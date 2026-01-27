@@ -8,10 +8,11 @@ import type { IngestionPipelineEnvelope } from "#/rna/pipeline/ingestion/ingesti
 
 import { guardPrePlanning, guardPlanning } from "./planning.guard";
 import {
+  leftFromLastError,
   makeStageLeft,
   PipelineStageFn,
-  StageLeft,
 } from "#/platform/pipeline/stage/stage";
+import { getNewId } from "#/domain/identity/id.provider";
 
 export const STAGE = "PLANNING" as const;
 
@@ -36,17 +37,15 @@ export const planningStage: PlanningStage = (env) => {
 
     // 1) prereqs (stage-level, before guard)
     E.chain((env) => {
-      const pre = guardPrePlanning(env);
+      const pre = guardPrePlanning(env as any);
 
       return pre.ok
         ? E.right(pre.env)
-        : left({
-            env: pre.env, // note: pre.env already has the appended error
-            stage: STAGE,
-            code: "PLANNING_PREREQ_MISSING",
-            message: "Planning prereqs missing.",
-            trace: { why: "preGuardFactory" },
-          });
+        : leftFromLastError<
+            IngestionPipelineEnvelope,
+            typeof STAGE,
+            PlanningErrorCode
+          >(pre.env);
     }),
 
     // 2) run guard (guard plucks directly from env)
@@ -76,34 +75,29 @@ export const planningStage: PlanningStage = (env) => {
     // 3) write stage output back into envelope
     E.map(({ env, data }) => {
       const ranAt = Date.now();
-      const planningId = `planning_${ranAt}`;
+      const planningId = getNewId("planning");
+      const planning = {
+        hasRun: true,
+        ranAt,
+        observed: {
+          proposalId: env.ids.proposalId,
+          snapshotId: env.ids.snapshotId,
+        },
+        planningId,
+        plan: data.plan,
+        fingerprint: fingerprint({
+          proposalId: env.ids.proposalId,
+          snapshotId: env.ids.snapshotId,
+          plan: data.plan,
+          commitPolicy: data.commitPolicy,
+        }),
+      } satisfies IngestionPipelineEnvelope["stages"]["planning"];
 
       return {
         ...env,
-        ids: {
-          ...env.ids,
-          planningId,
-        },
-        stages: {
-          ...env.stages,
-          planning: {
-            hasRun: true,
-            ranAt,
-            observed: {
-              proposalId: env.ids.proposalId,
-              snapshotId: env.ids.snapshotId,
-            } as any,
-            planningId,
-            plan: data.plan,
-            fingerprint: fingerprint({
-              proposalId: env.ids.proposalId,
-              snapshotId: env.ids.snapshotId,
-              plan: data.plan,
-              commitPolicy: data.commitPolicy,
-            }),
-          } as any,
-        },
-      } as IngestionPipelineEnvelope;
+        ids: { ...env.ids, planningId },
+        stages: { ...env.stages, planning },
+      };
     })
   );
 };

@@ -1,4 +1,3 @@
-// validation.stage.ts
 import { pipe } from "fp-ts/function";
 import * as E from "fp-ts/Either";
 
@@ -10,9 +9,9 @@ import type { IngestionPipelineEnvelope } from "#/rna/pipeline/ingestion/ingesti
 import { guardPreValidation, guardValidation } from "./validation.guard";
 
 import {
+  leftFromLastError,
   makeStageLeft,
   PipelineStageFn,
-  StageLeft,
 } from "#/platform/pipeline/stage/stage";
 
 export const STAGE = "VALIDATION" as const;
@@ -37,19 +36,16 @@ export const validationStage: ValidationStage = (env) => {
   return pipe(
     E.right(env),
 
-    // 1) prereqs (stage-level, before guard)
     E.chain((env) => {
-      const pre = guardPreValidation(env);
+      const pre = guardPreValidation(env as any);
 
       return pre.ok
         ? E.right(pre.env)
-        : left({
-            env: pre.env,
-            stage: STAGE,
-            code: "VALIDATION_PREREQ_MISSING",
-            message: "Validation prereqs missing.",
-            trace: { why: "preGuardFactory" },
-          });
+        : leftFromLastError<
+            IngestionPipelineEnvelope,
+            typeof STAGE,
+            ValidationErrorCode
+          >(pre.env);
     }),
 
     // 2) run guard (contract / schema)
@@ -104,36 +100,33 @@ export const validationStage: ValidationStage = (env) => {
     E.map(({ env }) => {
       const ranAt = Date.now();
       const validationId = getNewId("validation");
+      const validation = {
+        hasRun: true,
+        ranAt,
+        observed: {
+          intakeId: env.ids.intakeId,
+          proposalId: env.ids.proposalId,
+          snapshotId: env.ids.snapshotId,
+        },
+        validationId,
+        commitPolicy: { allowedModes: ["FULL"] as const },
+        decisionType: "APPROVE" as const,
+        decidedAt: ranAt,
+        justification: true,
+        attribution: [] as const,
+
+        fingerprint: fingerprint({
+          proposalId: env.ids.proposalId,
+          snapshotId: env.ids.snapshotId,
+          commitPolicy: "FULL",
+        }),
+      } satisfies IngestionPipelineEnvelope["stages"]["validation"];
 
       return {
         ...env,
-        ids: {
-          ...env.ids,
-          validationId,
-        },
-        stages: {
-          ...env.stages,
-          validation: {
-            hasRun: true,
-            ranAt,
-            observed: {
-              proposalId: env.ids.proposalId,
-              snapshotId: env.ids.snapshotId,
-            } as any,
-            validationId,
-            proposalId: env.ids.proposalId,
-            fingerprint: fingerprint({
-              proposalId: env.ids.proposalId,
-              snapshotId: env.ids.snapshotId,
-              commitPolicy: "FULL",
-            }),
-            decisionType: "APPROVE",
-            decidedAt: ranAt,
-            justification: true,
-            attribution: [],
-          } as any,
-        },
-      } as IngestionPipelineEnvelope;
+        ids: { ...env.ids, validationId },
+        stages: { ...env.stages, validation },
+      };
     })
   );
 };

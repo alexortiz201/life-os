@@ -13,26 +13,26 @@ export function hasHaltingErrors(
   return env.errors.some((e) => e.severity === "HALT");
 }
 
-export function appendError(
-  env: IngestionPipelineEnvelope,
-  error: {
-    stage: EnvelopeStage;
-    severity: StageErrorSeverity;
-    code: string;
-    message: string;
-    trace?: unknown;
-    at?: number;
-  }
-): IngestionPipelineEnvelope {
+export type HasErrors<TErr> = { errors: TErr[] };
+
+type Error = {
+  stage: EnvelopeStage;
+  severity: StageErrorSeverity;
+  code: string;
+  message: string;
+  trace?: unknown;
+  at?: number;
+};
+
+export function appendError<TErr extends Error, TEnv extends HasErrors<TErr>>(
+  env: TEnv,
+  error: Omit<TErr, "at"> & { at?: number }
+): TEnv {
   const at = error.at ?? Date.now();
+  const nextErr = { ...error, at } as TErr;
+
   return {
     ...env,
-    errors: [
-      ...env.errors,
-      {
-        ...error,
-        at,
-      },
-    ],
+    errors: [...env.errors, nextErr],
   };
 }

@@ -11,7 +11,7 @@ import { guardPreIntake, guardIntake } from "./intake.guard";
 import {
   leftFromLastError,
   makeStageLeft,
-  StageLeft,
+  PipelineStageFn,
 } from "#/platform/pipeline/stage/stage";
 
 export const STAGE = "INTAKE" as const;
@@ -26,100 +26,83 @@ export type IntakeErrorCode =
 // If TS complains, cast appendError as (env: IntakeEnvelope, err: any) => IntakeEnvelope.
 const left = makeStageLeft<IntakeEnvelope>(appendError as any);
 
-export type IntakeStage = (
-  env: IntakeEnvelope
-) => E.Either<
-  StageLeft<IntakeEnvelope, typeof STAGE, IntakeErrorCode>,
+export type IntakeStage = PipelineStageFn<
+  IntakeEnvelope,
+  typeof STAGE,
+  IntakeErrorCode,
   IngestionPipelineEnvelope
 >;
 
-export const intakeStage: IntakeStage = (env) => {
-  return pipe(
+export const intakeStage: IntakeStage = (env) =>
+  pipe(
     E.right(env),
 
-    // 0) fail-closed if re-run (and do not mutate ids)
-    E.chain((env) => {
-      if (env?.stages?.intake?.hasRun) {
-        return left({
-          env,
-          stage: STAGE,
-          code: "STAGE_ALREADY_RAN",
-          message: "Stage has already complete",
-          trace: { info: env.stages["intake"] },
-        });
-      }
-      return E.right(env);
-    }),
+    E.chain((env) =>
+      env?.stages?.intake?.hasRun
+        ? left({
+            env,
+            stage: STAGE,
+            code: "STAGE_ALREADY_RAN",
+            message: "Stage has already complete",
+            trace: { info: env.stages["intake"] },
+          })
+        : E.right(env)
+    ),
 
-    // 1) ensure proposalId exists (immutably)
     E.map((env) => {
       const proposalId = env.ids.proposalId ?? getNewId("proposal");
-      const withProposalId: IntakeEnvelope = {
-        ...env,
-        ids: { ...env.ids, proposalId },
-      };
-      return withProposalId;
+      return { ...env, ids: { ...env.ids, proposalId } };
     }),
 
-    // 2) prereqs (stage-level, before guard)
     E.chain((env) => {
       const pre = guardPreIntake(env as any);
       return pre.ok
         ? E.right(pre.env as IntakeEnvelope)
-        : leftFromLastError(pre.env as IntakeEnvelope);
+        : leftFromLastError(env);
     }),
 
-    // 3) run guard (guard plucks directly from env)
     E.chain((env) => {
       const g = guardIntake(env);
-
-      if (g.ok) return E.right({ env, data: g.data });
-
-      return left({
-        env,
-        stage: STAGE,
-        code: g.code as IntakeErrorCode, // if g.code is wider than IntakeErrorCode
-        message: g.message,
-        trace: g.trace,
-      });
+      return g.ok
+        ? E.right({ env, data: g.data })
+        : left({
+            env,
+            stage: STAGE,
+            code: g.code as IntakeErrorCode,
+            message: g.message,
+            trace: g.trace,
+          });
     }),
 
-    // 4) write stage output back into envelope
     E.map(({ env, data }) => {
       const ranAt = Date.now();
       const intakeId = getNewId("intake");
-      const proposalId = env.ids.proposalId!; // guaranteed by step (1)
+      const proposalId = env.ids.proposalId!;
+      const intake = {
+        hasRun: true,
+        ranAt,
+        observed: { proposalId },
+        intakeId,
+        proposal: {
+          id: proposalId,
+          createdAt: `${ranAt}`,
+          actor: data.rawProposal.actor,
+          kind: "PROPOSAL_RECORD",
+          trust: "UNTRUSTED",
+          proposalId,
+          fingerprint: fingerprint({
+            proposalId,
+            actor: data.rawProposal.actor,
+          }),
+          intakeTimestamp: `${ranAt}`,
+          rawProposal: data.rawProposal,
+        },
+      } satisfies IngestionPipelineEnvelope["stages"]["intake"];
 
       return {
         ...env,
-        ids: {
-          ...env.ids,
-          intakeId,
-        },
-        stages: {
-          ...env.stages,
-          intake: {
-            hasRun: true,
-            ranAt,
-            observed: { proposalId } as any,
-            intakeId,
-            proposal: {
-              id: proposalId,
-              createdAt: `${ranAt}`,
-              actor: data.rawProposal.actor,
-              kind: "PROPOSAL_RECORD",
-              trust: "UNTRUSTED",
-              proposalId,
-              fingerprint: fingerprint({
-                proposalId,
-                actor: data.rawProposal.actor,
-              }),
-              intakeTimestamp: `${ranAt}`,
-              rawProposal: data.rawProposal,
-            },
-          },
-        },
-      } as IngestionPipelineEnvelope;
+        ids: { ...env.ids, intakeId },
+        stages: { ...env.stages, intake },
+      };
     })
   );
-};

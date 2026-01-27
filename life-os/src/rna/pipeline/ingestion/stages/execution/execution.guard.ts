@@ -3,7 +3,6 @@ import { appendError } from "#/rna/envelope/envelope-utils";
 import type { IngestionPipelineEnvelope } from "#/rna/pipeline/ingestion/ingestion.types";
 
 import type { ExecutionRule } from "#/rna/pipeline/ingestion/stages/execution/execution.rules";
-import type { GuardExecutionResult } from "#/rna/pipeline/ingestion/stages/execution/execution.types";
 import { ExecutionInputSchema } from "#/rna/pipeline/ingestion/stages/execution/execution.schemas";
 import { STAGE } from "./execution.stage";
 
@@ -15,7 +14,7 @@ function isObject(x: unknown): x is Record<string, any> {
   return typeof x === "object" && x !== null;
 }
 
-export function guardExecution(env: unknown): GuardExecutionResult {
+export function guardExecution(env: unknown) {
   const errorResult = errorResultFactory({
     stage: STAGE,
     code: "INVALID_EXECUTION_INPUT" as const,
@@ -88,7 +87,7 @@ export function guardExecution(env: unknown): GuardExecutionResult {
   // ---------
   if (parsed.data.proposalId !== proposalId) {
     return {
-      ok: true,
+      ok: true as const,
       data: {
         proposalId,
         plan: plan,
@@ -153,7 +152,7 @@ export function guardExecution(env: unknown): GuardExecutionResult {
   // 4) Full approval otherwise
   // ---------
   return {
-    ok: true,
+    ok: true as const,
     data: {
       proposalId,
       plan: planning.plan,
@@ -172,7 +171,7 @@ export function guardPreExecution(env: IngestionPipelineEnvelope) {
 
   if (!planning.hasRun) {
     return {
-      ok: false,
+      ok: false as const,
       env: appendError(env, {
         stage: STAGE,
         severity: "HALT",
@@ -187,7 +186,7 @@ export function guardPreExecution(env: IngestionPipelineEnvelope) {
   // prereq: snapshotId exists (if you want execution to be pinned to a snapshot)
   if (!env.ids.snapshotId) {
     return {
-      ok: false,
+      ok: false as const,
       env: appendError(env, {
         stage: STAGE,
         severity: "HALT",
@@ -203,7 +202,7 @@ export function guardPreExecution(env: IngestionPipelineEnvelope) {
   }
 
   return {
-    ok: true,
+    ok: true as const,
     env,
   };
 }

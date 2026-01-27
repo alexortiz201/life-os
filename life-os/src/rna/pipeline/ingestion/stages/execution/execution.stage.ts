@@ -4,13 +4,13 @@ import * as E from "fp-ts/Either";
 
 import { appendError, hasHaltingErrors } from "#/rna/envelope/envelope-utils";
 import type { IngestionPipelineEnvelope } from "#/rna/pipeline/ingestion/ingestion.types";
-
-import { guardPreExecution, guardExecution } from "./execution.guard";
 import {
+  leftFromLastError,
   makeStageLeft,
   PipelineStageFn,
-  StageLeft,
 } from "#/platform/pipeline/stage/stage";
+import { getNewId } from "#/domain/identity/id.provider";
+import { guardPreExecution, guardExecution } from "./execution.guard";
 
 export const STAGE = "EXECUTION" as const;
 
@@ -35,17 +35,15 @@ export const executionStage: ExecutionStage = (env) => {
 
     // 1) prereqs (stage-level, before guard)
     E.chain((env) => {
-      const pre = guardPreExecution(env);
+      const pre = guardPreExecution(env as any);
 
       return pre.ok
         ? E.right(pre.env)
-        : left({
-            env: pre.env,
-            stage: STAGE,
-            code: "EXECUTION_PREREQ_MISSING",
-            message: "Execution prereqs missing.",
-            trace: { why: "preGuardFactory" },
-          });
+        : leftFromLastError<
+            IngestionPipelineEnvelope,
+            typeof STAGE,
+            ExecutionErrorCode
+          >(pre.env);
     }),
 
     // 2) run guard (schema / contract)
@@ -74,42 +72,30 @@ export const executionStage: ExecutionStage = (env) => {
 
     // 3) write stage output back into envelope
     E.map((env) => {
-      // v0: produce effects (stub)
-      const producedEffects = [] as any[]; // replace soon
-
       const ranAt = Date.now();
-      const executionId = `execution_${ranAt}`;
-      const effectsLogId = `effects_${ranAt}`;
-
-      const effectsLog = {
-        effectsLogId,
-        proposalId: env.ids.proposalId,
-        producedEffects,
-      };
+      const executionId = getNewId("execution");
+      const effectsLogId = getNewId("effects");
+      const execution = {
+        hasRun: true,
+        ranAt,
+        observed: {
+          proposalId: env.ids.proposalId,
+          snapshotId: env.ids.snapshotId,
+          planningId: env.ids.planningId,
+        },
+        executionId,
+        effectsLog: {
+          effectsLogId,
+          proposalId: env.ids.proposalId,
+          producedEffects: [],
+        },
+      } satisfies IngestionPipelineEnvelope["stages"]["execution"];
 
       return {
         ...env,
-        ids: {
-          ...env.ids,
-          executionId,
-          effectsLogId,
-        },
-        stages: {
-          ...env.stages,
-          execution: {
-            hasRun: true,
-            ranAt,
-            observed: {
-              proposalId: env.ids.proposalId,
-              snapshotId: env.ids.snapshotId,
-              planningId: env.ids.planningId,
-            } as any,
-            executionId,
-            effectsLog,
-            // executionResult: [] // later
-          } as any,
-        },
-      } as IngestionPipelineEnvelope;
+        ids: { ...env.ids, executionId, effectsLogId },
+        stages: { ...env.stages, execution },
+      };
     })
   );
 };

@@ -10,9 +10,9 @@ import type { CommitRecord } from "#/rna/pipeline/ingestion/stages/commit/commit
 import { guardPreCommit, guardCommit } from "./commit.guard";
 import { getNewId } from "#/domain/identity/id.provider";
 import {
+  leftFromLastError,
   makeStageLeft,
   PipelineStageFn,
-  StageLeft,
 } from "#/platform/pipeline/stage/stage";
 
 export const STAGE = "COMMIT" as const;
@@ -46,15 +46,14 @@ export const commitStage: CommitStage = (env) => {
     // 1) prereqs
     E.chain((env) => {
       const pre = guardPreCommit(env);
+
       return pre.ok
         ? E.right(pre.env)
-        : left({
-            env: pre.env,
-            stage: STAGE,
-            code: "COMMIT_PREREQ_MISSING",
-            message: "Commit prereqs missing.",
-            trace: { why: "preGuardFactory" },
-          });
+        : leftFromLastError<
+            IngestionPipelineEnvelope,
+            typeof STAGE,
+            CommitErrorCode
+          >(pre.env);
     }),
 
     // 2) run guard (schema / contract)
@@ -138,7 +137,7 @@ export const commitStage: CommitStage = (env) => {
               outcome,
             },
           },
-        } as IngestionPipelineEnvelope;
+        };
       }
 
       const effectsLogId = data.effectsLogId;
@@ -193,37 +192,36 @@ export const commitStage: CommitStage = (env) => {
               },
             };
 
+      const commit = {
+        hasRun: true,
+        ranAt,
+        commitId,
+        proposalId,
+        observed: {
+          snapshotId: env.ids.snapshotId,
+          proposalId: env.ids.proposalId,
+          intakeId: env.ids.intakeId,
+          validationId: env.ids.validationId,
+          planningId: env.ids.planningId,
+          effectsLogId: env.ids.effectsLogId,
+          revalidationId: env.ids.revalidationId,
+        },
+        promotions,
+        justification,
+        effects: {
+          approved: approvedEffects,
+          rejected: rejectedEffects,
+          ignored: ignoredEffects,
+        },
+        outcome,
+        ...applyInfo,
+      } satisfies IngestionPipelineEnvelope["stages"]["commit"];
+
       return {
         ...env,
         ids: { ...env.ids, commitId },
-        stages: {
-          ...env.stages,
-          commit: {
-            hasRun: true,
-            ranAt,
-            commitId,
-            proposalId,
-            observed: {
-              snapshotId: env.ids.snapshotId,
-              proposalId: env.ids.proposalId,
-              intakeId: env.ids.intakeId,
-              validationId: env.ids.validationId,
-              planningId: env.ids.planningId,
-              effectsLogId: env.ids.effectsLogId,
-              revalidationId: env.ids.revalidationId,
-            },
-            promotions,
-            justification,
-            effects: {
-              approved: approvedEffects,
-              rejected: rejectedEffects,
-              ignored: ignoredEffects,
-            },
-            outcome,
-            ...applyInfo,
-          },
-        },
-      } as IngestionPipelineEnvelope;
+        stages: { ...env.stages, commit },
+      };
     })
   );
 };
