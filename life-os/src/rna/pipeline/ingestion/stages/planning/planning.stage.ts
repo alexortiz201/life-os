@@ -2,31 +2,20 @@ import { pipe } from "fp-ts/function";
 import * as E from "fp-ts/Either";
 
 import { fingerprint } from "#/domain/encoding/fingerprint";
-import { appendError, hasHaltingErrors } from "#/rna/envelope/envelope-utils";
-
-import type { IngestionPipelineEnvelope } from "#/rna/pipeline/ingestion/ingestion.types";
-
-import { guardPrePlanning, guardPlanning } from "./planning.guard";
+import { getNewId } from "#/domain/identity/id.provider";
 import {
   leftFromLastError,
   makeStageLeft,
-  PipelineStageFn,
 } from "#/platform/pipeline/stage/stage";
-import { getNewId } from "#/domain/identity/id.provider";
 
-export const STAGE = "PLANNING" as const;
+import { appendError, hasHaltingErrors } from "#/rna/envelope/envelope-utils";
+import type { IngestionPipelineEnvelope } from "#/rna/pipeline/ingestion/ingestion.types";
 
-export type PlanningErrorCode =
-  | "PLANNING_PREREQ_MISSING"
-  | "INVALID_PLANNING_INPUT";
+import { guardPrePlanning, guardPlanning } from "./planning.guard";
+import type { PlanningErrorCode, PlanningStage } from "./planning.types";
+import { STAGE } from "./planning.const";
 
 const left = makeStageLeft<IngestionPipelineEnvelope>(appendError);
-
-export type PlanningStage = PipelineStageFn<
-  IngestionPipelineEnvelope,
-  typeof STAGE,
-  PlanningErrorCode
->;
 
 export const planningStage: PlanningStage = (env) => {
   // 0) fail closed if earlier stage produced HALT errors
@@ -80,6 +69,7 @@ export const planningStage: PlanningStage = (env) => {
         hasRun: true,
         ranAt,
         observed: {
+          validationId: env.ids.validationId,
           proposalId: env.ids.proposalId,
           snapshotId: env.ids.snapshotId,
         },
@@ -98,6 +88,6 @@ export const planningStage: PlanningStage = (env) => {
         ids: { ...env.ids, planningId },
         stages: { ...env.stages, planning },
       };
-    })
+    }),
   );
 };

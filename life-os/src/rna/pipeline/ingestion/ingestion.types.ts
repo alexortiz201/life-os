@@ -13,8 +13,10 @@ import { CommitRecord } from "#/rna/pipeline/ingestion/stages/commit/commit.type
 import { Permission } from "#/domain/permissions/permissions.types";
 import { Kinds } from "#/domain/scopes/scopes.types";
 import { ContextSnapshot } from "#/domain/snapshot/snapshot.provider.types";
-import { ProposalRecord } from "#/domain/proposals/proposals.schemas";
 import { ExecutionEffectsLog } from "#/rna/pipeline/ingestion/stages/execution/execution.types";
+
+import type { Intake } from "#/rna/pipeline/ingestion/stages/intake/intake.types";
+import type { Planning } from "#/rna/pipeline/ingestion/stages/planning/planning.types";
 
 /**
  * Canonical IDs carried by the envelope.
@@ -62,8 +64,7 @@ type StageResult<TStageState, TObservedIds> =
 /* ===========================
    Stage Outputs
    =========================== */
-type IntakeStageState = { intakeId: string; proposal: ProposalRecord };
-type IntakeStageOutput = StageResult<IntakeStageState, IntakeObservedIds>;
+type IntakeStageOutput = StageResult<Intake, IntakeObservedIds>;
 
 type ValidationStageState = {
   validationId: string;
@@ -79,15 +80,7 @@ type ValidationStageOutput = StageResult<
   ObservedIds<"intakeId">
 >;
 
-type PlanningStageState = {
-  planningId: string;
-  plan: string[];
-  fingerprint: string;
-};
-type PlanningStageOutput = StageResult<
-  PlanningStageState,
-  ObservedIds<"validationId">
->;
+type PlanningStageOutput = StageResult<Planning, ObservedIds<"validationId">>;
 
 type ExecutionStageState = {
   executionId: string;

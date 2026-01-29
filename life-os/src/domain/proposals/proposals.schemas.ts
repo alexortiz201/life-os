@@ -8,6 +8,8 @@ import {
 import {
   REVERSIBILITY_CLAIM,
   IMPACT,
+  PROPOSAL_RECORD,
+  PROPOSAL_UNTRUSTED,
 } from "#/domain/proposals/proposals.const";
 import { makeScopeSchema } from "#/domain/scopes/scopes.schemas";
 
@@ -41,12 +43,11 @@ export const makeProposalSchema = <T extends z.ZodTypeAny>(KindSchema: T) =>
     reversibilityClaim: ReversibilityClaimSchema,
   });
 
-const RawProposalSchema = z.string().min(1);
 const ProposalIdSchema = z.string().min(1);
 
 export const ProposalRecordSchema = ArtifactBaseSchema.extend({
-  kind: z.literal("PROPOSAL_RECORD"),
-  trust: z.literal("UNTRUSTED"),
+  kind: z.literal(PROPOSAL_RECORD),
+  trust: z.literal(PROPOSAL_UNTRUSTED),
 
   proposalId: ProposalIdSchema,
   // normalized: RawProposalSchema,

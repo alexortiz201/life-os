@@ -6,32 +6,26 @@ import { getNewId } from "#/domain/identity/id.provider";
 import { appendError } from "#/rna/envelope/envelope-utils";
 
 import type { IngestionPipelineEnvelope } from "#/rna/pipeline/ingestion/ingestion.types";
-import type { IntakeEnvelope } from "#/rna/pipeline/ingestion/stages/intake/intake.types";
+import type {
+  IntakeEnvelope,
+  IntakeErrorCode,
+  IntakeStage,
+} from "./intake.types";
 import { guardPreIntake, guardIntake } from "./intake.guard";
 import {
   leftFromLastError,
   makeStageLeft,
-  PipelineStageFn,
 } from "#/platform/pipeline/stage/stage";
-
-export const STAGE = "INTAKE" as const;
-
-export type IntakeErrorCode =
-  | "STAGE_ALREADY_RAN"
-  | "INTAKE_PREREQ_MISSING"
-  | "INVALID_INTAKE_INPUT";
+import { STAGE } from "./intake.const";
+import {
+  PROPOSAL_RECORD,
+  PROPOSAL_UNTRUSTED,
+} from "#/domain/proposals/proposals.const";
 
 // NOTE: If appendError is typed to IngestionPipelineEnvelope only,
 // but IntakeEnvelope structurally extends it, this should still work.
 // If TS complains, cast appendError as (env: IntakeEnvelope, err: any) => IntakeEnvelope.
 const left = makeStageLeft<IntakeEnvelope>(appendError as any);
-
-export type IntakeStage = PipelineStageFn<
-  IntakeEnvelope,
-  typeof STAGE,
-  IntakeErrorCode,
-  IngestionPipelineEnvelope
->;
 
 export const intakeStage: IntakeStage = (env) =>
   pipe(
@@ -46,7 +40,7 @@ export const intakeStage: IntakeStage = (env) =>
             message: "Stage has already complete",
             trace: { info: env.stages["intake"] },
           })
-        : E.right(env)
+        : E.right(env),
     ),
 
     E.map((env) => {
@@ -55,7 +49,7 @@ export const intakeStage: IntakeStage = (env) =>
     }),
 
     E.chain((env) => {
-      const pre = guardPreIntake(env as any);
+      const pre = guardPreIntake(env);
       return pre.ok
         ? E.right(pre.env as IntakeEnvelope)
         : leftFromLastError(env);
@@ -77,7 +71,7 @@ export const intakeStage: IntakeStage = (env) =>
     E.map(({ env, data }) => {
       const ranAt = Date.now();
       const intakeId = getNewId("intake");
-      const proposalId = env.ids.proposalId!;
+      const proposalId = env.ids.proposalId;
       const intake = {
         hasRun: true,
         ranAt,
@@ -87,8 +81,8 @@ export const intakeStage: IntakeStage = (env) =>
           id: proposalId,
           createdAt: `${ranAt}`,
           actor: data.rawProposal.actor,
-          kind: "PROPOSAL_RECORD",
-          trust: "UNTRUSTED",
+          kind: PROPOSAL_RECORD,
+          trust: PROPOSAL_UNTRUSTED,
           proposalId,
           fingerprint: fingerprint({
             proposalId,
@@ -104,5 +98,5 @@ export const intakeStage: IntakeStage = (env) =>
         ids: { ...env.ids, intakeId },
         stages: { ...env.stages, intake },
       };
-    })
+    }),
   );

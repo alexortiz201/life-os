@@ -10,16 +10,8 @@ export const guardPreIntake = preGuardFactory({
   CODE: "INTAKE_PREREQ_MISSING" as const,
 } as const);
 
-const pluckParams = ({
-  env,
-  ids,
-  stages,
-  proposalId,
-}: SchemaParseParams<IntakeEnvelope>) => ({
-  proposalId,
-  ids,
+const pluckParams = ({ env }: SchemaParseParams<IntakeEnvelope>) => ({
   rawProposal: env.rawProposal,
-  // context: env.context,
 });
 
 export const guardIntake = guardFactory({
