@@ -1,7 +1,10 @@
 import { z } from "zod";
 
+import { PipelineStageFn } from "#/platform/pipeline/stage/stage";
+import { IngestionPipelineEnvelope } from "../../ingestion.types";
+
 import { ValidationSchema } from "./validation.schemas";
-import { DECISION_TYPES, VALIDATION_RULES } from "./validation.const";
+import { DECISION_TYPES, STAGE, VALIDATION_RULES } from "./validation.const";
 
 export type Validation = z.infer<typeof ValidationSchema>;
 
@@ -18,3 +21,9 @@ export type ValidationErrorCode =
   | "SNAPSHOT_PERMISSION_NOT_ALLOWED";
 
 export type ValidationRule = (typeof VALIDATION_RULES)[number];
+
+export type ValidationStage = PipelineStageFn<
+  IngestionPipelineEnvelope,
+  typeof STAGE,
+  ValidationErrorCode
+>;

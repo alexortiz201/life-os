@@ -7,22 +7,15 @@ import { Snapshot } from "#/domain/snapshot/snapshot.provider.types";
 import {
   leftFromLastError,
   makeStageLeft,
-  PipelineStageFn,
 } from "#/platform/pipeline/stage/stage";
 import { appendError, hasHaltingErrors } from "#/rna/envelope/envelope-utils";
 import type { IngestionPipelineEnvelope } from "#/rna/pipeline/ingestion/ingestion.types";
 
 import { guardPreValidation, guardValidation } from "./validation.guard";
-import { ValidationErrorCode } from "./validation.types";
+import { ValidationErrorCode, ValidationStage } from "./validation.types";
 import { STAGE } from "./validation.const";
 
 const left = makeStageLeft<IngestionPipelineEnvelope>(appendError);
-
-export type ValidationStage = PipelineStageFn<
-  IngestionPipelineEnvelope,
-  typeof STAGE,
-  ValidationErrorCode
->;
 
 export const validationStage: ValidationStage = (env) => {
   // 0) fail closed if earlier stage produced HALT errors
