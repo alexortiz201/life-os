@@ -22,9 +22,6 @@ import {
   PROPOSAL_UNTRUSTED,
 } from "#/domain/proposals/proposals.const";
 
-// NOTE: If appendError is typed to IngestionPipelineEnvelope only,
-// but IntakeEnvelope structurally extends it, this should still work.
-// If TS complains, cast appendError as (env: IntakeEnvelope, err: any) => IntakeEnvelope.
 const left = makeStageLeft<IntakeEnvelope>(appendError as any);
 
 export const intakeStage: IntakeStage = (env) =>

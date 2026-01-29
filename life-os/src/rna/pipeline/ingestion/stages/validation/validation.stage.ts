@@ -3,23 +3,18 @@ import * as E from "fp-ts/Either";
 
 import { fingerprint } from "#/domain/encoding/fingerprint";
 import { getNewId } from "#/domain/identity/id.provider";
-import { appendError, hasHaltingErrors } from "#/rna/envelope/envelope-utils";
-
-import type { IngestionPipelineEnvelope } from "#/rna/pipeline/ingestion/ingestion.types";
-import { guardPreValidation, guardValidation } from "./validation.guard";
-
+import { Snapshot } from "#/domain/snapshot/snapshot.provider.types";
 import {
   leftFromLastError,
   makeStageLeft,
   PipelineStageFn,
 } from "#/platform/pipeline/stage/stage";
+import { appendError, hasHaltingErrors } from "#/rna/envelope/envelope-utils";
+import type { IngestionPipelineEnvelope } from "#/rna/pipeline/ingestion/ingestion.types";
 
-export const STAGE = "VALIDATION" as const;
-
-export type ValidationErrorCode =
-  | "INVALID_VALIDATION_INPUT"
-  | "VALIDATION_PREREQ_MISSING"
-  | "SNAPSHOT_PERMISSION_NOT_ALLOWED";
+import { guardPreValidation, guardValidation } from "./validation.guard";
+import { ValidationErrorCode } from "./validation.types";
+import { STAGE } from "./validation.const";
 
 const left = makeStageLeft<IngestionPipelineEnvelope>(appendError);
 
@@ -100,13 +95,28 @@ export const validationStage: ValidationStage = (env) => {
     E.map(({ env }) => {
       const ranAt = Date.now();
       const validationId = getNewId("validation");
+      const snapshotId = getNewId("snapshot");
+      const snapshot = {
+        snapshotId,
+        permissions: {
+          actor: "USER" as const,
+          allow: ["WEEKLY_REFLECTION"] as const,
+        },
+
+        scope: {
+          allowedKinds: ["NOTE"] as const,
+        },
+        invariantsVersion: "test",
+        timestampMs: ranAt,
+        dependencyVersions: {},
+      } satisfies Snapshot;
+
       const validation = {
         hasRun: true,
         ranAt,
         observed: {
           intakeId: env.ids.intakeId,
           proposalId: env.ids.proposalId,
-          snapshotId: env.ids.snapshotId,
         },
         validationId,
         commitPolicy: { allowedModes: ["FULL"] as const },
@@ -117,16 +127,17 @@ export const validationStage: ValidationStage = (env) => {
 
         fingerprint: fingerprint({
           proposalId: env.ids.proposalId,
-          snapshotId: env.ids.snapshotId,
+          snapshotId,
           commitPolicy: "FULL",
         }),
+        snapshot,
       } satisfies IngestionPipelineEnvelope["stages"]["validation"];
 
       return {
         ...env,
-        ids: { ...env.ids, validationId },
+        ids: { ...env.ids, validationId, snapshotId },
         stages: { ...env.stages, validation },
       };
-    })
+    }),
   );
 };

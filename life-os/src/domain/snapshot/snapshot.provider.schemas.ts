@@ -4,6 +4,7 @@ import { PERMISSIONS } from "#/domain/permissions/permissions.const";
 import { KINDS } from "#/domain/scopes/scopes.const";
 
 export const IngestionContextSnapshotSchema = z.object({
+  snapshotId: z.string().min(1),
   permissions: z.object({
     actor: z.string().min(1),
     allow: z.array(z.literal(PERMISSIONS)).readonly(),

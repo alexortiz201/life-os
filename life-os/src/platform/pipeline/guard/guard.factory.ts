@@ -1,9 +1,6 @@
 import type { z } from "zod";
 
 import { errorResultFactory } from "#/platform/pipeline/error/error.factory";
-// import { appendError } from "#/rna/envelope/envelope-utils";
-import type { IngestionPipelineEnvelope } from "#/rna/pipeline/ingestion/ingestion.types";
-
 import type { EnvelopeStage } from "#/rna/envelope/envelope.types";
 import { ENVELOPE_STAGE_TO_KEY } from "#/rna/envelope/envelope.const";
 import { INGESTION_STAGE_DEPS } from "#/rna/pipeline/ingestion/ingestion.const";
@@ -107,7 +104,7 @@ type NarrowResult<TParseRule extends string> =
 function narrowGuardInputs<
   TEnv,
   TStage extends EnvelopeStage,
-  TParseRule extends string
+  TParseRule extends string,
 >({
   env,
   STAGE,
@@ -125,11 +122,8 @@ function narrowGuardInputs<
     };
   }
 
-  const ids = isObject((env as any).ids) ? (env as any).ids : undefined;
-  const stages = isObject((env as any).stages)
-    ? (env as any).stages
-    : undefined;
-
+  const ids = isObject((env as any).ids) ? (env as any).ids : {};
+  const stages = isObject((env as any).stages) ? (env as any).stages : {};
   const dep = hasAllDepStages(STAGE, env);
   const rulesApplied = [parseFailedRule] as const;
 
@@ -182,7 +176,7 @@ export const guardFactory = <
   TCode extends string,
   TParseRule extends string,
   TTrace extends Record<string, any>,
-  TSchema extends z.ZodTypeAny
+  TSchema extends z.ZodTypeAny,
 >({
   STAGE,
   InputSchema,

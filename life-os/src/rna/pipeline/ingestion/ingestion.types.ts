@@ -7,6 +7,7 @@ import {
 import {
   CommitPolicy,
   DecisionType,
+  Validation,
 } from "#/rna/pipeline/ingestion/stages/validation/validation.types";
 import { RevalidationGuardOutput } from "#/rna/pipeline/ingestion/stages/revalidation/revalidation.types";
 import { CommitRecord } from "#/rna/pipeline/ingestion/stages/commit/commit.types";
@@ -65,21 +66,7 @@ type StageResult<TStageState, TObservedIds> =
    Stage Outputs
    =========================== */
 type IntakeStageOutput = StageResult<Intake, IntakeObservedIds>;
-
-type ValidationStageState = {
-  validationId: string;
-  commitPolicy: CommitPolicy;
-  decisionType: DecisionType;
-  decidedAt: number;
-  justification: boolean;
-  attribution: Array<any>;
-  fingerprint: string;
-};
-type ValidationStageOutput = StageResult<
-  ValidationStageState,
-  ObservedIds<"intakeId">
->;
-
+type ValidationStageOutput = StageResult<Validation, ObservedIds<"intakeId">>;
 type PlanningStageOutput = StageResult<Planning, ObservedIds<"validationId">>;
 
 type ExecutionStageState = {

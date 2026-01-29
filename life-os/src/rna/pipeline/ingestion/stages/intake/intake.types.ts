@@ -9,7 +9,7 @@ import {
   IntakeRawProposalSchema,
   IntakeSchema,
 } from "./intake.schemas";
-import { STAGE } from "./intake.const";
+import { INTAKE_RULES, STAGE } from "./intake.const";
 
 export type IntakeInput = z.infer<typeof IntakeInputSchema>;
 export type IntakeRawProposal = z.infer<typeof IntakeRawProposalSchema>;
@@ -31,3 +31,4 @@ export type IntakeStage = PipelineStageFn<
 >;
 
 export type Intake = z.infer<typeof IntakeSchema>;
+export type IntakeRule = (typeof INTAKE_RULES)[number];

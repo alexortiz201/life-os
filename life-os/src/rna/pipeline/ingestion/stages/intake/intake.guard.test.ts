@@ -4,54 +4,54 @@ import assert from "node:assert/strict";
 import { guardIntake } from "#/rna/pipeline/ingestion/stages/intake/intake.guard";
 import { makeEnv, clearDefaultIdsPastStage } from "#/shared/test-utils";
 
-// test("returns ok:false INVALID_INTAKE_INPUT when input shape is wrong", () => {
-//   const result = guardIntake({ nope: true } as any);
+test("returns ok:false INVALID_INTAKE_INPUT when input shape is wrong", () => {
+  const result = guardIntake({ nope: true } as any);
 
-//   assert.equal(result.ok, false);
-//   if (!result.ok) {
-//     assert.equal(result.code, "INVALID_INTAKE_INPUT");
-//     assert.equal(result.stage, "INTAKE");
-//     assert.equal(typeof result.message, "string");
-//     assert.ok(result.trace);
-//     assert.equal(result.trace.mode, "UNKNOWN");
-//     assert.ok(Array.isArray(result.trace.rulesApplied));
-//     assert.ok(result.trace.rulesApplied.includes("PARSE_FAILED"));
-//   }
-// });
+  assert.equal(result.ok, false);
+  if (!result.ok) {
+    assert.equal(result.code, "INVALID_INTAKE_INPUT");
+    assert.equal(result.stage, "INTAKE");
+    assert.equal(typeof result.message, "string");
+    assert.ok(result.trace);
+    assert.equal(result.trace.mode, "UNKNOWN");
+    assert.ok(Array.isArray(result.trace.rulesApplied));
+    assert.ok(result.trace.rulesApplied.includes("PARSE_FAILED"));
+  }
+});
 
-// test("returns ok:false INVALID_INTAKE_INPUT when proposalId missing", () => {
-//   const env = makeEnv();
-//   clearDefaultIdsPastStage("intake", env);
+test("returns ok:false INVALID_INTAKE_INPUT when proposalId missing", () => {
+  const env = makeEnv();
+  clearDefaultIdsPastStage("intake", env);
 
-//   const result = guardIntake(env as any);
+  const result = guardIntake(env as any);
 
-//   assert.equal(result.ok, false);
-//   if (!result.ok) {
-//     assert.equal(result.code, "INVALID_INTAKE_INPUT");
-//     assert.equal(result.stage, "INTAKE");
-//     assert.ok(result.trace.rulesApplied.includes("PARSE_FAILED"));
-//   }
-// });
+  assert.equal(result.ok, false);
+  if (!result.ok) {
+    assert.equal(result.code, "INVALID_INTAKE_INPUT");
+    assert.equal(result.stage, "INTAKE");
+    assert.ok(result.trace.rulesApplied.includes("PARSE_FAILED"));
+  }
+});
 
-// test("returns ok:false INVALID_INTAKE_INPUT when RAW_PROPOSAL missing required fields", () => {
-//   const env = makeEnv();
+test("returns ok:false INVALID_INTAKE_INPUT when RAW_PROPOSAL missing required fields", () => {
+  const env = makeEnv();
 
-//   // Intake input is not yet locked in code; we assert contract intent:
-//   // RAW_PROPOSAL must exist and contain required structural keys.
-//   // Keep this as a "shape enforcement" test for your IntakeInputSchema/pluckParams.
-//   (env as any).rawProposal = {
-//     // missing required fields like INTENT / ACTOR / TARGET_ENTITY / TARGET_SCOPE etc.
-//   };
+  // Intake input is not yet locked in code; we assert contract intent:
+  // RAW_PROPOSAL must exist and contain required structural keys.
+  // Keep this as a "shape enforcement" test for your IntakeInputSchema/pluckParams.
+  (env as any).rawProposal = {
+    // missing required fields like INTENT / ACTOR / TARGET_ENTITY / TARGET_SCOPE etc.
+  };
 
-//   const result = guardIntake(env as any);
+  const result = guardIntake(env as any);
 
-//   assert.equal(result.ok, false);
-//   if (!result.ok) {
-//     assert.equal(result.code, "INVALID_INTAKE_INPUT");
-//     assert.equal(result.stage, "INTAKE");
-//     assert.ok(result.trace.rulesApplied.includes("PARSE_FAILED"));
-//   }
-// });
+  assert.equal(result.ok, false);
+  if (!result.ok) {
+    assert.equal(result.code, "INVALID_INTAKE_INPUT");
+    assert.equal(result.stage, "INTAKE");
+    assert.ok(result.trace.rulesApplied.includes("PARSE_FAILED"));
+  }
+});
 
 test("returns ok:true when minimal structural RAW_PROPOSAL is present (no semantic judgment)", () => {
   const env = makeEnv();
