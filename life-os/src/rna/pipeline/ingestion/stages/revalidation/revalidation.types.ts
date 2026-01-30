@@ -1,12 +1,12 @@
 import z from "zod";
-// import type { CommitOutcome } from "#/rna/pipeline/ingestion/commit/commitDecision.constants";
+
 import type {
   EffectDecisionModeOrUnknown,
   GuardResult,
   StageGuardTrace,
 } from "#/platform/pipeline/pipeline.types";
 
-import { ExecutionEffectsLogSchema } from "#/rna/pipeline/ingestion/stages/execution/execution.schemas";
+import { ExecutionEffectsLog } from "#/rna/pipeline/ingestion/stages/execution/execution.types";
 import {
   RevalidationCommitDirectiveSchema,
   RevalidationInputSchema,
@@ -19,12 +19,10 @@ export type RevalidationCommitDirective = z.infer<
 
 export type RevalidationInput = z.infer<typeof RevalidationInputSchema>;
 
-type EffectsLog = z.infer<typeof ExecutionEffectsLogSchema>;
-
 export type RevalidationGuardOutput = {
   proposalId: string;
   directive: RevalidationCommitDirective;
-  effectsLog: EffectsLog;
+  effectsLog: ExecutionEffectsLog;
 };
 
 export type RevalidationTrace = StageGuardTrace<

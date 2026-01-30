@@ -18,6 +18,7 @@ import { ExecutionEffectsLog } from "#/rna/pipeline/ingestion/stages/execution/e
 
 import type { Intake } from "#/rna/pipeline/ingestion/stages/intake/intake.types";
 import type { Planning } from "#/rna/pipeline/ingestion/stages/planning/planning.types";
+import type { Execution } from "#/rna/pipeline/ingestion/stages/execution/execution.types";
 
 /**
  * Canonical IDs carried by the envelope.
@@ -68,15 +69,7 @@ type StageResult<TStageState, TObservedIds> =
 type IntakeStageOutput = StageResult<Intake, IntakeObservedIds>;
 type ValidationStageOutput = StageResult<Validation, ObservedIds<"intakeId">>;
 type PlanningStageOutput = StageResult<Planning, ObservedIds<"validationId">>;
-
-type ExecutionStageState = {
-  executionId: string;
-  effectsLog: ExecutionEffectsLog;
-};
-type ExecutionStageOutput = StageResult<
-  ExecutionStageState,
-  ObservedIds<"planningId">
->;
+type ExecutionStageOutput = StageResult<Execution, ObservedIds<"planningId">>;
 
 type RevalidationStageState = {
   revalidationId: string;

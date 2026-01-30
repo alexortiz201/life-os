@@ -5,30 +5,14 @@ import { validationStage } from "#/rna/pipeline/ingestion/stages/validation/vali
 import type { IngestionPipelineEnvelope } from "#/rna/pipeline/ingestion/ingestion.types";
 import {
   makeEnv,
-  clearDefaultIdsPastStage,
+  resetStagesUpTo,
   lastError,
   unwrapLeft,
   unwrapRight,
+  clone,
 } from "#/shared/test-utils";
 
-// cheap deep clone for env-like data
-function clone<T>(x: T): T {
-  return JSON.parse(JSON.stringify(x));
-}
-
-function makeValidationEnv() {
-  const env = makeEnv({
-    stages: {
-      validation: { hasRun: false },
-      planning: { hasRun: false },
-      execution: { hasRun: false },
-      revalidation: { hasRun: false },
-      commit: { hasRun: false },
-    },
-  });
-  clearDefaultIdsPastStage("validation", env);
-  return env;
-}
+const makeValidationEnv = () => resetStagesUpTo("validation", makeEnv());
 
 test("appends HALT error when proposalId missing (fail closed)", () => {
   const env = makeValidationEnv();
@@ -85,8 +69,8 @@ test("writes a deterministic, untrusted decision artifact and does not create do
   // decision_type must be one of the allowed outcomes
   assert.ok(
     ["APPROVE", "REJECT", "PARTIAL_APPROVE", "ESCALATE"].includes(
-      v.decisionType
-    )
+      v.decisionType,
+    ),
   );
 
   // must include explainability / attribution / timestamp fields

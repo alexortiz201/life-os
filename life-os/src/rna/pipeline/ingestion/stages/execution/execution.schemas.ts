@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import { EffectSchema } from "#/domain/effects/effects.schema";
 import { CommitPolicySchema } from "#/rna/pipeline/ingestion/stages/validation/validation.schemas";
+import { PlanSchema } from "#/rna/pipeline/ingestion/stages/planning/planning.schemas";
 
 export const ExecutionEffectsLogSchema = z.object({
   effectsLogId: z.string().min(1),
@@ -9,11 +10,16 @@ export const ExecutionEffectsLogSchema = z.object({
   producedEffects: z.array(EffectSchema),
 });
 
+export const ExecutionSchema = z.object({
+  executionId: z.string().min(1),
+  effectsLog: ExecutionEffectsLogSchema,
+});
+
 export const ExecutionInputSchema = z.object({
   proposalId: z.string().min(1),
   snapshotId: z.string().min(1),
   validationDecision: z.string().min(1),
   planningId: z.string().min(1),
-  plan: z.string().array().default([]),
+  plan: PlanSchema,
   commitPolicy: CommitPolicySchema,
 });

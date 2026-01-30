@@ -29,13 +29,13 @@ const clearDataPerStage = {
     ids: [
       "intakeId",
       "validationId",
-      "planningId",
-      "executionId",
-      "revalidationId",
-      "commitId",
       "proposalId",
       "snapshotId",
+      "planningId",
+      "executionId",
       "effectsLogId",
+      "revalidationId",
+      "commitId",
     ],
     stages: [
       "intake",
@@ -51,17 +51,24 @@ const clearDataPerStage = {
       "validationId",
       "planningId",
       "executionId",
+      "effectsLogId",
       "revalidationId",
       "commitId",
     ],
     stages: ["validation", "planning", "execution", "revalidation", "commit"],
   },
   planning: {
-    ids: ["planningId", "executionId", "revalidationId", "commitId"],
+    ids: [
+      "planningId",
+      "executionId",
+      "effectsLogId",
+      "revalidationId",
+      "commitId",
+    ],
     stages: ["planning", "execution", "revalidation", "commit"],
   },
   execution: {
-    ids: ["executionId", "revalidationId", "commitId", "effectsLogId"],
+    ids: ["executionId", "effectsLogId", "revalidationId", "commitId"],
     stages: ["execution", "revalidation", "commit"],
   },
   revalidation: {
@@ -75,21 +82,20 @@ const clearDataPerStage = {
 };
 
 export function clearDefaultIdsPastStage(
-  stage: string,
-  env: IngestionPipelineEnvelope
+  stage: keyof typeof clearDataPerStage,
+  env: IngestionPipelineEnvelope,
 ) {
-  if (stage === "intake") clearIds(env, clearDataPerStage[stage].ids);
-  if (stage === "validation") clearIds(env, idsToClear.slice(1));
-  if (stage === "planning") clearIds(env, idsToClear.slice(2));
-  if (stage === "execution") clearIds(env, idsToClear.slice(3));
-  if (stage === "revalidation") clearIds(env, idsToClear.slice(5));
-  if (stage === "commit") clearIds(env, idsToClear.slice(6));
+  if (clearDataPerStage[stage]) clearIds(env, clearDataPerStage[stage].ids);
+
+  return env;
 }
 
 export function clearIds(env: IngestionPipelineEnvelope, ids: Array<string>) {
   for (let id of ids) {
     if ((env.ids as any)[id]) (env.ids as any)[id] = undefined;
   }
+
+  return env;
 }
 
 function clearStages(env: IngestionPipelineEnvelope, stages: Array<string>) {
@@ -97,19 +103,18 @@ function clearStages(env: IngestionPipelineEnvelope, stages: Array<string>) {
     if ((env.stages as any)[stage])
       (env.stages as any)[stage] = { hasRun: false };
   }
+
+  return env;
 }
 
-export function resetStagesUpTo(stage: string, env: IngestionPipelineEnvelope) {
-  if (stage === "intake") {
+export function resetStagesUpTo(
+  stage: keyof typeof clearDataPerStage,
+  env: IngestionPipelineEnvelope,
+) {
+  if (clearDataPerStage[stage]) {
     clearIds(env, clearDataPerStage[stage].ids);
     clearStages(env, clearDataPerStage[stage].stages);
   }
-
-  if (stage === "validation") clearIds(env, idsToClear.slice(1));
-  if (stage === "planning") clearIds(env, idsToClear.slice(2));
-  if (stage === "execution") clearIds(env, idsToClear.slice(3));
-  if (stage === "revalidation") clearIds(env, idsToClear.slice(5));
-  if (stage === "commit") clearIds(env, idsToClear.slice(6));
 
   return env;
 }
@@ -118,17 +123,22 @@ export function assertMatchId(id: string, prefix: string) {
   return assert.match(id, new RegExp(`^${prefix}[0-9a-f\\-]+$`));
 }
 
+function makeIds() {
+  return {
+    intakeId: "intake_1",
+    planningId: "planning_1",
+    validationId: "validation_1",
+    proposalId: "proposal_1",
+    snapshotId: "snap_1",
+    executionId: "exec_1",
+    effectsLogId: "effects_1",
+  };
+}
+
 export function makeEnv(patch: EnvelopePatch = {}): IngestionPipelineEnvelope {
   const now = Date.now();
-
   const base: IngestionPipelineEnvelope = {
-    ids: {
-      intakeId: "intake_1",
-      validationId: "validation_1",
-      proposalId: "proposal_1",
-      snapshotId: "snap_1",
-      effectsLogId: "effects_1",
-    },
+    ids: { ...makeIds() },
     snapshot: { ...makeSnapshot() },
     stages: {
       intake: {
@@ -136,8 +146,18 @@ export function makeEnv(patch: EnvelopePatch = {}): IngestionPipelineEnvelope {
         ranAt: now,
         observed: {} as any,
         intakeId: "intake_1",
-        proposalId: "proposal_1",
         commitPolicy: { allowedModes: ["FULL"] as const },
+        proposal: {
+          id: "proposal_1",
+          createdAt: `${now}`,
+          actor: "USER",
+          kind: "WEEKLY_REFLECTION",
+          trust: "UNTRUSTED",
+          proposalId: "proposal_1",
+          fingerprint: "testHash12093812093",
+          intakeTimestamp: `${now}`,
+          rawProposal: "",
+        },
       },
 
       // ✅ validation hasRun true by default + commitPolicy lives here
@@ -146,17 +166,53 @@ export function makeEnv(patch: EnvelopePatch = {}): IngestionPipelineEnvelope {
         ranAt: now,
         observed: { intakeId: "intake_1", proposalId: "proposal_1" } as any,
         validationId: "validation_1",
+        snapshotId: "snap_1",
         commitPolicy: { allowedModes: ["FULL"] as const },
       } as any,
 
-      planning: { hasRun: false },
+      planning: {
+        hasRun: true,
+        ranAt: now,
+        observed: {
+          proposalId: "proposal_1",
+          validationId: "validation_1",
+          snapshotId: "snap_1",
+        } as any,
+        planningId: "planning_1",
+        plan: [
+          {
+            stepId: "step_1",
+            kind: "PRODUCE_ARTIFACT",
+            description: "Produce a NOTE artifact for weekly reflection.",
+            outputs: {
+              artifacts: [{ kind: "NOTE" }],
+              events: [],
+            },
+          },
+          {
+            stepId: "step_2",
+            kind: "EMIT_EVENT",
+            description:
+              "Emit an event indicating reflection is ready for review.",
+            outputs: {
+              artifacts: [],
+              events: [{ name: "REFLECTION_READY" }],
+            },
+          },
+        ],
+        fingerprint: "testHash12093812093",
+      } as any,
 
       // ✅ execution hasRun true by default
       // put the fields revalidation.guard expects to pluck/parse
       execution: {
         hasRun: true,
         ranAt: now,
-        observed: { proposalId: "proposal_1", snapshotId: "snap_1" } as any,
+        observed: {
+          proposalId: "proposal_1",
+          planningId: "planning_1",
+          snapshotId: "snap_1",
+        } as any,
         executionId: "exec_1",
         proposalId: "proposal_1",
         snapshotId: "snap_1",
@@ -170,7 +226,6 @@ export function makeEnv(patch: EnvelopePatch = {}): IngestionPipelineEnvelope {
           producedEffects: [],
         },
       } as any,
-
       revalidation: { hasRun: false },
       commit: { hasRun: false },
     } as any,
@@ -187,7 +242,7 @@ export function makeEnv(patch: EnvelopePatch = {}): IngestionPipelineEnvelope {
 }
 
 export function makeCommitEnv(
-  patch: EnvelopePatch = {}
+  patch: EnvelopePatch = {},
 ): IngestionPipelineEnvelope {
   const now = Date.now();
 
@@ -342,4 +397,8 @@ export function unwrapRight<L, R>(either: E.Either<L, R>): R {
 export function unwrapLeft<L, R>(either: E.Either<L, R>): L {
   assert.ok(E.isLeft(either), "expected Left");
   return either.left;
+}
+
+export function clone<T>(x: T): T {
+  return JSON.parse(JSON.stringify(x));
 }

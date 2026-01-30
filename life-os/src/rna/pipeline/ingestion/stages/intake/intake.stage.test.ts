@@ -10,20 +10,7 @@ import {
   makeEnv as makeEnvUtil,
 } from "#/shared/test-utils";
 
-const makeEnv = () => {
-  const env = makeEnvUtil({
-    stages: {
-      intake: { hasRun: false },
-      validation: { hasRun: false },
-      planning: { hasRun: false },
-      execution: { hasRun: false },
-      revalidation: { hasRun: false },
-      commit: { hasRun: false },
-    },
-  });
-
-  return resetStagesUpTo("intake", env);
-};
+const makeEnv = () => resetStagesUpTo("intake", makeEnvUtil());
 
 test("appends HALT error when rawProposal missing (structural invalidity)", () => {
   const env = makeEnv();

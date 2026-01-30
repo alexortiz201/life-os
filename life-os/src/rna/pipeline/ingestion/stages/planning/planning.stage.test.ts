@@ -1,30 +1,19 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import * as E from "fp-ts/Either";
-
 import { planningStage } from "#/rna/pipeline/ingestion/stages/planning/planning.stage";
-import type { IngestionPipelineEnvelope } from "#/rna/pipeline/ingestion/ingestion.types";
-import { makeEnv } from "#/shared/test-utils";
+import {
+  makeEnv as makeEnvUtil,
+  resetStagesUpTo,
+  clone,
+  unwrapRight,
+  unwrapLeft,
+} from "#/shared/test-utils";
 
-function clone<T>(x: T): T {
-  return JSON.parse(JSON.stringify(x));
-}
-
-function unwrapRight<L, A>(out: E.Either<L, A>): A {
-  assert.ok(E.isRight(out), "expected Right");
-  return out.right;
-}
-
-function unwrapLeft<L, A>(out: E.Either<L, A>): L {
-  assert.ok(E.isLeft(out), "expected Left");
-  return out.left;
-}
+const makeEnv = () => resetStagesUpTo("planning", makeEnvUtil());
 
 test("returns Left(HALT) when validation stage has not run", () => {
-  const env = makeEnv();
-  (env.stages.validation as any) = { hasRun: false };
-
+  const env = resetStagesUpTo("validation", makeEnvUtil());
   const out = planningStage(env);
   const left = unwrapLeft(out) as any;
 

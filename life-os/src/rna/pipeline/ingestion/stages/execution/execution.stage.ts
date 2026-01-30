@@ -2,29 +2,20 @@
 import { pipe } from "fp-ts/function";
 import * as E from "fp-ts/Either";
 
-import { appendError, hasHaltingErrors } from "#/rna/envelope/envelope-utils";
-import type { IngestionPipelineEnvelope } from "#/rna/pipeline/ingestion/ingestion.types";
 import {
   leftFromLastError,
   makeStageLeft,
-  PipelineStageFn,
 } from "#/platform/pipeline/stage/stage";
 import { getNewId } from "#/domain/identity/id.provider";
+
+import { appendError, hasHaltingErrors } from "#/rna/envelope/envelope-utils";
+import type { IngestionPipelineEnvelope } from "#/rna/pipeline/ingestion/ingestion.types";
+
 import { guardPreExecution, guardExecution } from "./execution.guard";
-
-export const STAGE = "EXECUTION" as const;
-
-export type ExecutionErrorCode =
-  | "EXECUTION_PREREQ_MISSING"
-  | "INVALID_EXECUTION_INPUT";
+import type { ExecutionErrorCode, ExecutionStage } from "./execution.types";
+import { STAGE } from "./execution.const";
 
 const left = makeStageLeft<IngestionPipelineEnvelope>(appendError);
-
-export type ExecutionStage = PipelineStageFn<
-  IngestionPipelineEnvelope,
-  typeof STAGE,
-  ExecutionErrorCode
->;
 
 export const executionStage: ExecutionStage = (env) => {
   // 0) fail closed if earlier stage produced HALT errors
@@ -96,6 +87,6 @@ export const executionStage: ExecutionStage = (env) => {
         ids: { ...env.ids, executionId, effectsLogId },
         stages: { ...env.stages, execution },
       };
-    })
+    }),
   );
 };

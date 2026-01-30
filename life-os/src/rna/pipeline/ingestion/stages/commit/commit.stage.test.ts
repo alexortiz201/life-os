@@ -5,7 +5,8 @@ import { commitStage } from "#/rna/pipeline/ingestion/stages/commit/commit.stage
 import type { IngestionPipelineEnvelope } from "#/rna/pipeline/ingestion/ingestion.types";
 import {
   assertMatchId,
-  makeCommitEnv,
+  makeCommitEnv as makeCommitEnvUtils,
+  resetStagesUpTo,
   lastError,
   unwrapRight,
   unwrapLeft,
@@ -15,6 +16,9 @@ function getCommitRecord(env: IngestionPipelineEnvelope) {
   assert.equal(env.stages.commit.hasRun, true, "commit stage must have run");
   return env.stages.commit as any;
 }
+
+const makeCommitEnv = (patch: any) =>
+  resetStagesUpTo("commit", makeCommitEnvUtils(patch));
 
 test("commits only PROVISIONAL produced artifacts", () => {
   const env = makeCommitEnv({

@@ -7,12 +7,13 @@ import { executionStage } from "#/rna/pipeline/ingestion/stages/execution/execut
 import type { IngestionPipelineEnvelope } from "#/rna/pipeline/ingestion/ingestion.types";
 import {
   makeEnv as makeEnvUtil,
+  resetStagesUpTo,
   lastError,
   unwrapRight,
   unwrapLeft,
 } from "#/shared/test-utils";
 
-const makeEnv = () => makeEnvUtil({ stages: { execution: { hasRun: false } } });
+const makeEnv = () => resetStagesUpTo("execution", makeEnvUtil());
 
 test("does nothing when earlier HALT errors exist (fails closed)", () => {
   const env = makeEnv();
@@ -51,10 +52,6 @@ test("appends HALT error when planning stage has not run", () => {
 
 test("appends HALT error when snapshotId is missing", () => {
   const env = makeEnv();
-  (env.stages.planning as any) = {
-    ...(env.stages.planning as any),
-    hasRun: true,
-  };
   env.ids.snapshotId = undefined;
 
   const out = executionStage(env);
@@ -74,13 +71,6 @@ test("appends HALT error when snapshotId is missing", () => {
 test("fails closed if execution input is invalid (guardExecution enforced)", () => {
   const env = makeEnv();
 
-  // Satisfy prereqs so we reach guardExecution.
-  (env.stages.planning as any) = {
-    ...(env.stages.planning as any),
-    hasRun: true,
-  };
-  env.ids.snapshotId = env.ids.snapshotId ?? "snapshot_1";
-
   // Corrupt a required identifier to force guardExecution to fail
   (env.ids as any).proposalId = "";
 
@@ -95,20 +85,11 @@ test("fails closed if execution input is invalid (guardExecution enforced)", () 
   const err = lastError(nextEnv) as any;
   assert.equal(err.stage, "EXECUTION");
   assert.equal(err.severity, "HALT");
-  assert.equal(err.code, "INVALID_EXECUTION_INPUT");
+  assert.equal(err.code, "EXECUTION_PREREQ_MISSING");
 });
 
 test("writes execution stage output + ids when prereqs satisfied and guard passes", () => {
   const env = makeEnv();
-
-  // Explicit prereqs
-  (env.stages.planning as any) = {
-    ...(env.stages.planning as any),
-    hasRun: true,
-  };
-  env.ids.snapshotId = env.ids.snapshotId ?? "snapshot_1";
-  env.ids.proposalId = env.ids.proposalId ?? "proposal_1";
-
   const out = executionStage(env);
   const nextEnv = unwrapRight(out);
 
@@ -150,14 +131,6 @@ test("writes execution stage output + ids when prereqs satisfied and guard passe
 
 test("effectsLog.proposalId matches envelope proposalId (drift prevention baseline)", () => {
   const env = makeEnv();
-
-  (env.stages.planning as any) = {
-    ...(env.stages.planning as any),
-    hasRun: true,
-  };
-  env.ids.snapshotId = env.ids.snapshotId ?? "snapshot_1";
-  env.ids.proposalId = env.ids.proposalId ?? "proposal_1";
-
   const out = executionStage(env);
   const nextEnv = unwrapRight(out);
 

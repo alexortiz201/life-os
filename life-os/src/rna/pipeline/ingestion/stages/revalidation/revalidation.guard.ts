@@ -9,7 +9,7 @@ import { RevalidationInputSchema } from "#/rna/pipeline/ingestion/stages/revalid
 import { STAGE } from "./revalidation.stage";
 
 function policyAllowsPartial(
-  allowedModes: readonly ["FULL"] | readonly ["FULL", "PARTIAL"]
+  allowedModes: readonly ["FULL"] | readonly ["FULL", "PARTIAL"],
 ): boolean {
   // tuple-union safe check
   return allowedModes.length === 2;
@@ -123,7 +123,7 @@ export function guardRevalidation(env: unknown): GuardRevalidationResult {
   // 3) PARTIAL requirement: any non-ARTIFACT produced effect
   // ---------
   const hasNonArtifact = parsedEffectsLog.producedEffects.some(
-    (e) => e.effectType !== "ARTIFACT"
+    (e) => e.effectType !== "ARTIFACT",
   );
 
   if (hasNonArtifact) {
@@ -269,3 +269,38 @@ export function guardPreRevalidation(env: IngestionPipelineEnvelope) {
     env,
   };
 }
+
+////////////////////////////////////
+/*
+import { guardFactory } from "#/platform/pipeline/guard/guard.factory";
+import { preGuardFactory } from "#/platform/pipeline/preguard/preguard.factory";
+import type { SchemaParseParams } from "#/platform/pipeline/guard/guard.factory.types";
+
+export const guardPreExecution = preGuardFactory({
+  STAGE: "EXECUTION",
+  CODE: "EXECUTION_PREREQ_MISSING",
+} as const);
+
+const pluckParams = ({ ids, stages, proposalId }: SchemaParseParams) => {
+  const validation = stages.validation;
+  const planning = stages.planning;
+
+  return {
+    proposalId,
+    snapshotId: ids?.snapshotId,
+    validationDecision:
+      (validation as any).validationId ?? "validation_unknown",
+    planningId: ids?.planningId ?? "planning_unknown",
+    plan: (planning as any)?.plan ?? [],
+    commitPolicy: (validation as any).commitPolicy ?? undefined,
+  };
+};
+
+export const guardExecution = guardFactory({
+  STAGE: "EXECUTION",
+  InputSchema: ExecutionInputSchema,
+  code: "INVALID_EXECUTION_INPUT",
+  parseFailedRule: "PARSE_FAILED",
+  pluckParams,
+});
+*/

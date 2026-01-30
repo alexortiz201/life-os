@@ -3,11 +3,14 @@ import assert from "node:assert/strict";
 
 import { revalidationStage } from "#/rna/pipeline/ingestion/stages/revalidation/revalidation.stage";
 import {
-  makeEnv,
+  makeEnv as makeEnvUtil,
+  resetStagesUpTo,
   lastError,
   unwrapRight,
   unwrapLeft,
 } from "#/shared/test-utils";
+
+const makeEnv = () => resetStagesUpTo("revalidation", makeEnvUtil());
 
 test("appends HALT error when execution stage has not run", () => {
   const env = makeEnv();
@@ -127,7 +130,7 @@ test("REJECT_COMMIT on drift (effectsLog.proposalId mismatch)", () => {
   assert.equal(r.directive.outcome, "REJECT_COMMIT");
   assert.ok(
     Array.isArray(r.directive.rulesApplied) &&
-      r.directive.rulesApplied.includes("DRIFT_DETECTED")
+      r.directive.rulesApplied.includes("DRIFT_DETECTED"),
   );
 });
 
