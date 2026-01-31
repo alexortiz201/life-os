@@ -217,13 +217,20 @@ export function makeEnv(patch: EnvelopePatch = {}): IngestionPipelineEnvelope {
         proposalId: "proposal_1",
         snapshotId: "snap_1",
         validationDecision: "validation_decision_1",
-        executionplanningId: "plan_1",
+        executionPlanningId: "plan_1",
         executionPlan: ["step_1"],
         executionResult: ["ok"],
         effectsLog: {
           effectsLogId: "effects_1",
           proposalId: "proposal_1",
-          producedEffects: [],
+          producedEffects: [
+            {
+              effectType: "ARTIFACT",
+              objectId: "note_1",
+              kind: "NOTE",
+              trust: "PROVISIONAL",
+            },
+          ],
         },
       } as any,
       revalidation: { hasRun: false },

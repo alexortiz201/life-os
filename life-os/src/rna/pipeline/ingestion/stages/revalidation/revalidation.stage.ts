@@ -1,30 +1,24 @@
 import { pipe } from "fp-ts/function";
 import * as E from "fp-ts/Either";
 
-import { appendError, hasHaltingErrors } from "#/rna/envelope/envelope-utils";
-import type { IngestionPipelineEnvelope } from "#/rna/pipeline/ingestion/ingestion.types";
-
-import { guardPreRevalidation, guardRevalidation } from "./revalidation.guard";
+import { getNewId } from "#/domain/identity/id.provider";
 import {
   leftFromLastError,
   makeStageLeft,
-  PipelineStageFn,
 } from "#/platform/pipeline/stage/stage";
-import { getNewId } from "#/domain/identity/id.provider";
 
-export const STAGE = "REVALIDATION" as const;
+import { appendError, hasHaltingErrors } from "#/rna/envelope/envelope-utils";
+import type { IngestionPipelineEnvelope } from "#/rna/pipeline/ingestion/ingestion.types";
 
-export type RevalidationErrorCode =
-  | "REVALIDATION_PREREQ_MISSING"
-  | "INVALID_REVALIDATION_INPUT";
+import {
+  guardPreRevalidation,
+  guardRevalidation,
+  postGuardRevalidation,
+} from "./revalidation.guard";
+import { RevalidationErrorCode, RevalidationStage } from "./revalidation.types";
+import { STAGE } from "./revalidation.const";
 
 const left = makeStageLeft<IngestionPipelineEnvelope>(appendError);
-
-export type RevalidationStage = PipelineStageFn<
-  IngestionPipelineEnvelope,
-  typeof STAGE,
-  RevalidationErrorCode
->;
 
 export const revalidationStage: RevalidationStage = (env) => {
   // 0) fail closed if earlier stage produced HALT errors
@@ -61,7 +55,22 @@ export const revalidationStage: RevalidationStage = (env) => {
       });
     }),
 
-    // 3) write stage output
+    // 3) post-guard (stage-specific semantic rules)
+    E.chain(({ env, data }) => {
+      const g = postGuardRevalidation({ env, data }); // <- feed both
+
+      return g.ok
+        ? E.right({ env, data: g.data }) // often you return refined data
+        : left({
+            env,
+            stage: STAGE,
+            code: g.code as RevalidationErrorCode,
+            message: g.message,
+            trace: g.trace,
+          });
+    }),
+
+    // 4) write stage output
     E.map(({ env, data }) => {
       const ranAt = Date.now();
       const revalidationId = getNewId("revalidation");
@@ -87,6 +96,6 @@ export const revalidationStage: RevalidationStage = (env) => {
         ids: { ...env.ids, revalidationId },
         stages: { ...env.stages, revalidation },
       };
-    })
+    }),
   );
 };

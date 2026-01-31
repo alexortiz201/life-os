@@ -1,12 +1,19 @@
 import { isProvisionalArtifactEffect } from "#/domain/effects/effects.guards";
 import { errorResultFactory } from "#/platform/pipeline/error/error.factory";
-import { appendError } from "#/rna/envelope/envelope-utils";
+import { guardFactory } from "#/platform/pipeline/guard/guard.factory";
+import { preGuardFactory } from "#/platform/pipeline/preguard/preguard.factory";
+import type { SchemaParseParams } from "#/platform/pipeline/guard/guard.factory.types";
 
-import type { RevalidationRule } from "#/rna/pipeline/ingestion/stages/revalidation/revalidation.rules";
-import type { IngestionPipelineEnvelope } from "#/rna/pipeline/ingestion/ingestion.types";
-import type { GuardRevalidationResult } from "#/rna/pipeline/ingestion/stages/revalidation/revalidation.types";
-import { RevalidationInputSchema } from "#/rna/pipeline/ingestion/stages/revalidation/revalidation.schemas";
-import { STAGE } from "./revalidation.stage";
+import type {
+  PostGuardRevalidationInput,
+  RevalidationErrorCode,
+  RevalidationInput,
+  RevalidationRule,
+} from "#/rna/pipeline/ingestion/stages/revalidation/revalidation.types";
+
+import type { GuardRevalidationResult } from "./revalidation.types";
+import { RevalidationInputSchema } from "./revalidation.schemas";
+import { STAGE } from "./revalidation.const";
 
 function policyAllowsPartial(
   allowedModes: readonly ["FULL"] | readonly ["FULL", "PARTIAL"],
@@ -15,97 +22,56 @@ function policyAllowsPartial(
   return allowedModes.length === 2;
 }
 
-/**
- * Minimal runtime narrowing so we can safely pluck from `unknown`.
- * (We still Zod-validate the "candidate" as the real contract.)
- */
-function isObject(x: unknown): x is Record<string, any> {
-  return typeof x === "object" && x !== null;
-}
+export const guardPreRevalidation = preGuardFactory({
+  STAGE,
+  CODE: "REVALIDATION_PREREQ_MISSING",
+} as const);
 
-export function guardRevalidation(env: unknown): GuardRevalidationResult {
-  const errorResult = errorResultFactory({
+const pluckParams = ({ ids, stages }: SchemaParseParams) => {
+  const execution = stages.execution;
+  const validation = stages.validation;
+  const planning = stages.planning;
+
+  return {
+    proposalId: ids?.proposalId,
+    snapshotId: ids?.snapshotId,
+    executionId: ids?.executionId,
+    planningId: ids?.planningId,
+    validationDecision: (validation as any).validationId,
+    plan: (planning as any)?.plan,
+    commitPolicy: (validation as any).commitPolicy,
+    effectsLog: (execution as any)?.effectsLog,
+    // executionResult: execution.result
+  } satisfies RevalidationInput;
+};
+
+export const guardRevalidation = guardFactory({
+  STAGE,
+  InputSchema: RevalidationInputSchema,
+  code: "INVALID_REVALIDATION_INPUT",
+  parseFailedRule: "PARSE_FAILED",
+  pluckParams,
+});
+
+// example: drift rules, allowlist rules, etc
+export function postGuardRevalidation(
+  input: PostGuardRevalidationInput,
+): GuardRevalidationResult {
+  const {
+    commitPolicy: parsedCommitPolicy,
+    effectsLog: parsedEffectsLog,
+    proposalId,
+  } = input.data;
+
+  const error = errorResultFactory<typeof STAGE, RevalidationErrorCode>({
     stage: STAGE,
-    code: "INVALID_REVALIDATION_INPUT" as const,
-    message: "Input invalid",
+    code: "INVALID_REVALIDATION_INPUT",
+    message: "Post guard revalidation failed",
   });
 
-  // ---------
-  // 0) Narrow unknown -> something we can safely optional-chain
-  // ---------
-  if (!isObject(env)) {
-    return errorResult({
-      rulesApplied: ["PARSE_FAILED"] satisfies RevalidationRule[],
-    });
-  }
-
-  const ids = isObject(env.ids) ? env.ids : undefined;
-  const stages = isObject(env.stages) ? env.stages : undefined;
-  const proposalId = typeof ids?.proposalId === "string" ? ids.proposalId : "";
-
-  if (!proposalId || !stages) {
-    return errorResult({
-      proposalId: proposalId || undefined,
-      rulesApplied: ["PARSE_FAILED"] satisfies RevalidationRule[],
-    });
-  }
-
-  const validation = stages.validation;
-  const execution = stages.execution;
-
-  // must exist as objects to proceed
-  if (!isObject(validation) || !isObject(execution)) {
-    return errorResult({
-      proposalId,
-      rulesApplied: ["PARSE_FAILED"] satisfies RevalidationRule[],
-    });
-  }
-
-  // ---------
-  // 1) Pluck what we can (fail-closed happens via Zod below)
-  // ---------
-  const commitPolicy =
-    validation.hasRun === true ? (validation as any).commitPolicy : undefined;
-
-  // Prefer canonical effectsLog if you store it on execution stage
-  const effectsLog =
-    execution.hasRun === true ? (execution as any).effectsLog : undefined;
-
-  const candidate = {
-    proposalId,
-    snapshotId: ids?.snapshotId,
-    validationDecision:
-      validation.hasRun === true
-        ? (validation as any).validationId
-        : "validation_unknown",
-    executionplanningId: ids?.planningId ?? "planning_unknown",
-    executionPlan: [],
-    executionResult: [],
-    commitPolicy,
-    effectsLog,
-  };
-
-  const parsed = RevalidationInputSchema.safeParse(candidate);
-
-  if (!parsed.success) {
-    return errorResult({
-      proposalId,
-      effectsLogDeclaredProposalId: (effectsLog as any)?.proposalId,
-      effectsLogId: (effectsLog as any)?.effectsLogId ?? ids?.effectsLogId,
-      allowListCount: 0,
-      rulesApplied: ["PARSE_FAILED"] satisfies RevalidationRule[],
-    });
-  }
-
-  const { effectsLog: parsedEffectsLog, commitPolicy: parsedCommitPolicy } =
-    parsed.data;
-
-  // ---------
-  // 2) Drift check (now meaningful)
-  // ---------
   if (parsedEffectsLog.proposalId !== proposalId) {
     return {
-      ok: true,
+      ok: true as const,
       data: {
         proposalId,
         effectsLog: parsedEffectsLog,
@@ -128,7 +94,7 @@ export function guardRevalidation(env: unknown): GuardRevalidationResult {
 
   if (hasNonArtifact) {
     if (!policyAllowsPartial(parsedCommitPolicy.allowedModes)) {
-      return errorResult({
+      return error({
         proposalId,
         effectsLogDeclaredProposalId: parsedEffectsLog.proposalId,
         effectsLogId: parsedEffectsLog.effectsLogId,
@@ -148,15 +114,17 @@ export function guardRevalidation(env: unknown): GuardRevalidationResult {
       .filter(isProvisionalArtifactEffect)
       .map((e) => e.objectId);
 
+    const commitAllowList = Array.from(new Set(allow));
+
     return {
-      ok: true,
+      ok: true as const,
       data: {
         proposalId,
         effectsLog: parsedEffectsLog,
         directive: {
           proposalId,
           outcome: "PARTIAL_COMMIT",
-          commitAllowList: allow,
+          commitAllowList,
           rulesApplied: [
             "NON_ARTIFACT_EFFECTS_PRESENT",
           ] satisfies RevalidationRule[],
@@ -169,7 +137,7 @@ export function guardRevalidation(env: unknown): GuardRevalidationResult {
   // 4) Full approval otherwise
   // ---------
   return {
-    ok: true,
+    ok: true as const,
     data: {
       proposalId,
       effectsLog: parsedEffectsLog,
@@ -182,125 +150,3 @@ export function guardRevalidation(env: unknown): GuardRevalidationResult {
     },
   };
 }
-
-export function guardPreRevalidation(env: IngestionPipelineEnvelope) {
-  const execution = env.stages.execution;
-  if (!execution.hasRun) {
-    return {
-      ok: false,
-      env: appendError(env, {
-        stage: STAGE,
-        severity: "HALT",
-        code: "REVALIDATION_PREREQ_MISSING",
-        message: "Execution stage has not run.",
-        trace: { proposalId: env.ids.proposalId, executionHasRun: false },
-        at: Date.now(),
-      }),
-    };
-  }
-
-  const validation = env.stages.validation;
-  if (!validation.hasRun) {
-    return {
-      ok: false,
-      env: appendError(env, {
-        stage: STAGE,
-        severity: "HALT",
-        code: "REVALIDATION_PREREQ_MISSING",
-        message: "Validation stage has not run (commitPolicy missing).",
-        trace: { proposalId: env.ids.proposalId, validationHasRun: false },
-        at: Date.now(),
-      }),
-    };
-  }
-
-  // commitPolicy should be produced by validation (source of truth)
-  if (!(validation as any).commitPolicy) {
-    return {
-      ok: false,
-      env: appendError(env, {
-        stage: STAGE,
-        severity: "HALT",
-        code: "REVALIDATION_PREREQ_MISSING",
-        message: "Missing commitPolicy on validation stage output.",
-        trace: { proposalId: env.ids.proposalId },
-        at: Date.now(),
-      }),
-    };
-  }
-
-  if (!env.ids.snapshotId) {
-    return {
-      ok: false,
-      env: appendError(env, {
-        stage: STAGE,
-        severity: "HALT",
-        code: "REVALIDATION_PREREQ_MISSING",
-        message:
-          "Missing snapshotId (meaning version) required for revalidation.",
-        trace: {
-          proposalId: env.ids.proposalId,
-          snapshotId: env.ids.snapshotId,
-        },
-        at: Date.now(),
-      }),
-    };
-  }
-
-  if (!env.ids.effectsLogId) {
-    return {
-      ok: false,
-      env: appendError(env, {
-        stage: STAGE,
-        severity: "HALT",
-        code: "REVALIDATION_PREREQ_MISSING",
-        message: "Missing effectsLogId required for revalidation.",
-        trace: {
-          proposalId: env.ids.proposalId,
-          effectsLogId: env.ids.effectsLogId,
-        },
-        at: Date.now(),
-      }),
-    };
-  }
-
-  return {
-    ok: true,
-    env,
-  };
-}
-
-////////////////////////////////////
-/*
-import { guardFactory } from "#/platform/pipeline/guard/guard.factory";
-import { preGuardFactory } from "#/platform/pipeline/preguard/preguard.factory";
-import type { SchemaParseParams } from "#/platform/pipeline/guard/guard.factory.types";
-
-export const guardPreExecution = preGuardFactory({
-  STAGE: "EXECUTION",
-  CODE: "EXECUTION_PREREQ_MISSING",
-} as const);
-
-const pluckParams = ({ ids, stages, proposalId }: SchemaParseParams) => {
-  const validation = stages.validation;
-  const planning = stages.planning;
-
-  return {
-    proposalId,
-    snapshotId: ids?.snapshotId,
-    validationDecision:
-      (validation as any).validationId ?? "validation_unknown",
-    planningId: ids?.planningId ?? "planning_unknown",
-    plan: (planning as any)?.plan ?? [],
-    commitPolicy: (validation as any).commitPolicy ?? undefined,
-  };
-};
-
-export const guardExecution = guardFactory({
-  STAGE: "EXECUTION",
-  InputSchema: ExecutionInputSchema,
-  code: "INVALID_EXECUTION_INPUT",
-  parseFailedRule: "PARSE_FAILED",
-  pluckParams,
-});
-*/

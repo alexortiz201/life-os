@@ -5,13 +5,18 @@ import type {
   GuardResult,
   StageGuardTrace,
 } from "#/platform/pipeline/pipeline.types";
+import { PipelineStageFn } from "#/platform/pipeline/stage/stage";
 
-import { ExecutionEffectsLog } from "#/rna/pipeline/ingestion/stages/execution/execution.types";
+import type { ExecutionEffectsLog } from "#/rna/pipeline/ingestion/stages/execution/execution.types";
+import type { IngestionPipelineEnvelope } from "#/rna/pipeline/ingestion/ingestion.types";
+
+import type { REVALIDATION_RULES, STAGE } from "./revalidation.const";
 import {
   RevalidationCommitDirectiveSchema,
   RevalidationInputSchema,
+  RevalidationSchema,
 } from "./revalidation.schemas";
-import type { RevalidationRule } from "./revalidation.rules";
+import { CommitPolicy } from "../validation/validation.types";
 
 export type RevalidationCommitDirective = z.infer<
   typeof RevalidationCommitDirectiveSchema
@@ -39,3 +44,21 @@ export type GuardRevalidationResult = GuardResult<
   RevalidationGuardOutput,
   RevalidationTrace
 >;
+
+export type RevalidationErrorCode =
+  | "REVALIDATION_PREREQ_MISSING"
+  | "INVALID_REVALIDATION_INPUT";
+
+export type RevalidationStage = PipelineStageFn<
+  IngestionPipelineEnvelope,
+  typeof STAGE,
+  RevalidationErrorCode
+>;
+
+export type RevalidationRule = (typeof REVALIDATION_RULES)[number];
+
+export type Revalidation = z.infer<typeof RevalidationSchema>;
+export type PostGuardRevalidationInput = {
+  env: IngestionPipelineEnvelope;
+  data: RevalidationInput;
+};

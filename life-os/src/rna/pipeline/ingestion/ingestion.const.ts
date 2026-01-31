@@ -22,5 +22,8 @@ export const INGESTION_STAGE_DEPS = {
   COMMIT: { stages: ["REVALIDATION"], ids: ["proposalId"] },
 } as const satisfies Record<
   PipelineStage,
-  { stages: readonly PipelineStage[]; ids: readonly (keyof EnvelopeIds)[] }
+  {
+    stages: readonly PipelineStage[];
+    ids: readonly (keyof EnvelopeIds)[];
+  }
 >;

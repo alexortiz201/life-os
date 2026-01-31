@@ -78,26 +78,6 @@ test("appends HALT error when effectsLogId missing", () => {
 
 test("APPROVE_COMMIT when only ARTIFACT effects are present", () => {
   const env = makeEnv();
-
-  (env.stages.validation as any) = {
-    ...(env.stages.validation as any),
-    hasRun: true,
-    commitPolicy: { allowedModes: ["FULL"] as const },
-  };
-
-  (env.stages.execution as any).effectsLog = {
-    effectsLogId: "effects_1",
-    proposalId: "proposal_1",
-    producedEffects: [
-      {
-        effectType: "ARTIFACT",
-        objectId: "note_1",
-        kind: "NOTE",
-        trust: "PROVISIONAL",
-      },
-    ],
-  };
-
   const out = revalidationStage(env);
   const nextEnv = unwrapRight(out);
 

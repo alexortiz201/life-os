@@ -1,21 +1,15 @@
-import {
+import type {
   PipelineEnvelope,
   PipelineStage,
   PipelineStageError,
 } from "#/platform/pipeline/pipeline.types";
+import type { Permission } from "#/domain/permissions/permissions.types";
+import type { Kinds } from "#/domain/scopes/scopes.types";
+import type { ContextSnapshot } from "#/domain/snapshot/snapshot.provider.types";
 
-import {
-  CommitPolicy,
-  DecisionType,
-  Validation,
-} from "#/rna/pipeline/ingestion/stages/validation/validation.types";
-import { RevalidationGuardOutput } from "#/rna/pipeline/ingestion/stages/revalidation/revalidation.types";
-import { CommitRecord } from "#/rna/pipeline/ingestion/stages/commit/commit.types";
-import { Permission } from "#/domain/permissions/permissions.types";
-import { Kinds } from "#/domain/scopes/scopes.types";
-import { ContextSnapshot } from "#/domain/snapshot/snapshot.provider.types";
-import { ExecutionEffectsLog } from "#/rna/pipeline/ingestion/stages/execution/execution.types";
-
+import type { Validation } from "#/rna/pipeline/ingestion/stages/validation/validation.types";
+import type { Revalidation } from "#/rna/pipeline/ingestion/stages/revalidation/revalidation.types";
+import type { CommitRecord } from "#/rna/pipeline/ingestion/stages/commit/commit.types";
 import type { Intake } from "#/rna/pipeline/ingestion/stages/intake/intake.types";
 import type { Planning } from "#/rna/pipeline/ingestion/stages/planning/planning.types";
 import type { Execution } from "#/rna/pipeline/ingestion/stages/execution/execution.types";
@@ -70,15 +64,10 @@ type IntakeStageOutput = StageResult<Intake, IntakeObservedIds>;
 type ValidationStageOutput = StageResult<Validation, ObservedIds<"intakeId">>;
 type PlanningStageOutput = StageResult<Planning, ObservedIds<"validationId">>;
 type ExecutionStageOutput = StageResult<Execution, ObservedIds<"planningId">>;
-
-type RevalidationStageState = {
-  revalidationId: string;
-} & RevalidationGuardOutput;
 type RevalidationStageOutput = StageResult<
-  RevalidationStageState,
+  Revalidation,
   ObservedIds<"effectsLogId">
 >;
-
 type CommitStageOutput = StageResult<
   CommitRecord,
   ObservedIds<"revalidationId" | "effectsLogId">
