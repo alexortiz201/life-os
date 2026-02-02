@@ -1,34 +1,25 @@
 import { pipe } from "fp-ts/function";
 import * as E from "fp-ts/Either";
 
-import { guardTrustPromotion } from "#/domain/trust/trustPromotion.guard";
-import { appendError, hasHaltingErrors } from "#/rna/envelope/envelope-utils";
-
-import type { IngestionPipelineEnvelope } from "#/rna/pipeline/ingestion/ingestion.types";
-import type { CommitRecord } from "#/rna/pipeline/ingestion/stages/commit/commit.types";
-
-import { guardPreCommit, guardCommit } from "./commit.guard";
 import { getNewId } from "#/domain/identity/id.provider";
+import { guardTrustPromotion } from "#/domain/trust/trustPromotion.guard";
 import {
   leftFromLastError,
   makeStageLeft,
   PipelineStageFn,
 } from "#/platform/pipeline/stage/stage";
 
-export const STAGE = "COMMIT" as const;
+import { appendError, hasHaltingErrors } from "#/rna/envelope/envelope-utils";
+import type { IngestionPipelineEnvelope } from "#/rna/pipeline/ingestion/ingestion.types";
 
-const TRUST_PROVISIONAL = "PROVISIONAL";
-const TRUST_COMMMITED = "COMMITTED";
+import type { CommitErrorCode, Commit } from "./commit.types";
+import { guardPreCommit, guardCommit, postGuardCommit } from "./commit.guard";
+import { STAGE, TRUST_COMMMITED, TRUST_PROVISIONAL } from "./commit.const";
 
 const TRUST_FROM = TRUST_PROVISIONAL;
 const TRUST_TO = TRUST_COMMMITED;
 
 const left = makeStageLeft<IngestionPipelineEnvelope>(appendError);
-
-export type CommitErrorCode =
-  | "INVALID_COMMIT_INPUT"
-  | "COMMIT_PREREQ_MISSING"
-  | "PARTIAL_NOT_ALLOWED";
 
 export type CommitStage = PipelineStageFn<
   IngestionPipelineEnvelope,
@@ -56,20 +47,11 @@ export const commitStage: CommitStage = (env) => {
           >(pre.env);
     }),
 
-    // 2) run guard (schema / contract)
+    // 2) guard (schema/contract)
     E.chain((env) => {
       const g = guardCommit(env);
 
       if (g.ok) return E.right({ env, data: g.data });
-
-      const nextEnv = appendError(env, {
-        stage: STAGE,
-        severity: "HALT",
-        code: g.code,
-        message: g.message,
-        trace: g.trace,
-        at: Date.now(),
-      });
 
       return left({
         env,
@@ -80,6 +62,21 @@ export const commitStage: CommitStage = (env) => {
       });
     }),
 
+    // 3) post-guard (stage-specific semantic rules)
+    E.chain(({ env, data }) => {
+      const g = postGuardCommit({ env, data });
+
+      return g.ok
+        ? E.right({ env, data: g.data }) // often you return refined data
+        : left({
+            env,
+            stage: STAGE,
+            code: g.code as CommitErrorCode,
+            message: g.message,
+            trace: g.trace,
+          });
+    }),
+
     // 3) build commit record + stage output
     E.map(({ env, data }) => {
       const ranAt = Date.now();
@@ -87,24 +84,24 @@ export const commitStage: CommitStage = (env) => {
       const proposalId = data.proposalId;
       const outcome = data.outcome;
 
-      const approvedEffects: CommitRecord["effects"]["approved"] = [];
-      const rejectedEffects: CommitRecord["effects"]["rejected"] = [
+      const approvedEffects: Commit["effects"]["approved"] = [];
+      const rejectedEffects: Commit["effects"]["rejected"] = [
         ...data.effects.rejected.artifacts,
         ...data.effects.rejected.events,
       ];
-      const ignoredEffects: CommitRecord["effects"]["ignored"] = [
+      const ignoredEffects: Commit["effects"]["ignored"] = [
         ...data.effects.ignored.artifacts,
         ...data.effects.ignored.events,
         ...data.effects.ignored.unknown,
       ];
 
-      const justification: CommitRecord["justification"] = {
+      const justification: Commit["justification"] = {
         mode: data.mode,
         rulesApplied: data.rulesApplied,
         inputs: [{ commitId, proposalId, allowListCount: data.allowListCount }],
       };
 
-      const promotions: CommitRecord["promotions"] = [];
+      const promotions: Commit["promotions"] = [];
 
       // If PARTIAL with empty allowlist -> commit nothing, still emit record + stage output
       if (
@@ -222,6 +219,6 @@ export const commitStage: CommitStage = (env) => {
         ids: { ...env.ids, commitId },
         stages: { ...env.stages, commit },
       };
-    })
+    }),
   );
 };

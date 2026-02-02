@@ -16,7 +16,6 @@ const EventEffectSchema = z.object({
   eventName: z.string().min(1), // e.g. "INGESTION_COMPLETED"
   payload: z.unknown().optional(), // keep flexible for now
   trust: TrustLevelSchema,
-
   // Optional: if you want linkage/audit correlation without requiring it yet
   // eventId: z.string().min(1).optional(),
 });
@@ -43,14 +42,21 @@ const LegacyArtifactEffectSchema = z.object({
  * - Accepts canonical ARTIFACT/EVENT effects
  * - Also accepts legacy artifact effects and normalizes them to canonical ARTIFACT
  */
-export const EffectSchema = z.preprocess((val) => {
-  // If it's legacy artifact shape, upgrade it in-place.
-  const legacy = LegacyArtifactEffectSchema.safeParse(val);
-  if (legacy.success) {
-    return {
-      effectType: "ARTIFACT",
-      ...legacy.data,
-    };
-  }
-  return val;
-}, z.discriminatedUnion("effectType", [ArtifactEffectSchema, EventEffectSchema, UnknownEffectSchema]));
+export const EffectSchema = z.preprocess(
+  (val) => {
+    // If it's legacy artifact shape, upgrade it in-place.
+    const legacy = LegacyArtifactEffectSchema.safeParse(val);
+    if (legacy.success) {
+      return {
+        effectType: "ARTIFACT",
+        ...legacy.data,
+      };
+    }
+    return val;
+  },
+  z.discriminatedUnion("effectType", [
+    ArtifactEffectSchema,
+    EventEffectSchema,
+    UnknownEffectSchema,
+  ]),
+);

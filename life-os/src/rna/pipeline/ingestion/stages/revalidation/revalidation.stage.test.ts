@@ -6,6 +6,7 @@ import {
   makeEnv as makeEnvUtil,
   resetStagesUpTo,
   lastError,
+  makeValidEffectsLog,
   unwrapRight,
   unwrapLeft,
 } from "#/shared/test-utils";
@@ -97,6 +98,7 @@ test("REJECT_COMMIT on drift (effectsLog.proposalId mismatch)", () => {
     effectsLogId: "effects_1",
     proposalId: "proposal_X",
     producedEffects: [],
+    fingerprint: "drift_print",
   };
 
   const out = revalidationStage(env);
@@ -123,7 +125,7 @@ test("PARTIAL_NOT_ALLOWED when non-artifact effects exist and policy is FULL-onl
     commitPolicy: { allowedModes: ["FULL"] as const },
   };
 
-  (env.stages.execution as any).effectsLog = {
+  (env.stages.execution as any).effectsLog = makeValidEffectsLog({
     effectsLogId: "effects_1",
     proposalId: "proposal_1",
     producedEffects: [
@@ -140,7 +142,7 @@ test("PARTIAL_NOT_ALLOWED when non-artifact effects exist and policy is FULL-onl
         trust: "PROVISIONAL",
       },
     ],
-  };
+  });
 
   const out = revalidationStage(env);
   const nextEnv = unwrapLeft(out);
@@ -163,7 +165,7 @@ test("PARTIAL_COMMIT when non-artifact effects exist and policy allows PARTIAL",
     commitPolicy: { allowedModes: ["FULL", "PARTIAL"] as const },
   };
 
-  (env.stages.execution as any).effectsLog = {
+  (env.stages.execution as any).effectsLog = makeValidEffectsLog({
     effectsLogId: "effects_1",
     proposalId: "proposal_1",
     producedEffects: [
@@ -185,7 +187,7 @@ test("PARTIAL_COMMIT when non-artifact effects exist and policy allows PARTIAL",
         trust: "COMMITTED",
       },
     ],
-  };
+  });
 
   const out = revalidationStage(env);
   const nextEnv = unwrapRight(out);

@@ -1,9 +1,6 @@
-import { Actor } from "../actors/actors.types";
-import { PERMISSIONS } from "./permissions.const";
+import { Actor } from "#/domain/actors/actors.types";
 
-export type Permission = (typeof PERMISSIONS)[number];
-
-export type PermissionState<TPerm extends string> = {
+export type PermissionState<TAction extends string> = {
   actor: Actor;
-  allow: readonly TPerm[];
+  allow: readonly TAction[];
 };

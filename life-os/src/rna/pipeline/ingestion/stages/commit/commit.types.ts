@@ -10,11 +10,16 @@ import type {
   ArtifactEffect,
   IgnoredEffect,
   EventEffect,
+  UnknownEffect,
 } from "#/domain/effects/effects.types";
 import type { TrustLevel } from "#/domain/trust/trust.types";
-import type { PrecommitRule } from "#/rna/pipeline/ingestion/stages/commit/commit.rules";
+
+import type { IngestionPipelineEnvelope } from "#/rna/pipeline/ingestion/ingestion.types";
+import { COMMIT_RULES } from "#/rna/pipeline/ingestion/stages/commit/commit.const";
 import { CommitInputSchema } from "#/rna/pipeline/ingestion/stages/commit/commit.schemas";
 import { CommitOutcome } from "#/rna/pipeline/ingestion/stages/commit/commitDecision.constants";
+
+export type CommitRule = (typeof COMMIT_RULES)[number];
 
 export type TrustPromotionRecord = {
   objectId: string;
@@ -48,7 +53,7 @@ export type RejectedEffect = RejectedEffectKey & {
 
 export type Justification = {
   mode: EffectDecisionMode;
-  rulesApplied: PrecommitRule[];
+  rulesApplied: CommitRule[];
   inputs: Array<{
     commitId: string;
     proposalId: string;
@@ -57,7 +62,7 @@ export type Justification = {
   notes?: Array<Note>;
 };
 
-export type CommitRecord = {
+export type Commit = {
   commitId: string;
   proposalId: string;
   promotions: Array<TrustPromotionRecord>;
@@ -92,13 +97,13 @@ export type CommitGuardOutput = {
       unknown: Array<IgnoredEffect>;
     };
   };
-  rulesApplied: PrecommitRule[];
+  rulesApplied: CommitRule[];
   outcome: CommitOutcome;
 };
 
 export type CommitTrace = StageGuardTrace<
   EffectDecisionModeOrUnknown,
-  PrecommitRule
+  CommitRule
 > &
   Partial<{
     revalidationDeclaredProposalId: string;
@@ -108,3 +113,50 @@ export type CommitTrace = StageGuardTrace<
   }>;
 
 export type GuardCommitResult = GuardResult<CommitGuardOutput, CommitTrace>;
+// export type GuardCommitResult =
+//   | { ok: true; data: CommitGuardOutput }
+//   | {
+//       ok: false;
+//       stage: typeof STAGE; // "COMMIT"
+//       code: CommitGuardErrorCode; // <-- union, NOT string
+//       message: string;
+//       trace: unknown; // or your trace type
+//     };
+
+export type CommitErrorCode =
+  | "INVALID_COMMIT_INPUT"
+  | "COMMIT_PREREQ_MISSING"
+  | "PARTIAL_NOT_ALLOWED";
+
+export type CommitGuardErrorCode =
+  | "INVALID_COMMIT_INPUT"
+  | "COMMIT_INPUT_MISMATCH"
+  | "COMMIT_OUTCOME_UNSUPPORTED"
+  | "ALLOWLIST_UNKNOWN_OBJECT";
+
+export type ProducedEffect = ArtifactEffect | EventEffect | UnknownEffect;
+
+export type GroupedEffects = {
+  all: {
+    artifactIds: string[];
+    eventNames: string[];
+  };
+  provisional: {
+    artifacts: ArtifactEffect[];
+    events: EventEffect[];
+  };
+  rejected: {
+    artifacts: RejectedEffect[];
+    events: RejectedEffect[];
+  };
+  other: {
+    artifacts: ArtifactEffect[];
+    events: EventEffect[];
+    unknown: UnknownEffect[];
+  };
+};
+
+export type PostGuardCommitInput = {
+  env: IngestionPipelineEnvelope;
+  data: CommitInput;
+};

@@ -92,7 +92,10 @@ export const validationStage: ValidationStage = (env) => {
       const snapshot = {
         snapshotId,
         permissions: {
-          actor: "USER" as const,
+          actor: {
+            actorId: "user_1",
+            actorType: "USER",
+          },
           allow: ["WEEKLY_REFLECTION"] as const,
         },
 

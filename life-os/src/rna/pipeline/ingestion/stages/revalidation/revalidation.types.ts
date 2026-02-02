@@ -16,7 +16,6 @@ import {
   RevalidationInputSchema,
   RevalidationSchema,
 } from "./revalidation.schemas";
-import { CommitPolicy } from "../validation/validation.types";
 
 export type RevalidationCommitDirective = z.infer<
   typeof RevalidationCommitDirectiveSchema

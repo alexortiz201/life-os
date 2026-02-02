@@ -14,6 +14,7 @@ import type {
 import type { GuardRevalidationResult } from "./revalidation.types";
 import { RevalidationInputSchema } from "./revalidation.schemas";
 import { STAGE } from "./revalidation.const";
+import { fingerprint } from "#/domain/encoding/fingerprint";
 
 function policyAllowsPartial(
   allowedModes: readonly ["FULL"] | readonly ["FULL", "PARTIAL"],
@@ -69,7 +70,17 @@ export function postGuardRevalidation(
     message: "Post guard revalidation failed",
   });
 
-  if (parsedEffectsLog.proposalId !== proposalId) {
+  // inside postGuardRevalidation, before other rules:
+  const expected = fingerprint({
+    proposalId,
+    effectsLogId: parsedEffectsLog.effectsLogId,
+    producedEffects: parsedEffectsLog.producedEffects,
+  });
+
+  if (
+    parsedEffectsLog.fingerprint !== expected ||
+    parsedEffectsLog.proposalId !== proposalId
+  ) {
     return {
       ok: true as const,
       data: {
@@ -79,7 +90,7 @@ export function postGuardRevalidation(
           proposalId,
           outcome: "REJECT_COMMIT",
           commitAllowList: [],
-          rulesApplied: ["DRIFT_DETECTED"] satisfies RevalidationRule[],
+          rulesApplied: ["DRIFT_DETECTED"] as const,
         },
       },
     };

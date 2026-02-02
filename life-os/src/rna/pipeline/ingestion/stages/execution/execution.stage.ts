@@ -14,6 +14,8 @@ import type { IngestionPipelineEnvelope } from "#/rna/pipeline/ingestion/ingesti
 import { guardPreExecution, guardExecution } from "./execution.guard";
 import type { ExecutionErrorCode, ExecutionStage } from "./execution.types";
 import { STAGE } from "./execution.const";
+import { Effect } from "#/domain/effects/effects.types";
+import { fingerprint } from "#/domain/encoding/fingerprint";
 
 const left = makeStageLeft<IngestionPipelineEnvelope>(appendError);
 
@@ -66,6 +68,7 @@ export const executionStage: ExecutionStage = (env) => {
       const ranAt = Date.now();
       const executionId = getNewId("execution");
       const effectsLogId = getNewId("effects");
+      const producedEffects: Effect[] = [];
       const execution = {
         hasRun: true,
         ranAt,
@@ -78,7 +81,12 @@ export const executionStage: ExecutionStage = (env) => {
         effectsLog: {
           effectsLogId,
           proposalId: env.ids.proposalId,
-          producedEffects: [],
+          producedEffects,
+          fingerprint: fingerprint({
+            proposalId: env.ids.proposalId,
+            effectsLogId,
+            producedEffects,
+          }),
         },
       } satisfies IngestionPipelineEnvelope["stages"]["execution"];
 

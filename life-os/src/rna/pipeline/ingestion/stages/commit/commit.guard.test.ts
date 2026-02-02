@@ -2,231 +2,114 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { guardCommit } from "#/rna/pipeline/ingestion/stages/commit/commit.guard";
-import type { IngestionPipelineEnvelope } from "#/rna/pipeline/ingestion/ingestion.types";
-import { makeCommitEnv } from "#/shared/test-utils"; // adjust relative import if needed
 
-function patchEnv(
-  patch: Partial<IngestionPipelineEnvelope>
-): IngestionPipelineEnvelope {
-  // if your makeCommitEnv already deep merges stages.revalidation.directive/effectsLog,
-  // this is enough:
-  return makeCommitEnv(patch as any);
-}
+import { makeEnv as makeEnvUtil, resetStagesUpTo } from "#/shared/test-utils";
 
-function ids(x: any): string[] {
-  return (x as Array<any>).map((o) => o.objectId).sort();
-}
+const makeEnv = () => resetStagesUpTo("commit", makeEnvUtil());
 
-test("INVALID_COMMIT_INPUT when input shape is wrong", () => {
+//////////////////// Guard (guardFactory)
+test("guardCommit returns ok:false INVALID_COMMIT_INPUT when input shape is wrong", () => {
   const result = guardCommit({ nope: true } as any);
 
   assert.equal(result.ok, false);
   if (!result.ok) {
     assert.equal(result.code, "INVALID_COMMIT_INPUT");
     assert.equal(typeof result.message, "string");
+    assert.ok(result.trace);
+    assert.ok(result.trace?.rulesApplied?.includes("PARSE_FAILED"));
   }
 });
 
-test("COMMIT_INPUT_MISMATCH when revalidation.proposalId does not match proposalId", () => {
-  const env = patchEnv({
-    ids: { proposalId: "proposal_1" },
-    stages: {
-      revalidation: {
-        ...(makeCommitEnv().stages.revalidation as any),
-        directive: {
-          ...(makeCommitEnv().stages.revalidation as any).directive,
-          proposalId: "proposal_X",
-          outcome: "APPROVE_COMMIT",
-        },
-      } as any,
-    } as any,
-  });
+test("guardCommit returns ok:false when required plucked fields are missing (parse fails)", () => {
+  const env = makeEnv();
 
-  const result = guardCommit(env);
+  // break a required field for schema parsing
+  (env.ids.proposalId as any) = undefined;
+
+  const result = guardCommit(env as any);
 
   assert.equal(result.ok, false);
   if (!result.ok) {
-    assert.equal(result.code, "COMMIT_INPUT_MISMATCH");
+    assert.equal(result.code, "INVALID_COMMIT_INPUT");
+    assert.ok(result.trace?.rulesApplied?.includes("PARSE_FAILED"));
   }
 });
 
-test("COMMIT_INPUT_MISMATCH when effectsLog.proposalId does not match proposalId", () => {
-  const env = patchEnv({
-    ids: { proposalId: "proposal_1" },
-    stages: {
-      revalidation: {
-        ...(makeCommitEnv().stages.revalidation as any),
-        effectsLog: {
-          ...(makeCommitEnv().stages.revalidation as any).effectsLog,
-          proposalId: "proposal_X",
-        },
-      } as any,
-    } as any,
-  });
+test("guardCommit returns ok:false when execution.effectsLog is missing (parse fails)", () => {
+  const env = makeEnv();
 
-  const result = guardCommit(env);
+  // pluckParams reads effectsLog from stages.execution.effectsLog
+  (env.stages.execution as any) = {
+    ...(env.stages.execution as any),
+    effectsLog: undefined,
+  };
+
+  const result = guardCommit(env as any);
 
   assert.equal(result.ok, false);
   if (!result.ok) {
-    assert.equal(result.code, "COMMIT_INPUT_MISMATCH");
+    assert.equal(result.code, "INVALID_COMMIT_INPUT");
+    assert.ok(result.trace?.rulesApplied?.includes("PARSE_FAILED"));
   }
 });
 
-test("COMMIT_OUTCOME_UNSUPPORTED when outcome is not APPROVE_COMMIT or PARTIAL_COMMIT", () => {
-  const env = patchEnv({
-    stages: {
-      revalidation: {
-        ...(makeCommitEnv().stages.revalidation as any),
-        directive: {
-          ...(makeCommitEnv().stages.revalidation as any).directive,
-          outcome: "REJECT_COMMIT",
-          commitAllowList: [],
-        },
-      } as any,
-    } as any,
-  });
+test("guardCommit returns ok:false when revalidation stage is missing (parse fails)", () => {
+  const env = makeEnv();
 
-  const result = guardCommit(env);
+  // pluckParams returns revalidation: stages.revalidation
+  (env.stages as any).revalidation = undefined;
+
+  const result = guardCommit(env as any);
 
   assert.equal(result.ok, false);
   if (!result.ok) {
-    assert.equal(result.code, "COMMIT_OUTCOME_UNSUPPORTED");
+    assert.equal(result.code, "INVALID_COMMIT_INPUT");
+    assert.ok(result.trace?.rulesApplied?.includes("PARSE_FAILED"));
   }
 });
 
-test("APPROVE_COMMIT returns FULL mode and commitEligibleEffects includes all PROVISIONAL artifacts (ignores allowlist)", () => {
-  const env = patchEnv({
-    stages: {
-      revalidation: {
-        ...(makeCommitEnv().stages.revalidation as any),
-        directive: {
-          ...(makeCommitEnv().stages.revalidation as any).directive,
-          outcome: "APPROVE_COMMIT",
-          commitAllowList: ["ghost_id", "note_2"], // should be ignored in FULL
-        },
-      } as any,
-    } as any,
-  });
+test("guardCommit returns ok:true and plucks + parses expected fields", () => {
+  const env = makeEnv();
 
-  const result = guardCommit(env);
+  const result = guardCommit(env as any);
 
   assert.equal(result.ok, true);
+
   if (result.ok) {
-    assert.equal(result.data.mode, "FULL");
-    assert.deepEqual(ids(result.data.effects.eligible.artifacts), [
-      "note_1",
-      "report_1",
-    ]);
+    // proposalId comes from ids
+    assert.equal(result.data.proposalId, env.ids.proposalId);
+
+    // assert shallowly not deepEqual when stubbing!!!!
+    // revalidation is the entire stages.revalidation object (not directive)
+    assert.equal(
+      // TODO FIX
+      result.data.revalidation.revalidationId,
+      (env.stages as any).revalidation.revalidationId,
+    );
+
+    // effectsLog comes from stages.execution.effectsLog
+    assert.equal(
+      result.data.effectsLog.effectsLogId,
+      (env.stages.execution as any).effectsLog.effectsLogId,
+    );
   }
 });
 
-test("PARTIAL_COMMIT with empty allowlist returns ok and empty commitEligibleEffects", () => {
-  const env = patchEnv({
-    stages: {
-      revalidation: {
-        ...(makeCommitEnv().stages.revalidation as any),
-        directive: {
-          ...(makeCommitEnv().stages.revalidation as any).directive,
-          outcome: "PARTIAL_COMMIT",
-          commitAllowList: [],
-        },
-      } as any,
-    } as any,
-  });
+test("guardCommit fail-closed does not mark commit stage as run or create commitId", () => {
+  const env = makeEnv();
 
-  const result = guardCommit(env);
+  // force parse failure
+  (env.ids as any).proposalId = undefined;
 
-  assert.equal(result.ok, true);
-  if (result.ok) {
-    assert.equal(result.data.mode, "PARTIAL");
-    assert.deepEqual(result.data.effects.eligible.artifacts, []);
-  }
-});
+  const beforeHasRun = (env.stages.commit as any)?.hasRun;
+  const beforeCommitId = (env.ids as any).commitId;
 
-test("ALLOWLIST_UNKNOWN_OBJECT when PARTIAL_COMMIT allowlist references an id not in produced ARTIFACT ids", () => {
-  const env = patchEnv({
-    stages: {
-      revalidation: {
-        ...(makeCommitEnv().stages.revalidation as any),
-        effectsLog: {
-          ...(makeCommitEnv().stages.revalidation as any).effectsLog,
-          producedEffects: [
-            {
-              effectType: "ARTIFACT",
-              objectId: "note_1",
-              kind: "NOTE",
-              trust: "PROVISIONAL",
-            },
-          ],
-        },
-        directive: {
-          ...(makeCommitEnv().stages.revalidation as any).directive,
-          outcome: "PARTIAL_COMMIT",
-          commitAllowList: ["note_1", "ghost_id"],
-        },
-      } as any,
-    } as any,
-  });
+  const res = guardCommit(env as any);
 
-  const result = guardCommit(env);
-
-  assert.equal(result.ok, false);
-  if (!result.ok) {
-    assert.equal(result.code, "ALLOWLIST_UNKNOWN_OBJECT");
-  }
-});
-
-test("PARTIAL_COMMIT selects only allowlisted PROVISIONAL artifacts (filters COMMITTED/UNTRUSTED)", () => {
-  const env = patchEnv({
-    stages: {
-      revalidation: {
-        ...(makeCommitEnv().stages.revalidation as any),
-        effectsLog: {
-          ...(makeCommitEnv().stages.revalidation as any).effectsLog,
-          producedEffects: [
-            {
-              effectType: "ARTIFACT",
-              objectId: "note_1",
-              kind: "NOTE",
-              trust: "PROVISIONAL",
-            },
-            {
-              effectType: "ARTIFACT",
-              objectId: "report_1",
-              kind: "REPORT",
-              trust: "PROVISIONAL",
-            },
-            {
-              effectType: "ARTIFACT",
-              objectId: "note_2",
-              kind: "NOTE",
-              trust: "COMMITTED",
-            },
-            {
-              effectType: "ARTIFACT",
-              objectId: "raw_1",
-              kind: "RAW",
-              trust: "UNTRUSTED",
-            },
-          ],
-        },
-        directive: {
-          ...(makeCommitEnv().stages.revalidation as any).directive,
-          outcome: "PARTIAL_COMMIT",
-          commitAllowList: ["note_1", "note_2", "raw_1", "report_1"],
-        },
-      } as any,
-    } as any,
-  });
-
-  const result = guardCommit(env);
-
-  assert.equal(result.ok, true);
-  if (result.ok) {
-    assert.equal(result.data.mode, "PARTIAL");
-    assert.deepEqual(ids(result.data.effects.eligible.artifacts), [
-      "note_1",
-      "report_1",
-    ]);
+  assert.equal(res.ok, false);
+  if (!res.ok) {
+    // guard should only return error; it should not write success outputs
+    assert.equal((env.stages.commit as any)?.hasRun, beforeHasRun);
+    assert.equal((env.ids as any).commitId, beforeCommitId);
   }
 });

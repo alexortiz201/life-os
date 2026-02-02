@@ -19,7 +19,10 @@ export const INGESTION_STAGE_DEPS = {
     stages: ["EXECUTION", "VALIDATION"],
     ids: ["proposalId", "effectsLogId", "snapshotId"],
   },
-  COMMIT: { stages: ["REVALIDATION"], ids: ["proposalId"] },
+  COMMIT: {
+    stages: ["REVALIDATION"],
+    ids: ["proposalId", "snapshotId", "effectsLogId", "revalidationId"],
+  },
 } as const satisfies Record<
   PipelineStage,
   {
@@ -27,3 +30,5 @@ export const INGESTION_STAGE_DEPS = {
     ids: readonly (keyof EnvelopeIds)[];
   }
 >;
+
+export const INGESTION_ACTIONS = ["WEEKLY_REFLECTION"] as const;

@@ -29,5 +29,4 @@ export const RevalidationSchema = z.object({
   proposalId: z.string().min(1),
   revalidationId: z.string().min(1),
   directive: RevalidationCommitDirectiveSchema,
-  effectsLog: ExecutionEffectsLogSchema,
 });

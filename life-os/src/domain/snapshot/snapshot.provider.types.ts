@@ -6,10 +6,10 @@ import { ScopeConfig } from "#/domain/scopes/scopes.types";
 import { IngestionContextSnapshotSchema } from "./snapshot.provider.schemas";
 
 export type ContextSnapshot<
-  TAllowPerm extends string,
+  TAllowActions extends string,
   TAllowKind extends string,
 > = {
-  permissions: PermissionState<TAllowPerm>;
+  permissions: PermissionState<TAllowActions>;
   scope: ScopeConfig<TAllowKind>;
   invariantsVersion: string;
   timestampMs: number;

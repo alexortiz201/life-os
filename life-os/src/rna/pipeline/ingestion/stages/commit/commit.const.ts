@@ -1,4 +1,6 @@
-export const PRECOMMIT_RULES = [
+export const STAGE = "COMMIT" as const;
+
+export const COMMIT_RULES = [
   "PARSE_FAILED",
 
   "PROPOSAL_ID_MISMATCH_REVALIDATION",
@@ -14,4 +16,5 @@ export const PRECOMMIT_RULES = [
   "FULL_IGNORES_ALLOWLIST",
 ] as const;
 
-export type PrecommitRule = (typeof PRECOMMIT_RULES)[number];
+export const TRUST_PROVISIONAL = "PROVISIONAL" as const;
+export const TRUST_COMMMITED = "COMMITTED" as const;

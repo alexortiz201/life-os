@@ -213,6 +213,7 @@ export const guardFactory = <
     const { ids, stages, proposalId } = narrowed;
 
     const schemaInput = pluckParams({ env, ids, stages, proposalId });
+
     const parsed = InputSchema.safeParse(schemaInput);
 
     if (!parsed.success) {
