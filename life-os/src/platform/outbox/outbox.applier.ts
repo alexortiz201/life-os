@@ -1,4 +1,5 @@
-import type { OutboxEntry, OutboxError } from "./outbox.types";
+import type { OutboxEntryOpaque, OutboxError } from "./outbox.types";
+import { markOutboxInProgress } from "./outbox.utils";
 
 /**
  * The Outbox is a durable record of *intent to apply*.
@@ -15,14 +16,22 @@ export interface OutboxApplier {
    *
    * Implementations should be idempotent where possible.
    */
-  apply(entry: OutboxEntry): Promise<void>;
+  apply(entry: OutboxEntryOpaque): Promise<void>;
 
   /**
    * Persist that the entry was applied successfully.
    * (May be combined with apply() in some implementations, but keep the API explicit.)
    */
   markApplied(
-    entry: OutboxEntry,
+    entry: OutboxEntryOpaque,
+    params?: { appliedAt?: number },
+  ): Promise<void>;
+
+  /**
+   * Mark that the entry is in progress.
+   */
+  markInProgress(
+    entry: OutboxEntryOpaque,
     params?: { appliedAt?: number },
   ): Promise<void>;
 
@@ -31,7 +40,7 @@ export interface OutboxApplier {
    * Must record an error payload that can be audited.
    */
   markFailed(
-    entry: OutboxEntry,
+    entry: OutboxEntryOpaque,
     error: OutboxError,
     params?: { failedAt?: number },
   ): Promise<void>;
@@ -43,18 +52,22 @@ export interface OutboxApplier {
  */
 export async function applyOutboxEntry(
   applier: OutboxApplier,
-  entry: OutboxEntry,
+  entry: OutboxEntryOpaque,
 ): Promise<void> {
+  if (entry.status !== "PENDING") return;
+
+  const inProgress = markOutboxInProgress(entry);
+  await applier.markInProgress(inProgress);
+
   try {
-    await applier.apply(entry);
-    await applier.markApplied(entry);
-  } catch (err: unknown) {
+    await applier.apply(inProgress);
+    await applier.markApplied(inProgress);
+  } catch (err) {
     const error: OutboxError = {
-      message:
-        err instanceof Error ? err.message : "Unknown outbox apply error",
+      message: err instanceof Error ? err.message : "Unknown apply error",
       trace: err,
       at: Date.now(),
     };
-    await applier.markFailed(entry, error);
+    await applier.markFailed(inProgress, error);
   }
 }

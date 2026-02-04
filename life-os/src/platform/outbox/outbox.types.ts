@@ -1,5 +1,12 @@
-import z from "zod";
-import { OutboxErrorSchema } from "./outbox.schemas";
+import { z } from "zod";
+
+import {
+  OutboxStatusSchema,
+  OutboxErrorSchema,
+  BaseOutboxEntrySchema,
+  OutboxEntryOpaqueSchema,
+  makeOutboxEntrySchema,
+} from "./outbox.schemas";
 
 /**
  * Outbox is a platform-level construct.
@@ -9,61 +16,43 @@ import { OutboxErrorSchema } from "./outbox.schemas";
  * Application happens elsewhere.
  */
 
-export type OutboxStatus = "PENDING" | "APPLIED" | "FAILED";
+/** Canonical status union (source of truth = schema) */
+export type OutboxStatus = z.infer<typeof OutboxStatusSchema>;
+
+/** Canonical error type (source of truth = schema) */
+export type OutboxError = z.infer<typeof OutboxErrorSchema>;
 
 /**
- * Generic Outbox Entry
- *
- * TEffect:
- *   The domain-specific effect payload (opaque to platform).
- *
- * TPipeline:
- *   Logical pipeline identifier (e.g. "INGESTION").
- *
- * TStage:
- *   Stage that produced the outbox entry (usually COMMIT).
+ * Canonical platform-owned entry shape (no effect field).
+ * This is the stable contract the platform owns.
  */
-export type OutboxEntry<
-  TEffect = unknown,
+export type BaseOutboxEntry = z.infer<typeof BaseOutboxEntrySchema>;
+
+/**
+ * Convenience type: opaque effect (platform doesn’t interpret the payload).
+ * Matches OutboxEntryOpaqueSchema exactly.
+ */
+export type OutboxEntryOpaque = z.infer<typeof OutboxEntryOpaqueSchema>;
+
+/**
+ * Typed outbox entry shape for pipeline-specific effects.
+ * Prefer inferring directly from a concrete schema:
+ *   const S = makeOutboxEntrySchema({ effect: MyEffectSchema, pipeline: ..., stage: ... })
+ *   type Entry = z.infer<typeof S>
+ *
+ * But when you already know the types, this is convenient.
+ */
+export type OutboxEntryOf<
+  TEffect,
   TPipeline extends string = string,
   TStage extends string = string,
-> = {
-  /** Stable unique identifier for this outbox entry */
-  outboxId: string;
-
-  /**
-   * Idempotency key.
-   * MUST be deterministic for the same logical effect.
-   */
-  idempotencyKey: string;
-
-  /** Pipeline that produced this entry */
+> = BaseOutboxEntry & {
   pipeline: TPipeline;
-
-  /** Stage that emitted the entry (typically COMMIT) */
   stage: TStage;
-
-  /** Effect payload (domain-owned, platform-opaque) */
   effect: TEffect;
-
-  /** Current lifecycle status */
-  status: OutboxStatus;
-
-  /** Number of apply attempts */
-  attempts: number;
-
-  /** Timestamp bookkeeping */
-  createdAt: number;
-  appliedAt: number;
-  updatedAt: number;
-
-  /** Failure information (only when status === FAILED) */
-  error?: OutboxError;
-  lastError?: OutboxError;
 };
 
 /**
- * Structured failure information.
- * Never throw—errors are data.
+ * Export factory type so callers can reference it in signatures if they want.
  */
-export type OutboxError = z.infer<typeof OutboxErrorSchema>;
+export type MakeOutboxEntrySchema = typeof makeOutboxEntrySchema;

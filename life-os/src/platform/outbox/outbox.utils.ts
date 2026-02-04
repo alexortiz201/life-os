@@ -1,6 +1,10 @@
 import { getNewId } from "#/domain/identity/id.provider";
 
-import type { OutboxEntry, OutboxError, OutboxStatus } from "./outbox.types";
+import type {
+  OutboxEntryOpaque,
+  OutboxError,
+  OutboxStatus,
+} from "./outbox.types";
 
 export function nowMs(): number {
   return Date.now();
@@ -11,10 +15,6 @@ export function nowMs(): number {
  * If you already have a dedicated id provider for outbox, swap this.
  */
 export function newOutboxId(): string {
-  // If you don't have `getNewId("outbox")`, either:
-  // - add it, or
-  // - keep `getNewId("event")` etc.
-  // This is the cleanest: register "outbox" in your id.provider.
   return getNewId("outbox" as any);
 }
 
@@ -32,47 +32,56 @@ export function makeOutboxError(params: {
   };
 }
 
-export function isPending(entry: Pick<OutboxEntry, "status">): boolean {
-  return entry.status === ("PENDING" as OutboxStatus);
+/** Status predicates */
+export function isPending(entry: Pick<OutboxEntryOpaque, "status">): boolean {
+  return entry.status === ("PENDING" satisfies OutboxStatus);
 }
 
-export function isApplied(entry: Pick<OutboxEntry, "status">): boolean {
-  return entry.status === ("APPLIED" as OutboxStatus);
+export function isApplied(entry: Pick<OutboxEntryOpaque, "status">): boolean {
+  return entry.status === ("APPLIED" satisfies OutboxStatus);
 }
 
-export function isFailed(entry: Pick<OutboxEntry, "status">): boolean {
-  return entry.status === ("FAILED" as OutboxStatus);
+export function isFailed(entry: Pick<OutboxEntryOpaque, "status">): boolean {
+  return entry.status === ("FAILED" satisfies OutboxStatus);
 }
 
 /**
  * Pure transition helpers. These *do not* mutate the world.
  * They only return the next entry state.
+ *
+ * Note: These enforce the BaseOutboxEntrySchema invariants:
+ * - FAILED => error must exist
+ * - not FAILED => error must be absent
  */
+
 export function markOutboxApplied(
-  entry: OutboxEntry,
+  entry: OutboxEntryOpaque,
   params?: { appliedAt?: number },
-): OutboxEntry {
+): OutboxEntryOpaque {
   const appliedAt = params?.appliedAt ?? nowMs();
 
   return {
     ...entry,
     status: "APPLIED",
     appliedAt,
-    // once applied, failure should be cleared (audit still lives in history if you keep it)
-    lastError: undefined,
     updatedAt: appliedAt,
+
+    // schema invariant: error only allowed when FAILED
+    error: undefined,
+
+    // keep lastError semantics optional; clearing is reasonable after success
+    lastError: undefined,
   };
 }
 
 export function markOutboxFailed(
-  entry: OutboxEntry,
+  entry: OutboxEntryOpaque,
   error: OutboxError,
   params?: { failedAt?: number; maxAttempts?: number },
-): OutboxEntry {
+): OutboxEntryOpaque {
   const failedAt = params?.failedAt ?? nowMs();
   const nextAttempts = (entry.attempts ?? 0) + 1;
 
-  // Optional: clamp attempts if you enforce a ceiling.
   const attempts =
     typeof params?.maxAttempts === "number"
       ? Math.min(nextAttempts, params.maxAttempts)
@@ -82,21 +91,45 @@ export function markOutboxFailed(
     ...entry,
     status: "FAILED",
     attempts,
-    lastError: error,
     updatedAt: failedAt,
+
+    // schema invariant: FAILED must include error
+    error,
+
+    // lastError can mirror error (useful if you later keep `error` as "terminal")
+    lastError: error,
   };
 }
 
 export function markOutboxPending(
-  entry: OutboxEntry,
+  entry: OutboxEntryOpaque,
   params?: { updatedAt?: number },
-): OutboxEntry {
+): OutboxEntryOpaque {
   const updatedAt = params?.updatedAt ?? nowMs();
 
   return {
     ...entry,
     status: "PENDING",
     updatedAt,
+
+    // schema invariant: error only allowed when FAILED
+    error: undefined,
+  };
+}
+
+export function markOutboxInProgress(
+  entry: OutboxEntryOpaque,
+  params?: { updatedAt?: number },
+): OutboxEntryOpaque {
+  const updatedAt = params?.updatedAt ?? nowMs();
+
+  return {
+    ...entry,
+    status: "IN_PROGRESS",
+    updatedAt,
+
+    // schema invariant: error only allowed when FAILED
+    error: undefined,
   };
 }
 
@@ -104,7 +137,7 @@ export function markOutboxPending(
  * Basic retry gating. You can make this stricter later (backoff, jitter, etc.)
  */
 export function canRetry(
-  entry: Pick<OutboxEntry, "status" | "attempts">,
+  entry: Pick<OutboxEntryOpaque, "status" | "attempts">,
   opts?: {
     maxAttempts?: number;
   },
