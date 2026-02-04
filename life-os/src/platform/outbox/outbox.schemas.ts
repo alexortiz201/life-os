@@ -14,27 +14,24 @@ export const OutboxErrorSchema = z.object({
   at: z.number().int().nonnegative(),
 });
 
-export const BaseOutboxEntrySchema = z
+export const BaseOutboxEntryCoreSchema = z
   .object({
     outboxId: z.string().min(1),
     idempotencyKey: z.string().min(1),
-
     pipeline: z.string().min(1),
     stage: z.string().min(1),
-
     status: OutboxStatusSchema,
     attempts: z.number().int().nonnegative().default(0),
-
     createdAt: z.number().int().nonnegative(),
     updatedAt: z.number().int().nonnegative(),
     appliedAt: z.number().int().nonnegative().optional(),
-
-    // Prefer ONE canonical field. If you keep both, be explicit about semantics.
     error: OutboxErrorSchema.optional(),
     lastError: OutboxErrorSchema.optional(),
   })
-  .strict()
-  .superRefine((val, ctx) => {
+  .strict();
+
+export const refineOutboxEntry = <T extends z.ZodTypeAny>(schema: T) =>
+  schema.superRefine((val: any, ctx: any) => {
     if (val.status === "FAILED" && !val.error) {
       ctx.addIssue({
         code: "custom",
@@ -42,7 +39,6 @@ export const BaseOutboxEntrySchema = z
         path: ["error"],
       });
     }
-
     if (val.status !== "FAILED" && val.error) {
       ctx.addIssue({
         code: "custom",
@@ -61,14 +57,13 @@ export const makeOutboxEntrySchema = <
   pipeline?: z.ZodType<TPipeline>;
   stage?: z.ZodType<TStage>;
 }) => {
-  return BaseOutboxEntrySchema.extend({
-    // override pipeline/stage to be constrained if supplied
-    pipeline: params.pipeline ?? BaseOutboxEntrySchema.shape.pipeline,
-    stage: params.stage ?? BaseOutboxEntrySchema.shape.stage,
-
-    // inject effect schema
+  const schema = BaseOutboxEntryCoreSchema.extend({
+    pipeline: params.pipeline ?? BaseOutboxEntryCoreSchema.shape.pipeline,
+    stage: params.stage ?? BaseOutboxEntryCoreSchema.shape.stage,
     effect: params.effect,
   });
+
+  return refineOutboxEntry(schema);
 };
 
 /** -----------------------------

@@ -3,7 +3,7 @@ import { z } from "zod";
 import {
   OutboxStatusSchema,
   OutboxErrorSchema,
-  BaseOutboxEntrySchema,
+  BaseOutboxEntryCoreSchema,
   OutboxEntryOpaqueSchema,
   makeOutboxEntrySchema,
 } from "./outbox.schemas";
@@ -26,7 +26,7 @@ export type OutboxError = z.infer<typeof OutboxErrorSchema>;
  * Canonical platform-owned entry shape (no effect field).
  * This is the stable contract the platform owns.
  */
-export type BaseOutboxEntry = z.infer<typeof BaseOutboxEntrySchema>;
+export type BaseOutboxEntry = z.infer<typeof BaseOutboxEntryCoreSchema>;
 
 /**
  * Convenience type: opaque effect (platform doesn’t interpret the payload).
