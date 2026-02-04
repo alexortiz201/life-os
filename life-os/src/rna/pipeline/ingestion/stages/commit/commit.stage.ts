@@ -160,6 +160,7 @@ export const commitStage: CommitStage = (env) => {
         }
 
         approvedEffects.push({
+          effectType: obj.effectType,
           objectId: obj.objectId,
           kind: obj.kind,
           trust: TRUST_TO,

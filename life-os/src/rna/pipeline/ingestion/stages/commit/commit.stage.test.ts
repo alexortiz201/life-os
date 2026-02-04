@@ -25,7 +25,7 @@ test("commits only PROVISIONAL produced artifacts", () => {
 
   (env.stages.revalidation as any).directive = {
     ...(env.stages.revalidation as any).directive,
-    outcome: "APPROVE_COMMIT",
+    outcome: "APPROVE_COMMIT" as const,
     commitAllowList: ["note_1", "report_1"],
   };
 

@@ -276,7 +276,7 @@ export function makeEnv(patch: EnvelopePatch = {}): IngestionPipelineEnvelope {
         proposalId: "proposal_1",
         directive: {
           proposalId: "proposal_1",
-          outcome: "APPROVE_COMMIT",
+          outcome: "APPROVE_COMMIT" as const,
           commitAllowList: [],
           rulesApplied: [],
         },

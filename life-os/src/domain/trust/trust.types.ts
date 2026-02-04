@@ -1,3 +1,4 @@
-import type { TRUST_LEVELS } from "./trust.constants";
+import z from "zod";
+import { TrustLevelSchema } from "./trust.schemas";
 
-export type TrustLevel = (typeof TRUST_LEVELS)[number];
+export type TrustLevel = z.infer<typeof TrustLevelSchema>;

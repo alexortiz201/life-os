@@ -13,7 +13,7 @@ import type {
   CommitGuardOutput,
   ProducedEffect,
   GroupedEffects,
-  RejectedEffect,
+  RejectedArtifactEffect,
   CommitRule,
   GuardCommitResult,
   PostGuardCommitInput,
@@ -22,10 +22,6 @@ import type {
 } from "./commit.types";
 import { CommitInputSchema } from "./commit.schemas";
 import { STAGE } from "./commit.const";
-
-function isObject(x: unknown): x is Record<string, unknown> {
-  return typeof x === "object" && x !== null;
-}
 
 export const guardPreCommit = preGuardFactory({
   STAGE: "COMMIT",
@@ -226,7 +222,7 @@ export function postGuardCommit(
 
     const allowSet = new Set(rv.directive.commitAllowList);
     let allowListEffects: ArtifactEffect[] = [];
-    let allowListRejectedEffects: RejectedEffect[] = [];
+    let allowListRejectedEffects: RejectedArtifactEffect[] = [];
 
     groupedEffects.provisional.artifacts.filter((o) => {
       if (allowSet.has(o.objectId)) {

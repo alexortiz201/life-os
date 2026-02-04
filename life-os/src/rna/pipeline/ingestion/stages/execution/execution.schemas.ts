@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { EffectSchema } from "#/domain/effects/effects.schema";
+import { EffectSchema } from "#/domain/effects/effects.schemas";
 import { CommitPolicySchema } from "#/rna/pipeline/ingestion/stages/validation/validation.schemas";
 import { PlanSchema } from "#/rna/pipeline/ingestion/stages/planning/planning.schemas";
 

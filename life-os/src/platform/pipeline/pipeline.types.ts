@@ -1,12 +1,14 @@
+import z from "zod";
 import type { PIPELINE_STAGES } from "./pipeline.constants";
 import * as E from "fp-ts/Either";
+import {
+  EffectDecisionModeSchema,
+  EffectDecisionModeOrUnknownSchema,
+} from "./pipeline.schemas";
 
 export type Stage<E, A> = (env: A) => E.Either<E, A>;
 
 export type PipelineStage = (typeof PIPELINE_STAGES)[number];
-
-export type EffectDecisionMode = "FULL" | "PARTIAL";
-export type EffectDecisionModeOrUnknown = EffectDecisionMode | "UNKNOWN";
 
 export type GuardResult<TData, TTrace, TCode extends string = string> =
   | { ok: true; data: TData }
@@ -14,23 +16,17 @@ export type GuardResult<TData, TTrace, TCode extends string = string> =
 
 export type StageGuardTrace<
   TMode extends string = string,
-  TRule extends string = string
+  TRule extends string = string,
 > = Partial<{
   mode: TMode;
   proposalId: string;
   rulesApplied: TRule[];
 }>;
 
-// type StageErrorCode =
-//   | "INVALID_COMMIT_INPUT"
-//   | "COMMIT_PREREQ_MISSING"
-//   | "PARTIAL_NOT_ALLOWED"
-//   | ...;
-
 export type PipelineStageError<
   TStageName,
   TStageErrorSeverity,
-  TCode extends string = string
+  TCode extends string = string,
 > = {
   stage: TStageName;
   severity: TStageErrorSeverity;
@@ -45,7 +41,7 @@ export type PipelineEnvelope<
   TContextSnapshot,
   TStages,
   TErrors,
-  TMeta = {}
+  TMeta = {},
 > = {
   ids: TIds;
   snapshot: TContextSnapshot;
@@ -53,3 +49,8 @@ export type PipelineEnvelope<
   errors: TErrors[];
   meta?: TMeta;
 };
+
+export type EffectDecisionMode = z.infer<typeof EffectDecisionModeSchema>;
+export type EffectDecisionModeOrUnknown = z.infer<
+  typeof EffectDecisionModeOrUnknownSchema
+>;

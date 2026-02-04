@@ -18,3 +18,9 @@ export const COMMIT_RULES = [
 
 export const TRUST_PROVISIONAL = "PROVISIONAL" as const;
 export const TRUST_COMMMITED = "COMMITTED" as const;
+
+export const COMMIT_OUTCOMES = [
+  "APPROVE_COMMIT",
+  "PARTIAL_COMMIT",
+  "REJECT_COMMIT",
+] as const;

@@ -1,105 +1,35 @@
 import z from "zod";
 
 import type {
-  EffectDecisionMode,
   EffectDecisionModeOrUnknown,
   GuardResult,
   StageGuardTrace,
 } from "#/platform/pipeline/pipeline.types";
 import type {
   ArtifactEffect,
-  IgnoredEffect,
   EventEffect,
   UnknownEffect,
 } from "#/domain/effects/effects.types";
-import type { TrustLevel } from "#/domain/trust/trust.types";
 
 import type { IngestionPipelineEnvelope } from "#/rna/pipeline/ingestion/ingestion.types";
+import type {
+  ProducedEffectSchema,
+  RejectedArtifactEffectSchema,
+  RejectedEffectSchema,
+  RejectedEventEffectSchema,
+} from "#/rna/pipeline/ingestion/ingestion.schemas";
 import { COMMIT_RULES } from "#/rna/pipeline/ingestion/stages/commit/commit.const";
-import { CommitInputSchema } from "#/rna/pipeline/ingestion/stages/commit/commit.schemas";
-import { CommitOutcome } from "#/rna/pipeline/ingestion/stages/commit/commitDecision.constants";
+import {
+  CommitGuardOutputSchema,
+  CommitInputSchema,
+  CommitSchema,
+} from "#/rna/pipeline/ingestion/stages/commit/commit.schemas";
 
 export type CommitRule = (typeof COMMIT_RULES)[number];
 
-export type TrustPromotionRecord = {
-  objectId: string;
-  from: "PROVISIONAL";
-  to: "COMMITTED";
-  stage: "COMMIT";
-  reason: string;
-  proposalId: string;
-  effectsLogId: string;
-  commitId: string;
-};
-
-type Note = any;
-
-export type ApprovedEffect = {
-  objectId: string;
-  kind: string;
-  trust: "COMMITTED";
-};
-
-type RejectedEffectKey =
-  | { effectType: "ARTIFACT"; objectId: string; kind: string }
-  | { effectType: "EVENT"; eventName: string };
-
-export type RejectedEffect = RejectedEffectKey & {
-  trust: TrustLevel;
-  originalTrust: TrustLevel;
-  reasonCode: string;
-  reason: string;
-};
-
-export type Justification = {
-  mode: EffectDecisionMode;
-  rulesApplied: CommitRule[];
-  inputs: Array<{
-    commitId: string;
-    proposalId: string;
-    allowListCount: number;
-  }>;
-  notes?: Array<Note>;
-};
-
-export type Commit = {
-  commitId: string;
-  proposalId: string;
-  promotions: Array<TrustPromotionRecord>;
-  justification: Justification;
-  effects: {
-    approved: Array<ApprovedEffect>;
-    rejected: Array<RejectedEffect>;
-    ignored: Array<IgnoredEffect>;
-  };
-  outcome: CommitOutcome;
-};
-
+export type Commit = z.infer<typeof CommitSchema>;
 export type CommitInput = z.infer<typeof CommitInputSchema>;
-
-export type CommitGuardOutput = {
-  mode: EffectDecisionMode;
-  proposalId: string;
-  effectsLogId: string;
-  allowListCount: number;
-  effects: {
-    eligible: {
-      artifacts: Array<ArtifactEffect>;
-      events: Array<EventEffect>;
-    };
-    rejected: {
-      artifacts: Array<RejectedEffect>;
-      events: Array<RejectedEffect>;
-    };
-    ignored: {
-      artifacts: Array<ArtifactEffect>;
-      events: Array<EventEffect>;
-      unknown: Array<IgnoredEffect>;
-    };
-  };
-  rulesApplied: CommitRule[];
-  outcome: CommitOutcome;
-};
+export type CommitGuardOutput = z.infer<typeof CommitGuardOutputSchema>;
 
 export type CommitTrace = StageGuardTrace<
   EffectDecisionModeOrUnknown,
@@ -113,15 +43,6 @@ export type CommitTrace = StageGuardTrace<
   }>;
 
 export type GuardCommitResult = GuardResult<CommitGuardOutput, CommitTrace>;
-// export type GuardCommitResult =
-//   | { ok: true; data: CommitGuardOutput }
-//   | {
-//       ok: false;
-//       stage: typeof STAGE; // "COMMIT"
-//       code: CommitGuardErrorCode; // <-- union, NOT string
-//       message: string;
-//       trace: unknown; // or your trace type
-//     };
 
 export type CommitErrorCode =
   | "INVALID_COMMIT_INPUT"
@@ -134,7 +55,11 @@ export type CommitGuardErrorCode =
   | "COMMIT_OUTCOME_UNSUPPORTED"
   | "ALLOWLIST_UNKNOWN_OBJECT";
 
-export type ProducedEffect = ArtifactEffect | EventEffect | UnknownEffect;
+export type ProducedEffect = z.infer<typeof ProducedEffectSchema>;
+export type RejectedEffect = z.infer<typeof RejectedEffectSchema>;
+export type RejectedArtifactEffect = z.infer<
+  typeof RejectedArtifactEffectSchema
+>;
 
 export type GroupedEffects = {
   all: {
@@ -146,8 +71,8 @@ export type GroupedEffects = {
     events: EventEffect[];
   };
   rejected: {
-    artifacts: RejectedEffect[];
-    events: RejectedEffect[];
+    artifacts: z.infer<typeof RejectedArtifactEffectSchema>[];
+    events: z.infer<typeof RejectedEventEffectSchema>[];
   };
   other: {
     artifacts: ArtifactEffect[];

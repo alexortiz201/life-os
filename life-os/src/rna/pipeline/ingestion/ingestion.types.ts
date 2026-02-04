@@ -19,7 +19,11 @@ import type { Revalidation } from "#/rna/pipeline/ingestion/stages/revalidation/
 import type { Commit } from "#/rna/pipeline/ingestion/stages/commit/commit.types";
 
 import { INGESTION_ACTIONS } from "./ingestion.const";
-import { PermissionSchema } from "./ingestion.schemas";
+import {
+  PermissionSchema,
+  RejectedEffectSchema,
+  TrustPromotionRecordSchema,
+} from "./ingestion.schemas";
 
 export type IngestionActions = (typeof INGESTION_ACTIONS)[number];
 export type Permission = z.infer<typeof PermissionSchema>;
@@ -76,12 +80,9 @@ type PlanningStageOutput = StageResult<Planning, ObservedIds<"validationId">>;
 type ExecutionStageOutput = StageResult<Execution, ObservedIds<"planningId">>;
 type RevalidationStageOutput = StageResult<
   Revalidation,
-  ObservedIds<"effectsLogId">
+  ObservedIds<"executionId" | "effectsLogId">
 >;
-type CommitStageOutput = StageResult<
-  Commit,
-  ObservedIds<"revalidationId" | "effectsLogId">
->;
+type CommitStageOutput = StageResult<Commit, ObservedIds<"revalidationId">>;
 
 export type IngestionStages = {
   intake: IntakeStageOutput;
@@ -106,3 +107,5 @@ export type IngestionPipelineEnvelope = PipelineEnvelope<
   PipelineStageError<PipelineStageName, PipelineStageErrorSeverity>,
   Partial<{ commitPolicy: CommitPolicy }>
 >;
+
+export type TrustPromotionRecord = z.infer<typeof TrustPromotionRecordSchema>;

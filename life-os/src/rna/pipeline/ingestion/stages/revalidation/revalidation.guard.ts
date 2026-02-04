@@ -88,7 +88,7 @@ export function postGuardRevalidation(
         effectsLog: parsedEffectsLog,
         directive: {
           proposalId,
-          outcome: "REJECT_COMMIT",
+          outcome: "REJECT_COMMIT" as const,
           commitAllowList: [],
           rulesApplied: ["DRIFT_DETECTED"] as const,
         },
@@ -134,7 +134,7 @@ export function postGuardRevalidation(
         effectsLog: parsedEffectsLog,
         directive: {
           proposalId,
-          outcome: "PARTIAL_COMMIT",
+          outcome: "PARTIAL_COMMIT" as const,
           commitAllowList,
           rulesApplied: [
             "NON_ARTIFACT_EFFECTS_PRESENT",
@@ -154,7 +154,7 @@ export function postGuardRevalidation(
       effectsLog: parsedEffectsLog,
       directive: {
         proposalId,
-        outcome: "APPROVE_COMMIT",
+        outcome: "APPROVE_COMMIT" as const,
         commitAllowList: [],
         rulesApplied: [] satisfies RevalidationRule[],
       },

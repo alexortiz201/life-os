@@ -1,19 +1,8 @@
 import type { z } from "zod";
-import type { EffectSchema } from "./effects.schema";
-import { TrustLevel } from "#/domain/trust/trust.types";
+
+import type { EffectSchema } from "./effects.schemas";
 
 export type Effect = z.infer<typeof EffectSchema>;
-
-type EffectKey =
-  | {
-      effectType: "ARTIFACT";
-      trust: TrustLevel;
-      objectId: string;
-      kind: string;
-    }
-  | { effectType: "EVENT"; trust: TrustLevel; eventName: string }
-  | { effectType: "UNKNOWN"; trust: TrustLevel; raw?: unknown };
-
 export type ArtifactEffect = Extract<Effect, { effectType: "ARTIFACT" }>;
 export type EventEffect = Extract<Effect, { effectType: "EVENT" }>;
 export type UnknownEffect = Extract<Effect, { effectType: "UNKNOWN" }>;

@@ -1,14 +1,14 @@
 import { z } from "zod";
 
-import { COMMIT_OUTCOMES } from "#/rna/pipeline/ingestion/stages/commit/commitDecision.constants";
+import { CommitOutcomeSchema } from "#/platform/pipeline/pipeline.schemas";
 
 import { CommitPolicySchema } from "#/rna/pipeline/ingestion/stages/validation/validation.schemas";
-import { ExecutionEffectsLogSchema } from "#/rna/pipeline/ingestion/stages/execution/execution.schemas";
 import { PlanSchema } from "#/rna/pipeline/ingestion/stages/planning/planning.schemas";
+import { ExecutionEffectsLogSchema } from "#/rna/pipeline/ingestion/stages/execution/execution.schemas";
 
 export const RevalidationCommitDirectiveSchema = z.object({
   proposalId: z.string().min(1),
-  outcome: z.enum(COMMIT_OUTCOMES),
+  outcome: CommitOutcomeSchema,
   commitAllowList: z.string().array().default([]),
   rulesApplied: z.string().array().default([]),
 });
