@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { PipelineStageFn } from "#/platform/pipeline/stage/stage";
+import type { PipelineStageFn } from "#/platform/pipeline/stage/stage.types";
 import type { IngestionPipelineEnvelope } from "#/rna/pipeline/ingestion/ingestion.types";
 
 import { CommitPolicySchema, ValidationSchema } from "./validation.schemas";

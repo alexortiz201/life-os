@@ -130,12 +130,14 @@ test("PARTIAL_NOT_ALLOWED when non-artifact effects exist and policy is FULL-onl
     proposalId: "proposal_1",
     producedEffects: [
       {
+        stableId: "producedEffect_1",
         effectType: "EVENT",
         eventName: "PIPELINE_TRIGGER",
         trust: "PROVISIONAL",
         payload: { foo: "bar" },
       },
       {
+        stableId: "producedEffect_2",
         effectType: "ARTIFACT",
         objectId: "note_1",
         kind: "NOTE",
@@ -170,17 +172,20 @@ test("PARTIAL_COMMIT when non-artifact effects exist and policy allows PARTIAL",
     proposalId: "proposal_1",
     producedEffects: [
       {
+        stableId: "producedEffect_1",
         effectType: "EVENT",
         eventName: "PIPELINE_TRIGGER",
         trust: "PROVISIONAL",
       },
       {
+        stableId: "producedEffect_2",
         effectType: "ARTIFACT",
         objectId: "note_1",
         kind: "NOTE",
         trust: "PROVISIONAL",
       },
       {
+        stableId: "producedEffect_3",
         effectType: "ARTIFACT",
         objectId: "note_2",
         kind: "NOTE",

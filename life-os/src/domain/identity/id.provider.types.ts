@@ -1,4 +1,10 @@
-type ArtifactIdKind = "proposal" | "effects" | "snapshot" | "envelope";
+type ArtifactIdKind =
+  | "proposal"
+  | "effects"
+  | "snapshot"
+  | "envelope"
+  | "outbox";
+
 type StageRunIdKind =
   | "intake"
   | "validation"
@@ -6,4 +12,7 @@ type StageRunIdKind =
   | "execution"
   | "revalidation"
   | "commit";
-export type IdKind = ArtifactIdKind | StageRunIdKind;
+
+type DurableRecordIdKind = "outbox";
+
+export type IdKind = ArtifactIdKind | StageRunIdKind | DurableRecordIdKind;

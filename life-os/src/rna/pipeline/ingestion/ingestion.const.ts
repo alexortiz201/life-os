@@ -1,6 +1,8 @@
 import { PipelineStage } from "#/platform/pipeline/pipeline.types";
 import type { EnvelopeIds } from "#/rna/pipeline/ingestion/ingestion.types";
 
+export const PIPELINE_NAME = "INGESTION";
+
 export const INGESTION_STAGE_DEPS = {
   INTAKE: { stages: [], ids: [] },
   VALIDATION: {

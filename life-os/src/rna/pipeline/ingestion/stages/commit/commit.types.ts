@@ -5,6 +5,7 @@ import type {
   GuardResult,
   StageGuardTrace,
 } from "#/platform/pipeline/pipeline.types";
+import type { PipelineStageFn } from "#/platform/pipeline/stage/stage.types";
 import type {
   ArtifactEffect,
   EventEffect,
@@ -18,7 +19,10 @@ import type {
   RejectedEffectSchema,
   RejectedEventEffectSchema,
 } from "#/rna/pipeline/ingestion/ingestion.schemas";
-import { COMMIT_RULES } from "#/rna/pipeline/ingestion/stages/commit/commit.const";
+import {
+  COMMIT_RULES,
+  STAGE,
+} from "#/rna/pipeline/ingestion/stages/commit/commit.const";
 import {
   CommitGuardOutputSchema,
   CommitInputSchema,
@@ -85,3 +89,9 @@ export type PostGuardCommitInput = {
   env: IngestionPipelineEnvelope;
   data: CommitInput;
 };
+
+export type CommitStage = PipelineStageFn<
+  IngestionPipelineEnvelope,
+  typeof STAGE,
+  CommitErrorCode
+>;

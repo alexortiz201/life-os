@@ -247,12 +247,14 @@ export function makeEnv(patch: EnvelopePatch = {}): IngestionPipelineEnvelope {
             proposalId: "proposal_1",
             producedEffects: [
               {
+                stableId: "producedEffect_1",
                 effectType: "ARTIFACT",
                 objectId: "note_1",
                 kind: "NOTE",
                 trust: "PROVISIONAL",
               },
               {
+                stableId: "producedEffect_2",
                 effectType: "ARTIFACT",
                 objectId: "report_1",
                 kind: "REPORT",

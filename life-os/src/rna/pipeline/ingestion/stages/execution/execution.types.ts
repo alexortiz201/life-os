@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-import { PipelineStageFn } from "#/platform/pipeline/stage/stage";
-import { IngestionPipelineEnvelope } from "#/rna/pipeline/ingestion/ingestion.types";
+import type { PipelineStageFn } from "#/platform/pipeline/stage/stage.types";
+import type { IngestionPipelineEnvelope } from "#/rna/pipeline/ingestion/ingestion.types";
 
 import { EXECUTION_RULES, STAGE } from "./execution.const";
 import {

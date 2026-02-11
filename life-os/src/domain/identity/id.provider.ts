@@ -1,7 +1,10 @@
 import { IdKind } from "./id.provider.types";
 
 const PREFIX: Record<IdKind, string> = {
-  // kinds
+  // records
+  outbox: "outbox",
+
+  // artifacts
   proposal: "proposal",
   effects: "effects",
   snapshot: "snapshot",

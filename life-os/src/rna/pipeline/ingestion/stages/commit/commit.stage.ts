@@ -6,26 +6,22 @@ import { guardTrustPromotion } from "#/domain/trust/trustPromotion.guard";
 import {
   leftFromLastError,
   makeStageLeft,
-  PipelineStageFn,
 } from "#/platform/pipeline/stage/stage";
 
 import { appendError, hasHaltingErrors } from "#/rna/envelope/envelope-utils";
 import type { IngestionPipelineEnvelope } from "#/rna/pipeline/ingestion/ingestion.types";
+import { PIPELINE_NAME } from "#/rna/pipeline/ingestion/ingestion.const";
 
-import type { CommitErrorCode, Commit } from "./commit.types";
+import type { CommitErrorCode, Commit, CommitStage } from "./commit.types";
 import { guardPreCommit, guardCommit, postGuardCommit } from "./commit.guard";
 import { STAGE, TRUST_COMMMITED, TRUST_PROVISIONAL } from "./commit.const";
+import { fingerprint } from "#/domain/encoding/fingerprint";
+import { OutboxEntryOpaque } from "#/platform/outbox/outbox.types";
 
 const TRUST_FROM = TRUST_PROVISIONAL;
 const TRUST_TO = TRUST_COMMMITED;
 
 const left = makeStageLeft<IngestionPipelineEnvelope>(appendError);
-
-export type CommitStage = PipelineStageFn<
-  IngestionPipelineEnvelope,
-  typeof STAGE,
-  CommitErrorCode
->;
 
 export const commitStage: CommitStage = (env) => {
   // 0) fail closed if earlier stage produced HALT errors
@@ -132,9 +128,10 @@ export const commitStage: CommitStage = (env) => {
                 ignored: ignoredEffects,
               },
               outcome,
+              outbox: [],
             },
           },
-        };
+        } satisfies IngestionPipelineEnvelope;
       }
 
       const effectsLogId = data.effectsLogId;
@@ -160,6 +157,7 @@ export const commitStage: CommitStage = (env) => {
         }
 
         approvedEffects.push({
+          stableId: obj.stableId,
           effectType: obj.effectType,
           objectId: obj.objectId,
           kind: obj.kind,
@@ -177,18 +175,6 @@ export const commitStage: CommitStage = (env) => {
           proposalId,
         });
       }
-
-      const applyInfo =
-        outcome === "REJECT_COMMIT"
-          ? {}
-          : {
-              apply: {
-                status: "PENDING",
-                attempts: 0,
-                lastError: undefined,
-                appliedAt: undefined,
-              },
-            };
 
       const commit = {
         hasRun: true,
@@ -212,13 +198,58 @@ export const commitStage: CommitStage = (env) => {
           ignored: ignoredEffects,
         },
         outcome,
-        ...applyInfo,
-      } satisfies IngestionPipelineEnvelope["stages"]["commit"];
+        outbox: [],
+      };
 
       return {
         ...env,
         ids: { ...env.ids, commitId },
         stages: { ...env.stages, commit },
+      } as IngestionPipelineEnvelope;
+    }),
+
+    // 4) build outbox + stage output
+    E.map((env) => {
+      const commit = env.stages.commit;
+
+      if (!commit.hasRun) return env;
+
+      const approvedEffects = commit.effects.approved;
+
+      if (!approvedEffects.length) return env;
+
+      const effectsToApply: OutboxEntryOpaque[] = approvedEffects.map(
+        (effect) =>
+          ({
+            outboxId: getNewId("outbox"),
+            idempotencyKey: fingerprint({
+              pipeline: PIPELINE_NAME,
+              stage: STAGE,
+              commitId: commit.commitId,
+
+              effectType: effect.effectType,
+              objectId: (effect as any).objectId,
+              kind: (effect as any).kind,
+            }),
+            status: "PENDING",
+            attempts: 0,
+            createdAt: commit.ranAt,
+            updatedAt: commit.ranAt,
+            pipeline: PIPELINE_NAME,
+            stage: STAGE,
+            effect,
+          }) satisfies OutboxEntryOpaque,
+      );
+
+      return {
+        ...env,
+        stages: {
+          ...env.stages,
+          commit: {
+            ...commit,
+            outbox: effectsToApply,
+          },
+        },
       };
     }),
   );

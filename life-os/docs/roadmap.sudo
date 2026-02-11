@@ -228,7 +228,7 @@ You can run weekly reflection locally and inspect:
 
 ---
 
-# PHASE_3A.2: OUTBOX SHAPE + EFFECT APPLIER INTERFACE (NEXT)
+# PHASE_3A.2: OUTBOX SHAPE + EFFECT APPLIER INTERFACE (IN_PROGRESS)
 
 GOAL:
 Introduce the apply boundary without implementing behavior.
@@ -240,10 +240,10 @@ Explicit apply lifecycle
 World mutation boundary
 
 DELIVERABLES:
-- [ ] OutboxEntry type + schema
-- [ ] Outbox status model: PENDING | APPLIED | FAILED
+- [x] OutboxEntry type + schema
+- [x] Outbox status model: PENDING | IN_PROGRESS | APPLIED | FAILED
 - [ ] Commit writes outbox entries with status=PENDING
-- [ ] EffectApplier interface stub (apply/markApplied/markFailed)
+- [x] EffectApplier interface stub (apply/markApplied/markFailed)
 - [ ] Tests proving: commit ≠ apply
 
 RULE:

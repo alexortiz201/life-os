@@ -5,7 +5,7 @@ import type {
   GuardResult,
   StageGuardTrace,
 } from "#/platform/pipeline/pipeline.types";
-import { PipelineStageFn } from "#/platform/pipeline/stage/stage";
+import type { PipelineStageFn } from "#/platform/pipeline/stage/stage.types";
 
 import type { ExecutionEffectsLog } from "#/rna/pipeline/ingestion/stages/execution/execution.types";
 import type { IngestionPipelineEnvelope } from "#/rna/pipeline/ingestion/ingestion.types";

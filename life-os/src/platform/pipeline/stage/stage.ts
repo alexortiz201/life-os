@@ -1,43 +1,19 @@
 import * as E from "fp-ts/Either";
-import { appendError, type HasErrors } from "#/rna/envelope/envelope-utils";
-import {
+
+import type {
   PipelineStageErrorSeverity,
   PipelineStageName,
 } from "#/rna/pipeline/ingestion/ingestion.types";
-import { PipelineStageError } from "#/platform/pipeline/pipeline.types";
+import type { HasErrors } from "#/rna/envelope/envelope-utils";
+import type { PipelineStageError } from "#/platform/pipeline/pipeline.types";
 
-export type StageLeft<
-  TEnv,
-  TStage extends PipelineStageName = PipelineStageName,
-  TCode extends string = string
-> = {
-  env: TEnv;
-  error: PipelineStageError<TStage, PipelineStageErrorSeverity, TCode>;
-};
-
-export type PipelineStageFn<
-  TEnvIn,
-  TStage extends PipelineStageName,
-  TCode extends string,
-  TEnvOut = TEnvIn
-> = (
-  env: TEnvIn
-) => E.Either<StageLeft<TEnvOut, PipelineStageName, TCode>, TEnvOut>;
-
-export type StageLeftHalt<
-  TEnv,
-  TStage extends PipelineStageName,
-  TCode extends string
-> = {
-  env: TEnv;
-  error: PipelineStageError<TStage, "HALT", TCode>;
-};
+import type { StageLeft } from "./stage.types";
 
 export function stageLeft<
   TEnv extends HasErrors<PipelineStageError<any, any, any>>,
   TStage extends PipelineStageName,
   TCode extends string,
-  TSeverity extends PipelineStageErrorSeverity = "HALT"
+  TSeverity extends PipelineStageErrorSeverity = "HALT",
 >(params: {
   env: TEnv;
   stage: TStage;
@@ -48,7 +24,7 @@ export function stageLeft<
   at?: number;
   appendError: (
     env: TEnv,
-    err: PipelineStageError<TStage, TSeverity, TCode>
+    err: PipelineStageError<TStage, TSeverity, TCode>,
   ) => TEnv;
 }): E.Either<StageLeft<TEnv, TStage, TCode>, never> {
   const at = params.at ?? Date.now();
@@ -74,7 +50,7 @@ export function stageLeft<
 export function leftFromLastError<
   TEnv extends HasErrors<PipelineStageError<any, any, any>>,
   TStage extends PipelineStageName,
-  TCode extends string
+  TCode extends string,
 >(env: TEnv): E.Either<StageLeft<TEnv, TStage, TCode>, never> {
   const error = env.errors.at(-1);
   if (!error) throw new Error("leftFromLastError: env.errors is empty");
@@ -94,7 +70,7 @@ export const makeStageLeft =
   <
     TStage extends PipelineStageName,
     TCode extends string,
-    TSeverity extends PipelineStageErrorSeverity = "HALT"
+    TSeverity extends PipelineStageErrorSeverity = "HALT",
   >(params: {
     env: TEnv;
     stage: TStage;

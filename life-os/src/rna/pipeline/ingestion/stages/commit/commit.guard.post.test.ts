@@ -100,6 +100,7 @@ test("ALLOWLIST_UNKNOWN_OBJECT when PARTIAL_COMMIT allowlist references unknown 
 
   (env.stages.execution as any).effectsLog.producedEffects = [
     {
+      stableId: "producedEffect_1",
       effectType: "ARTIFACT",
       objectId: "note_1",
       kind: "NOTE",
@@ -129,18 +130,21 @@ test("PARTIAL_COMMIT selects only allowlisted PROVISIONAL artifacts", () => {
 
   (env.stages.execution as any).effectsLog.producedEffects = [
     {
+      stableId: "producedEffect_1",
       effectType: "ARTIFACT",
       objectId: "note_1",
       kind: "NOTE",
       trust: "PROVISIONAL",
     },
     {
+      stableId: "producedEffect_2",
       effectType: "ARTIFACT",
       objectId: "note_2",
       kind: "NOTE",
       trust: "COMMITTED",
     },
     {
+      stableId: "producedEffect_3",
       effectType: "ARTIFACT",
       objectId: "report_1",
       kind: "REPORT",
@@ -176,18 +180,21 @@ test("FULL commit includes all PROVISIONAL artifacts and ignores allowlist", () 
 
   (env.stages.execution as any).effectsLog.producedEffects = [
     {
+      stableId: "producedEffect_1",
       effectType: "ARTIFACT",
       objectId: "note_1",
       kind: "NOTE",
       trust: "PROVISIONAL",
     },
     {
+      stableId: "producedEffect_2",
       effectType: "ARTIFACT",
       objectId: "note_2",
       kind: "NOTE",
       trust: "COMMITTED",
     },
     {
+      stableId: "producedEffect_3",
       effectType: "ARTIFACT",
       objectId: "report_1",
       kind: "REPORT",

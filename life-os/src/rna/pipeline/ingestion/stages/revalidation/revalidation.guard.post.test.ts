@@ -69,6 +69,7 @@ test("postGuardRevalidation returns REJECT_COMMIT on drift (fingerprint mismatch
   // and drift producedEffects WITHOUT updating fingerprint.
   const originalProducedEffects = [
     {
+      stableId: "producedEffect_1",
       effectType: "ARTIFACT",
       objectId: "note_1",
       kind: "NOTE",
@@ -91,6 +92,7 @@ test("postGuardRevalidation returns REJECT_COMMIT on drift (fingerprint mismatch
       ...originalProducedEffects,
       // ...but now we drift the producedEffects
       {
+        stableId: "producedEffect_2",
         effectType: "ARTIFACT",
         objectId: "drift_note",
         kind: "NOTE",
@@ -125,11 +127,13 @@ test("FULL-only policy fails closed if PARTIAL would be required (non-artifact e
     proposalId: "proposal_1",
     producedEffects: [
       {
+        stableId: "producedEffect_1",
         effectType: "EVENT",
         eventName: "TRIGGER_PIPELINE",
         trust: "PROVISIONAL",
       },
       {
+        stableId: "producedEffect_2",
         effectType: "ARTIFACT",
         objectId: "note_1",
         kind: "NOTE",
@@ -167,17 +171,20 @@ test("PARTIAL allowed produces PARTIAL_COMMIT and allowlist of provisional ARTIF
     proposalId: "proposal_1",
     producedEffects: [
       {
+        stableId: "producedEffect_1",
         effectType: "EVENT",
         eventName: "TRIGGER_PIPELINE",
         trust: "PROVISIONAL",
       },
       {
+        stableId: "producedEffect_2",
         effectType: "ARTIFACT",
         objectId: "note_1",
         kind: "NOTE",
         trust: "PROVISIONAL",
       },
       {
+        stableId: "producedEffect_3",
         effectType: "ARTIFACT",
         objectId: "note_2",
         kind: "NOTE",
@@ -185,6 +192,7 @@ test("PARTIAL allowed produces PARTIAL_COMMIT and allowlist of provisional ARTIF
       },
       // duplicates should be deduped
       {
+        stableId: "producedEffect_2", // stableId should be derived of content and deterministic
         effectType: "ARTIFACT",
         objectId: "note_1",
         kind: "NOTE",
@@ -218,6 +226,7 @@ test("no drift + no non-artifact effects => APPROVE_COMMIT", () => {
     proposalId: "proposal_1",
     producedEffects: [
       {
+        stableId: "producedEffect_1",
         effectType: "ARTIFACT",
         objectId: "note_1",
         kind: "NOTE",
@@ -250,11 +259,13 @@ test("fingerprint correct does not cause false drift (still produces expected di
 
   const producedEffects = [
     {
+      stableId: "producedEffect_1",
       effectType: "EVENT",
       eventName: "TRIGGER_PIPELINE",
       trust: "PROVISIONAL",
     },
     {
+      stableId: "producedEffect_2",
       effectType: "ARTIFACT",
       objectId: "note_1",
       kind: "NOTE",

@@ -20,6 +20,7 @@ import {
   ArtifactEffectSchema,
   EventEffectSchema,
 } from "#/domain/effects/effects.schemas";
+import { OutboxEntryOpaqueSchema } from "#/platform/outbox/outbox.schemas";
 
 export const CommitInputSchema = z.object({
   proposalId: z.string().min(1),
@@ -52,6 +53,7 @@ export const CommitSchema = z.object({
     ignored: z.array(IgnoredEffectSchema).default([]),
   }),
   outcome: CommitOutcomeSchema,
+  outbox: z.array(OutboxEntryOpaqueSchema).default([]),
 });
 
 export const CommitGuardOutputSchema = z.object({
