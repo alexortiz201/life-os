@@ -228,7 +228,7 @@ You can run weekly reflection locally and inspect:
 
 ---
 
-# PHASE_3A.2: OUTBOX SHAPE + EFFECT APPLIER INTERFACE (IN_PROGRESS)
+# PHASE_3A.2: OUTBOX SHAPE + EFFECT APPLIER INTERFACE (CURRENT)
 
 GOAL:
 Introduce the apply boundary without implementing behavior.
@@ -242,9 +242,10 @@ World mutation boundary
 DELIVERABLES:
 - [x] OutboxEntry type + schema
 - [x] Outbox status model: PENDING | IN_PROGRESS | APPLIED | FAILED
-- [ ] Commit writes outbox entries with status=PENDING
+- [x] Commit writes outbox entries with status=PENDING
 - [x] EffectApplier interface stub (apply/markApplied/markFailed)
-- [ ] Tests proving: commit ≠ apply
+- [x] Tests proving: commit ≠ apply
+- [ ] Port pipeline + stage tests from node:test to Vitest (new default)
 
 RULE:
 Authority is committed at commit.
@@ -546,28 +547,33 @@ MEASURE_PROGRESS_BY:
 
 # WHERE WE ARE
 
-You are here: **end of PHASE_3A.1**.
+You are here: **PHASE_3A.2 — Outbox + Apply boundary (IN_PROGRESS)**.
 
 What’s locked in now:
 - Stages refactored to fp-ts with consistent error/wrapping patterns
 - Unit tests colocated and passing per stage
 - E2E spine test(s) running end-to-end (weekly reflection) and validating invariants
+- OutboxEntry schema defined and validated
+- Commit stage emits deterministic outbox entries (PENDING)
+- Tests prove commit ≠ apply
 
 ---
 
-# WHAT’S NEXT
-
-Next milestone: **PHASE_3A.2 — Outbox + Apply boundary (no real apply)**
-
-Immediate next steps:
-1. Define `OutboxEntry` + schema and attach it to the envelope (or commit stage output) as the only “apply-ready” surface.
-2. Update `commitStage` to emit `outbox: { status: PENDING, ... }` entries for approved effects.
-3. Add tests that prove:
-   - commit emits outbox entries
-   - outbox starts as PENDING
-   - no world mutation occurs
-   - retry semantics are modeled explicitly (status transitions) even before implementation
-
 After that:
 - If you want better orchestration ergonomics/debugging: **PHASE_3A.3 (XState)**
+- If you want durability/replay semantics + real retries: **PHASE_3A.4 (Temporal)**
+
+# WHAT’S NEXT
+
+Next milestone: **Finish PHASE_3A.2 by porting tests to Vitest**
+
+Immediate next steps:
+1. Port stage unit tests + E2E spine tests from node:test to Vitest.
+2. Keep the same invariants/assertions; only change the harness.
+3. Ensure CI runs Vitest as the canonical runner.
+
+After that:
+- **PHASE_3A.3 (XState)** — port the spine to an explicit state machine while preserving contracts + envelope semantics.
+
+After that:
 - If you want durability/replay semantics + real retries: **PHASE_3A.4 (Temporal)**

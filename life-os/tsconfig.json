@@ -9,9 +9,9 @@
     "skipLibCheck": true,
 
     "rootDir": ".",
-    "baseUrl": "src",
+    "baseUrl": ".",
     "paths": {
-      "#/*": ["*"]
+      "#/*": ["src/*"]
     },
 
     "sourceMap": true,
