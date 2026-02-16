@@ -1,4 +1,4 @@
-import { test, describe, it, expect } from "vitest";
+import { test, expect } from "vitest";
 
 import { OutboxEntryOpaqueSchema } from "#/platform/outbox/outbox.schemas";
 import type { OutboxEntryOpaque } from "#/platform/outbox/outbox.types";

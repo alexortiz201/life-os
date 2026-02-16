@@ -1,4 +1,4 @@
-import { test, describe, it, expect } from "vitest";
+import { test, expect } from "vitest";
 
 import { pipe } from "fp-ts/function";
 import * as E from "fp-ts/Either";

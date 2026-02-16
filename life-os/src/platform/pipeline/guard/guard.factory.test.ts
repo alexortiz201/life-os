@@ -1,5 +1,5 @@
 // guard-utils.test.ts
-import { test, describe, it, expect } from "vitest";
+import { test, expect } from "vitest";
 import { z } from "zod";
 
 import { guardFactory } from "#/platform/pipeline/guard/guard.factory";

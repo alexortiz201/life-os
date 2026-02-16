@@ -228,7 +228,7 @@ You can run weekly reflection locally and inspect:
 
 ---
 
-# PHASE_3A.2: OUTBOX SHAPE + EFFECT APPLIER INTERFACE (CURRENT)
+# PHASE_3A.2: OUTBOX SHAPE + EFFECT APPLIER INTERFACE
 
 GOAL:
 Introduce the apply boundary without implementing behavior.
@@ -245,7 +245,7 @@ DELIVERABLES:
 - [x] Commit writes outbox entries with status=PENDING
 - [x] EffectApplier interface stub (apply/markApplied/markFailed)
 - [x] Tests proving: commit ≠ apply
-- [ ] Port pipeline + stage tests from node:test to Vitest (new default)
+- [x] Port pipeline + stage tests from node:test to Vitest (new default)
 
 RULE:
 Authority is committed at commit.
@@ -547,11 +547,11 @@ MEASURE_PROGRESS_BY:
 
 # WHERE WE ARE
 
-You are here: **PHASE_3A.2 — Outbox + Apply boundary (IN_PROGRESS)**.
+You are here: **PHASE_3A.2 — Outbox + Apply boundary (COMPLETE)**.
 
 What’s locked in now:
 - Stages refactored to fp-ts with consistent error/wrapping patterns
-- Unit tests colocated and passing per stage
+- Unit tests colocated and passing per stage (now running in Vitest)
 - E2E spine test(s) running end-to-end (weekly reflection) and validating invariants
 - OutboxEntry schema defined and validated
 - Commit stage emits deterministic outbox entries (PENDING)
@@ -565,15 +565,12 @@ After that:
 
 # WHAT’S NEXT
 
-Next milestone: **Finish PHASE_3A.2 by porting tests to Vitest**
+Next milestone: **PHASE_3A.3 — Port the spine to XState**
 
 Immediate next steps:
-1. Port stage unit tests + E2E spine tests from node:test to Vitest.
-2. Keep the same invariants/assertions; only change the harness.
-3. Ensure CI runs Vitest as the canonical runner.
+1. Express the ingestion spine as an XState machine (states = stages).
+2. Map pre-guards/guards to XState guards (preserve fail-closed semantics).
+3. Map stage writebacks to XState actions (preserve envelope + audit trail).
 
 After that:
-- **PHASE_3A.3 (XState)** — port the spine to an explicit state machine while preserving contracts + envelope semantics.
-
-After that:
-- If you want durability/replay semantics + real retries: **PHASE_3A.4 (Temporal)**
+- **PHASE_3A.4 (Temporal)** — durability/replay semantics + real retries (activities for execution/apply)

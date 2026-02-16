@@ -1,4 +1,4 @@
-import { test, describe, it, expect } from "vitest";
+import { test, expect } from "vitest";
 
 import { guardRevalidation } from "#/rna/pipeline/ingestion/stages/revalidation/revalidation.guard";
 import { makeEnv as makeEnvUtil, resetStagesUpTo } from "#/shared/test-utils";

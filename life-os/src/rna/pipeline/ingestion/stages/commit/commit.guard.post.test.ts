@@ -1,4 +1,4 @@
-import { test, describe, it, expect } from "vitest";
+import { test, expect } from "vitest";
 
 import {
   guardCommit,
