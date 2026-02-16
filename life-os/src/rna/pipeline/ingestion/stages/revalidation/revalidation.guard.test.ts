@@ -1,5 +1,4 @@
-import test from "node:test";
-import assert from "node:assert/strict";
+import { test, describe, it, expect } from "vitest";
 
 import { guardRevalidation } from "#/rna/pipeline/ingestion/stages/revalidation/revalidation.guard";
 import { makeEnv as makeEnvUtil, resetStagesUpTo } from "#/shared/test-utils";
@@ -10,12 +9,12 @@ const makeEnv = () => resetStagesUpTo("revalidation", makeEnvUtil());
 test("guardRevalidation returns ok:false INVALID_REVALIDATION_INPUT when input shape is wrong", () => {
   const result = guardRevalidation({ nope: true } as any);
 
-  assert.equal(result.ok, false);
+  expect(result.ok).toBeFalsy();
   if (!result.ok) {
-    assert.equal(result.code, "INVALID_REVALIDATION_INPUT");
-    assert.equal(typeof result.message, "string");
-    assert.ok(result.trace);
-    assert.equal(result.trace.mode, "UNKNOWN");
+    expect(result.code).toBe("INVALID_REVALIDATION_INPUT");
+    expect(typeof result.message).toBe("string");
+    expect(result.trace).toBeTruthy();
+    expect(result.trace.mode).toBe("UNKNOWN");
   }
 });
 
@@ -27,10 +26,10 @@ test("guardRevalidation returns ok:false when required plucked fields are missin
 
   const result = guardRevalidation(env as any);
 
-  assert.equal(result.ok, false);
+  expect(result.ok).toBeFalsy();
   if (!result.ok) {
-    assert.equal(result.code, "INVALID_REVALIDATION_INPUT");
-    assert.ok(result.trace?.rulesApplied?.includes("PARSE_FAILED"));
+    expect(result.code).toBe("INVALID_REVALIDATION_INPUT");
+    expect(result.trace.rulesApplied).toContain("PARSE_FAILED");
   }
 });
 
@@ -38,28 +37,27 @@ test("guardRevalidation returns ok:true and plucks + parses the expected fields"
   const env = makeEnv();
   const result = guardRevalidation(env as any);
 
-  assert.equal(result.ok, true);
+  expect(result.ok).toBeTruthy();
 
   if (result.ok) {
-    assert.equal(result.data.proposalId, env.ids.proposalId);
-    assert.equal(result.data.snapshotId, env.ids.snapshotId);
-    assert.equal(result.data.executionId, env.ids.executionId);
-    assert.equal(result.data.planningId, env.ids.planningId);
+    expect(result.data.proposalId).toBe(env.ids.proposalId);
+    expect(result.data.snapshotId).toBe(env.ids.snapshotId);
+    expect(result.data.executionId).toBe(env.ids.executionId);
+    expect(result.data.planningId).toBe(env.ids.planningId);
 
     // from stages.validation.validationId
-    assert.equal(result.data.validationDecision, "validation_1");
+    expect(result.data.validationDecision).toBe("validation_1");
 
     // plan should be the modeled plan (not string[])
-    assert.deepEqual(result.data.plan, (env.stages.planning as any).plan);
+    expect(result.data.plan).toEqual((env.stages.planning as any).plan);
 
     // commitPolicy must be present + typed
-    assert.deepEqual(result.data.commitPolicy, {
+    expect(result.data.commitPolicy).toEqual({
       allowedModes: ["FULL"],
     });
 
     // effectsLog should be an object
-    assert.deepEqual(
-      result.data.effectsLog,
+    expect(result.data.effectsLog).toEqual(
       (env.stages.execution as any).effectsLog,
     );
   }

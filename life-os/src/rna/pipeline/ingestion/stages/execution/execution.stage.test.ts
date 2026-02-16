@@ -1,5 +1,4 @@
-import test from "node:test";
-import assert from "node:assert/strict";
+import { test, describe, it, expect } from "vitest";
 
 import * as E from "fp-ts/Either";
 
@@ -26,10 +25,9 @@ test("does nothing when earlier HALT errors exist (fails closed)", () => {
   });
 
   const out = executionStage(env);
+  const nextEnv = unwrapRight(out);
 
-  assert.ok(E.isRight(out));
-  // should return the same env reference (no-op)
-  assert.equal(out.right, env);
+  expect(nextEnv).toBe(env);
 });
 
 test("appends HALT error when planning stage has not run", () => {
@@ -41,13 +39,13 @@ test("appends HALT error when planning stage has not run", () => {
 
   const nextEnv = left.env as IngestionPipelineEnvelope;
 
-  assert.equal(nextEnv.stages.execution.hasRun, false);
-  assert.ok(nextEnv.errors.length >= 1);
+  expect(nextEnv.stages.execution.hasRun).toBeFalsy();
+  expect(nextEnv.errors.length >= 1).toBeTruthy();
 
   const err = lastError(nextEnv) as any;
-  assert.equal(err.stage, "EXECUTION");
-  assert.equal(err.severity, "HALT");
-  assert.equal(err.code, "EXECUTION_PREREQ_MISSING");
+  expect(err.stage).toBe("EXECUTION");
+  expect(err.severity).toBe("HALT");
+  expect(err.code).toBe("EXECUTION_PREREQ_MISSING");
 });
 
 test("appends HALT error when snapshotId is missing", () => {
@@ -59,13 +57,13 @@ test("appends HALT error when snapshotId is missing", () => {
 
   const nextEnv = left.env as IngestionPipelineEnvelope;
 
-  assert.equal(nextEnv.stages.execution.hasRun, false);
-  assert.ok(nextEnv.errors.length >= 1);
+  expect(nextEnv.stages.execution.hasRun).toBeFalsy();
+  expect(nextEnv.errors.length >= 1).toBeTruthy();
 
   const err = lastError(nextEnv) as any;
-  assert.equal(err.stage, "EXECUTION");
-  assert.equal(err.severity, "HALT");
-  assert.equal(err.code, "EXECUTION_PREREQ_MISSING");
+  expect(err.stage).toBe("EXECUTION");
+  expect(err.severity).toBe("HALT");
+  expect(err.code).toBe("EXECUTION_PREREQ_MISSING");
 });
 
 test("fails closed if execution input is invalid (guardExecution enforced)", () => {
@@ -79,13 +77,13 @@ test("fails closed if execution input is invalid (guardExecution enforced)", () 
 
   const nextEnv = left.env as IngestionPipelineEnvelope;
 
-  assert.equal(nextEnv.stages.execution.hasRun, false);
-  assert.ok(nextEnv.errors.length >= 1);
+  expect(nextEnv.stages.execution.hasRun).toBeFalsy();
+  expect(nextEnv.errors.length >= 1).toBeTruthy();
 
   const err = lastError(nextEnv) as any;
-  assert.equal(err.stage, "EXECUTION");
-  assert.equal(err.severity, "HALT");
-  assert.equal(err.code, "EXECUTION_PREREQ_MISSING");
+  expect(err.stage).toBe("EXECUTION");
+  expect(err.severity).toBe("HALT");
+  expect(err.code).toBe("EXECUTION_PREREQ_MISSING");
 });
 
 test("writes execution stage output + ids when prereqs satisfied and guard passes", () => {
@@ -93,39 +91,38 @@ test("writes execution stage output + ids when prereqs satisfied and guard passe
   const out = executionStage(env);
   const nextEnv = unwrapRight(out);
 
-  assert.equal(nextEnv.errors.length, 0);
-  assert.equal(nextEnv.stages.execution.hasRun, true);
+  expect(nextEnv.errors.length).toBe(0);
+  expect(nextEnv.stages.execution.hasRun).toBeTruthy();
 
   // ids written (shape expectation, not exact value)
-  assert.equal(typeof nextEnv.ids.executionId, "string");
-  assert.ok(nextEnv.ids.executionId);
-  assert.ok(nextEnv.ids.executionId.length > 0);
+  expect(nextEnv.ids.executionId).toBeTruthy();
+  expect(nextEnv.ids.executionId).toBeTypeOf("string");
+  expect(nextEnv.ids.executionId).toMatch(/^.+$/);
 
-  assert.equal(typeof nextEnv.ids.effectsLogId, "string");
-  assert.ok(nextEnv.ids.effectsLogId);
-  assert.ok(nextEnv.ids.effectsLogId.length > 0);
+  expect(nextEnv.ids.effectsLogId).toBeTruthy();
+  expect(nextEnv.ids.effectsLogId).toBeTypeOf("string");
+  expect(nextEnv.ids.effectsLogId).toMatch(/^.+$/);
 
   const x = nextEnv.stages.execution as any;
 
   // stage writeback
-  assert.equal(typeof x.ranAt, "number");
-  assert.equal(x.executionId, nextEnv.ids.executionId);
+  expect(typeof x.ranAt).toBe("number");
+  expect(x.executionId).toBe(nextEnv.ids.executionId);
 
   // observed invariants (audit wiring)
-  assert.ok(x.observed);
-  assert.equal(x.observed.proposalId, nextEnv.ids.proposalId);
-  assert.equal(x.observed.snapshotId, nextEnv.ids.snapshotId);
-  assert.equal(x.observed.planningId, nextEnv.ids.planningId);
+  expect(x.observed).toBeTruthy();
+  expect(x.observed.proposalId).toBe(nextEnv.ids.proposalId);
+  expect(x.observed.snapshotId).toBe(nextEnv.ids.snapshotId);
+  expect(x.observed.planningId).toBe(nextEnv.ids.planningId);
 
   // effects log invariants (must exist even if empty)
-  assert.ok(x.effectsLog);
-  assert.equal(x.effectsLog.effectsLogId, nextEnv.ids.effectsLogId);
-  assert.equal(x.effectsLog.proposalId, nextEnv.ids.proposalId);
-  assert.ok(Array.isArray(x.effectsLog.producedEffects));
+  expect(x.effectsLog).toBeTruthy();
+  expect(x.effectsLog.effectsLogId).toBe(nextEnv.ids.effectsLogId);
+  expect(x.effectsLog.proposalId).toBe(nextEnv.ids.proposalId);
+  expect(x.effectsLog.producedEffects).toSatisfy(Array.isArray);
 
-  // execution MUST NOT emit COMMITTED trust
   for (const e of x.effectsLog.producedEffects) {
-    assert.notEqual((e as any).trust, "COMMITTED");
+    expect((e as any).trust).not.toBe("COMMITTED");
   }
 });
 
@@ -135,5 +132,5 @@ test("effectsLog.proposalId matches envelope proposalId (drift prevention baseli
   const nextEnv = unwrapRight(out);
 
   const x = nextEnv.stages.execution as any;
-  assert.equal(x.effectsLog.proposalId, nextEnv.ids.proposalId);
+  expect(x.effectsLog.proposalId).toBe(nextEnv.ids.proposalId);
 });

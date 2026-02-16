@@ -1,5 +1,4 @@
-import test from "node:test";
-import assert from "node:assert/strict";
+import { test, describe, it, expect } from "vitest";
 
 import { planningStage } from "#/rna/pipeline/ingestion/stages/planning/planning.stage";
 import {
@@ -18,13 +17,13 @@ test("returns Left(HALT) when validation stage has not run", () => {
   const left = unwrapLeft(out) as any;
 
   // env is carried on the Left
-  assert.equal(left.env.stages.planning.hasRun, false);
-  assert.ok(left.env.errors.length >= 1);
+  expect(left.env.stages.planning.hasRun).toBeFalsy();
+  expect(left.env.errors.length >= 1).toBeTruthy();
 
   // prefer the structured error on StageLeft
-  assert.equal(left.error.stage, "PLANNING");
-  assert.equal(left.error.severity, "HALT");
-  assert.equal(left.error.code, "PLANNING_PREREQ_MISSING");
+  expect(left.error.stage).toBe("PLANNING");
+  expect(left.error.severity).toBe("HALT");
+  expect(left.error.code).toBe("PLANNING_PREREQ_MISSING");
 });
 
 test("returns Left(HALT) when proposalId missing", () => {
@@ -34,12 +33,12 @@ test("returns Left(HALT) when proposalId missing", () => {
   const out = planningStage(env);
   const left = unwrapLeft(out) as any;
 
-  assert.equal(left.env.stages.planning.hasRun, false);
-  assert.ok(left.env.errors.length >= 1);
+  expect(left.env.stages.planning.hasRun).toBeFalsy();
+  expect(left.env.errors.length >= 1).toBeTruthy();
 
-  assert.equal(left.error.stage, "PLANNING");
-  assert.equal(left.error.severity, "HALT");
-  assert.equal(left.error.code, "PLANNING_PREREQ_MISSING");
+  expect(left.error.stage).toBe("PLANNING");
+  expect(left.error.severity).toBe("HALT");
+  expect(left.error.code).toBe("PLANNING_PREREQ_MISSING");
 });
 
 test("returns Left(HALT) when snapshotId missing (plan must be pinned to a snapshot)", () => {
@@ -49,12 +48,12 @@ test("returns Left(HALT) when snapshotId missing (plan must be pinned to a snaps
   const out = planningStage(env);
   const left = unwrapLeft(out) as any;
 
-  assert.equal(left.env.stages.planning.hasRun, false);
-  assert.ok(left.env.errors.length >= 1);
+  expect(left.env.stages.planning.hasRun).toBeFalsy();
+  expect(left.env.errors.length >= 1).toBeTruthy();
 
-  assert.equal(left.error.stage, "PLANNING");
-  assert.equal(left.error.severity, "HALT");
-  assert.equal(left.error.code, "PLANNING_PREREQ_MISSING");
+  expect(left.error.stage).toBe("PLANNING");
+  expect(left.error.severity).toBe("HALT");
+  expect(left.error.code).toBe("PLANNING_PREREQ_MISSING");
 });
 
 test("writes a deterministic, untrusted plan artifact and does not execute", () => {
@@ -65,38 +64,38 @@ test("writes a deterministic, untrusted plan artifact and does not execute", () 
   const out = planningStage(env);
   const nextEnv = unwrapRight(out);
 
-  assert.equal(nextEnv.errors.length, 0);
-  assert.equal(nextEnv.stages.planning.hasRun, true);
+  expect(nextEnv.errors.length).toBe(0);
+  expect(nextEnv.stages.planning.hasRun).toBeTruthy();
 
   // Must write a planningId
-  assert.equal(typeof nextEnv.ids.planningId, "string");
-  assert.ok((nextEnv.ids.planningId as any).length > 0);
+  expect(typeof nextEnv.ids.planningId).toBe("string");
+  expect((nextEnv.ids.planningId as any).length).toBeGreaterThan(0);
 
   const p = nextEnv.stages.planning as any;
 
   // Must write plan artifact fields (shape-level expectations)
-  assert.equal(p.planningId, nextEnv.ids.planningId);
-  assert.equal(typeof p.ranAt, "number");
-  assert.ok(Array.isArray(p.plan));
+  expect(p.planningId).toBe(nextEnv.ids.planningId);
+  expect(typeof p.ranAt).toBe("number");
+  expect(p.plan).toBeInstanceOf(Array);
 
   // Must include a deterministic fingerprint field (contract)
   const fp = p.planFingerprint ?? p.fingerprint;
-  assert.equal(typeof fp, "string");
-  assert.ok(fp.length > 0);
+  expect(typeof fp).toBe("string");
+  expect(fp.length > 0).toBeTruthy();
 
   // Planning is descriptive: must not flip execution on
-  assert.equal((nextEnv.stages.execution as any)?.hasRun, false);
+  expect((nextEnv.stages.execution as any)?.hasRun).toBeFalsy();
 
   // Planning must not create effects log ids
-  assert.equal((nextEnv.ids as any).effectsLogId, undefined);
+  expect((nextEnv.ids as any).effectsLogId).toBeUndefined();
 
   // Planning must not create producedEffects anywhere
-  assert.equal((nextEnv.stages.planning as any)?.effectsLog, undefined);
-  assert.equal((nextEnv.stages.execution as any)?.effectsLog, undefined);
+  expect((nextEnv.stages.planning as any)?.effectsLog).toBeUndefined();
+  expect((nextEnv.stages.execution as any)?.effectsLog).toBeUndefined();
 
   // Planning must not create COMMITTED artifacts (trust escalation forbidden)
   if (typeof p.trust === "string") {
-    assert.notEqual(p.trust, "COMMITTED");
+    expect(p.trust).not.toBe("COMMITTED");
   }
 });
 
@@ -117,11 +116,11 @@ test("planning does not mutate validation output (must honor constraints verbati
   const out = planningStage(env);
   const nextEnv = unwrapRight(out);
 
-  assert.equal(nextEnv.errors.length, 0);
-  assert.equal(nextEnv.stages.planning.hasRun, true);
+  expect(nextEnv.errors.length).toBe(0);
+  expect(nextEnv.stages.planning.hasRun).toBeTruthy();
 
   const after = nextEnv.stages.validation as any;
-  assert.deepEqual(after, before);
+  expect(after).toEqual(before);
 });
 
 test("identical inputs produce identical plans and fingerprints (determinism invariant)", () => {
@@ -134,8 +133,8 @@ test("identical inputs produce identical plans and fingerprints (determinism inv
   const e1 = unwrapRight(out1);
   const e2 = unwrapRight(out2);
 
-  assert.equal(e1.errors.length, 0);
-  assert.equal(e2.errors.length, 0);
+  expect(e1.errors.length).toBe(0);
+  expect(e2.errors.length).toBe(0);
 
   const p1 = e1.stages.planning as any;
   const p2 = e2.stages.planning as any;
@@ -143,8 +142,8 @@ test("identical inputs produce identical plans and fingerprints (determinism inv
   const fp1 = p1.planFingerprint ?? p1.fingerprint;
   const fp2 = p2.planFingerprint ?? p2.fingerprint;
 
-  assert.equal(fp1, fp2);
-  assert.deepEqual(p1.plan, p2.plan);
+  expect(fp1).toBe(fp2);
+  expect(p1.plan).toEqual(p2.plan);
 });
 
 test("planning failure fails closed (no advancement / no planningId)", () => {
@@ -154,12 +153,12 @@ test("planning failure fails closed (no advancement / no planningId)", () => {
   const out = planningStage(env);
   const left = unwrapLeft(out) as any;
 
-  assert.equal(left.env.stages.planning.hasRun, false);
-  assert.ok(left.env.errors.length >= 1);
+  expect(left.env.stages.planning.hasRun).toBeFalsy();
+  expect(left.env.errors.length >= 1).toBeTruthy();
 
-  assert.equal(left.error.stage, "PLANNING");
-  assert.equal(left.error.severity, "HALT");
+  expect(left.error.stage).toBe("PLANNING");
+  expect(left.error.severity).toBe("HALT");
 
   // On fail-closed, planningId must not be created
-  assert.equal(left.env.ids.planningId, undefined);
+  expect(left.env.ids.planningId).toBeUndefined();
 });

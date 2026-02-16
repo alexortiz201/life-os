@@ -1,5 +1,4 @@
-import test from "node:test";
-import assert from "node:assert/strict";
+import { test, describe, it, expect } from "vitest";
 
 import type { IngestionPipelineEnvelope } from "#/rna/pipeline/ingestion/ingestion.types";
 import { PIPELINE_NAME } from "#/rna/pipeline/ingestion/ingestion.const";
@@ -17,7 +16,7 @@ import {
 } from "#/shared/test-utils";
 
 function getCommitRecord(env: IngestionPipelineEnvelope) {
-  assert.equal(env.stages.commit.hasRun, true, "commit stage must have run");
+  expect(env.stages.commit.hasRun).toBe(true);
   return env.stages.commit as any;
 }
 
@@ -69,22 +68,22 @@ test("commits only PROVISIONAL produced artifacts", () => {
   const out = commitStage(env);
   const nextEnv = unwrapRight(out);
 
-  assert.equal(nextEnv.errors.length, 0);
+  expect(nextEnv.errors.length).toBe(0);
 
   const c = getCommitRecord(nextEnv);
   assertMatchId(c.proposalId, "proposal_");
   assertMatchId(c.commitId, "commit_");
 
-  assert.equal(c.effects.approved.length, 2);
-  assert.deepEqual(c.effects.approved.map((o: any) => o.objectId).sort(), [
+  expect(c.effects.approved.length).toBe(2);
+  expect(c.effects.approved.map((o: any) => o.objectId).sort()).toEqual([
     "note_1",
     "report_1",
   ]);
 
   for (const obj of c.effects.approved) {
-    assert.equal(obj.trust, "COMMITTED");
-    assert.equal(typeof obj.stableId, "string");
-    assert.ok(obj.stableId.length > 0);
+    expect(obj.trust).toBe("COMMITTED");
+    expect(typeof obj.stableId).toBe("string");
+    expect(obj.stableId.length > 0).toBeTruthy();
   }
 });
 
@@ -119,15 +118,15 @@ test("commits nothing if there are no PROVISIONAL artifacts", () => {
   const out = commitStage(env);
   const nextEnv = unwrapRight(out);
 
-  assert.equal(nextEnv.errors.length, 0);
+  expect(nextEnv.errors.length).toBe(0);
 
   const c = getCommitRecord(nextEnv);
-  assert.equal(c.effects.approved.length, 0);
-  assert.equal(c.promotions.length, 0);
+  expect(c.effects.approved.length).toBe(0);
+  expect(c.promotions.length).toBe(0);
 
   // outbox should also be empty
-  assert.ok(Array.isArray(c.outbox));
-  assert.equal(c.outbox.length, 0);
+  expect(c.outbox).toBeInstanceOf(Array);
+  expect(c.outbox.length).toBe(0);
 });
 
 test("fails closed when revalidation.proposalId mismatches envelope proposalId", () => {
@@ -146,14 +145,14 @@ test("fails closed when revalidation.proposalId mismatches envelope proposalId",
   const out = commitStage(env);
   const left = unwrapLeft(out);
 
-  assert.ok(left.env.errors.length >= 1);
+  expect(left.env.errors.length >= 1).toBeTruthy();
 
   const err = lastError(left.env) as any;
-  assert.equal(err.stage, "COMMIT");
-  assert.equal(err.severity, "HALT");
-  assert.equal(err.code, "COMMIT_INPUT_MISMATCH");
+  expect(err.stage).toBe("COMMIT");
+  expect(err.severity).toBe("HALT");
+  expect(err.code).toBe("COMMIT_INPUT_MISMATCH");
 
-  assert.equal(left.env.stages.commit.hasRun, false);
+  expect(left.env.stages.commit.hasRun).toBeFalsy();
 });
 
 test("fails closed on unsupported outcome (REJECT_COMMIT)", () => {
@@ -169,11 +168,11 @@ test("fails closed on unsupported outcome (REJECT_COMMIT)", () => {
   const left = unwrapLeft(out);
 
   const err = lastError(left.env) as any;
-  assert.equal(err.stage, "COMMIT");
-  assert.equal(err.severity, "HALT");
-  assert.equal(err.code, "COMMIT_OUTCOME_UNSUPPORTED");
+  expect(err.stage).toBe("COMMIT");
+  expect(err.severity).toBe("HALT");
+  expect(err.code).toBe("COMMIT_OUTCOME_UNSUPPORTED");
 
-  assert.equal(left.env.stages.commit.hasRun, false);
+  expect(left.env.stages.commit.hasRun).toBeFalsy();
 });
 
 test("PARTIAL_COMMIT with empty allowlist commits nothing (but emits commit record)", () => {
@@ -200,15 +199,15 @@ test("PARTIAL_COMMIT with empty allowlist commits nothing (but emits commit reco
   const out = commitStage(env);
   const nextEnv = unwrapRight(out);
 
-  assert.equal(nextEnv.errors.length, 0);
+  expect(nextEnv.errors.length).toBe(0);
 
   const c = getCommitRecord(nextEnv);
-  assert.equal(c.effects.approved.length, 0);
-  assert.equal(c.promotions.length, 0);
+  expect(c.effects.approved.length).toBe(0);
+  expect(c.promotions.length).toBe(0);
 
   // outbox should be empty because nothing approved
-  assert.ok(Array.isArray(c.outbox));
-  assert.equal(c.outbox.length, 0);
+  expect(c.outbox).toBeInstanceOf(Array);
+  expect(c.outbox.length).toBe(0);
 });
 
 test("PARTIAL_COMMIT commits only allowlisted PROVISIONAL artifacts", () => {
@@ -242,13 +241,13 @@ test("PARTIAL_COMMIT commits only allowlisted PROVISIONAL artifacts", () => {
   const out = commitStage(env);
   const nextEnv = unwrapRight(out);
 
-  assert.equal(nextEnv.errors.length, 0);
+  expect(nextEnv.errors.length).toBe(0);
 
   const c = getCommitRecord(nextEnv);
-  assert.equal(c.effects.approved.length, 1);
-  assert.equal(c.effects.approved[0].objectId, "note_1");
-  assert.equal(c.promotions.length, 1);
-  assert.equal(c.promotions[0].objectId, "note_1");
+  expect(c.effects.approved.length).toBe(1);
+  expect(c.effects.approved[0].objectId).toBe("note_1");
+  expect(c.promotions.length).toBe(1);
+  expect(c.promotions[0].objectId).toBe("note_1");
 });
 
 test("PARTIAL_COMMIT fails when allowlist references unknown objects", () => {
@@ -275,12 +274,12 @@ test("PARTIAL_COMMIT fails when allowlist references unknown objects", () => {
   const out = commitStage(env);
   const left = unwrapLeft(out);
 
-  assert.equal(left.env.stages.commit.hasRun, false);
+  expect(left.env.stages.commit.hasRun).toBeFalsy();
 
   const err = lastError(left.env) as any;
-  assert.equal(err.stage, "COMMIT");
-  assert.equal(err.severity, "HALT");
-  assert.equal(err.code, "ALLOWLIST_UNKNOWN_OBJECT");
+  expect(err.stage).toBe("COMMIT");
+  expect(err.severity).toBe("HALT");
+  expect(err.code).toBe("ALLOWLIST_UNKNOWN_OBJECT");
 });
 
 test("does not emit promotions for non-PROVISIONAL artifacts (records rejectedEffects)", () => {
@@ -314,15 +313,16 @@ test("does not emit promotions for non-PROVISIONAL artifacts (records rejectedEf
   const out = commitStage(env);
   const nextEnv = unwrapRight(out);
 
-  assert.equal(nextEnv.errors.length, 0);
+  expect(nextEnv.errors.length).toBe(0);
 
   const c = getCommitRecord(nextEnv);
-  assert.equal(c.effects.approved.length, 0);
-  assert.equal(c.promotions.length, 0);
+  expect(c.effects.approved.length).toBe(0);
+  expect(c.promotions.length).toBe(0);
 
   // coverage: rejectedEffects should be recorded
-  assert.ok(Array.isArray(c.effects.rejected));
-  assert.deepEqual(c.effects.rejected.map((e: any) => e.objectId).sort(), [
+  expect(c.effects.rejected).toBeInstanceOf(Array);
+
+  expect(c.effects.rejected.map((e: any) => e.objectId).sort()).toEqual([
     "note_2",
     "raw_1",
   ]);
@@ -365,35 +365,35 @@ test("outbox: emits one entry per approved effect and includes required metadata
 
   const c = getCommitRecord(nextEnv);
 
-  assert.ok(Array.isArray(c.outbox));
-  assert.equal(c.outbox.length, c.effects.approved.length);
-  assert.equal(c.outbox.length, 2);
+  expect(c.outbox).toBeInstanceOf(Array);
+  expect(c.outbox.length).toBe(c.effects.approved.length);
+  expect(c.outbox.length).toBe(2);
 
   // Entry-level invariants
   for (const entry of c.outbox) {
     assertMatchId(entry.outboxId, "outbox_");
-    assert.equal(entry.pipeline, PIPELINE_NAME);
-    assert.equal(entry.stage, "COMMIT");
-    assert.equal(typeof entry.idempotencyKey, "string");
-    assert.ok(entry.idempotencyKey.length > 0);
+    expect(entry.pipeline).toBe(PIPELINE_NAME);
+    expect(entry.stage).toBe("COMMIT");
+    expect(typeof entry.idempotencyKey).toBe("string");
+    expect(entry.idempotencyKey.length > 0).toBeTruthy();
 
     // status expectation: align with your current commit implementation
-    assert.equal(entry.status, "PENDING");
+    expect(entry.status).toBe("PENDING");
 
-    assert.equal(typeof entry.createdAt, "number");
-    assert.equal(typeof entry.updatedAt, "number");
-    assert.equal(entry.attempts, 0);
+    expect(typeof entry.createdAt).toBe("number");
+    expect(typeof entry.updatedAt).toBe("number");
+    expect(entry.attempts).toBe(0);
 
     // effect should be the approved effect payload
-    assert.ok(entry.effect);
-    assert.equal(entry.effect.trust, "COMMITTED");
-    assert.equal(typeof entry.effect.stableId, "string");
+    expect(entry.effect).toBeTruthy();
+    expect(entry.effect.trust).toBe("COMMITTED");
+    expect(typeof entry.effect.stableId).toBe("string");
   }
 
   // Ensure the outbox effects correspond to approved objectIds
   const approvedIds = c.effects.approved.map((e: any) => e.objectId).sort();
   const outboxIds = c.outbox.map((e: any) => e.effect.objectId).sort();
-  assert.deepEqual(outboxIds, approvedIds);
+  expect(outboxIds).toEqual(approvedIds);
 });
 
 test("outbox: no approved effects => outbox is empty", () => {
@@ -421,8 +421,8 @@ test("outbox: no approved effects => outbox is empty", () => {
   const nextEnv = unwrapRight(out);
 
   const c = getCommitRecord(nextEnv);
-  assert.ok(Array.isArray(c.outbox));
-  assert.equal(c.outbox.length, 0);
+  expect(c.outbox).toBeInstanceOf(Array);
+  expect(c.outbox.length).toBe(0);
 });
 
 test("outbox: on HALT/Left, commit stage must not emit outbox", () => {
@@ -434,9 +434,9 @@ test("outbox: on HALT/Left, commit stage must not emit outbox", () => {
   const out = commitStage(env);
   const left = unwrapLeft(out);
 
-  assert.equal(left.env.stages.commit.hasRun, false);
+  expect(left.env.stages.commit.hasRun).toBeFalsy();
 
   // outbox field should not exist on a not-run commit stage
   const c = left.env.stages.commit as any;
-  assert.equal(c.outbox, undefined);
+  expect(c.outbox).toBeUndefined();
 });

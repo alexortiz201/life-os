@@ -1,5 +1,4 @@
-import test from "node:test";
-import assert from "node:assert/strict";
+import { test, describe, it, expect } from "vitest";
 
 import { fingerprint } from "#/domain/encoding/fingerprint";
 
@@ -48,15 +47,17 @@ test("postGuardRevalidation returns REJECT_COMMIT on drift (effectsLog.proposalI
   });
 
   const parsed = guardRevalidation(env as any);
-  assert.equal(parsed.ok, true);
+  expect(parsed.ok).toBeTruthy();
   if (!parsed.ok) return;
 
   const result = postGuardRevalidation({ data: parsed.data } as any);
 
-  assert.equal(result.ok, true);
+  expect(result.ok).toBeTruthy();
   if (result.ok) {
-    assert.equal(result.data.directive.outcome, "REJECT_COMMIT");
-    assert.ok(result.data.directive.rulesApplied.includes("DRIFT_DETECTED"));
+    expect(result.data.directive.outcome).toBe("REJECT_COMMIT");
+    expect(result.data.directive.rulesApplied.includes("DRIFT_DETECTED")).toBe(
+      true,
+    );
   }
 });
 
@@ -102,15 +103,17 @@ test("postGuardRevalidation returns REJECT_COMMIT on drift (fingerprint mismatch
   };
 
   const parsed = guardRevalidation(env as any);
-  assert.equal(parsed.ok, true);
+  expect(parsed.ok).toBeTruthy();
   if (!parsed.ok) return;
 
   const result = postGuardRevalidation({ data: parsed.data } as any);
 
-  assert.equal(result.ok, true);
+  expect(result.ok).toBeTruthy();
   if (result.ok) {
-    assert.equal(result.data.directive.outcome, "REJECT_COMMIT");
-    assert.ok(result.data.directive.rulesApplied.includes("DRIFT_DETECTED"));
+    expect(result.data.directive.outcome).toBe("REJECT_COMMIT");
+    expect(result.data.directive.rulesApplied.includes("DRIFT_DETECTED")).toBe(
+      true,
+    );
   }
 });
 
@@ -143,20 +146,20 @@ test("FULL-only policy fails closed if PARTIAL would be required (non-artifact e
   });
 
   const parsed = guardRevalidation(env as any);
-  assert.equal(parsed.ok, true);
+  expect(parsed.ok).toBeTruthy();
   if (!parsed.ok) return;
 
   const result = postGuardRevalidation({ data: parsed.data } as any);
 
-  assert.equal(result.ok, false);
+  expect(result.ok).toBeFalsy();
   if (!result.ok) {
-    assert.equal(result.code, "PARTIAL_NOT_ALLOWED");
-    assert.ok(
+    expect(result.code).toBe("PARTIAL_NOT_ALLOWED");
+    expect(
       result.trace?.rulesApplied?.includes("NON_ARTIFACT_EFFECTS_PRESENT"),
-    );
-    assert.ok(
+    ).toBe(true);
+    expect(
       result.trace?.rulesApplied?.includes("PARTIAL_NOT_ALLOWED_BY_POLICY"),
-    );
+    ).toBe(true);
   }
 });
 
@@ -202,20 +205,20 @@ test("PARTIAL allowed produces PARTIAL_COMMIT and allowlist of provisional ARTIF
   });
 
   const parsed = guardRevalidation(env as any);
-  assert.equal(parsed.ok, true);
+  expect(parsed.ok).toBeTruthy();
   if (!parsed.ok) return;
 
   const result = postGuardRevalidation({ data: parsed.data } as any);
 
-  assert.equal(result.ok, true);
+  expect(result.ok).toBeTruthy();
   if (result.ok) {
-    assert.equal(result.data.directive.outcome, "PARTIAL_COMMIT");
-    assert.deepEqual(result.data.directive.commitAllowList, ["note_1"]);
-    assert.ok(
+    expect(result.data.directive.outcome).toBe("PARTIAL_COMMIT");
+    expect(result.data.directive.commitAllowList).toEqual(["note_1"]);
+    expect(
       result.data.directive.rulesApplied.includes(
         "NON_ARTIFACT_EFFECTS_PRESENT",
       ),
-    );
+    ).toBe(true);
   }
 });
 
@@ -236,15 +239,15 @@ test("no drift + no non-artifact effects => APPROVE_COMMIT", () => {
   });
 
   const parsed = guardRevalidation(env as any);
-  assert.equal(parsed.ok, true);
+  expect(parsed.ok).toBeTruthy();
   if (!parsed.ok) return;
 
   const result = postGuardRevalidation({ data: parsed.data } as any);
 
-  assert.equal(result.ok, true);
+  expect(result.ok).toBeTruthy();
   if (result.ok) {
-    assert.equal(result.data.directive.outcome, "APPROVE_COMMIT");
-    assert.deepEqual(result.data.directive.commitAllowList, []);
+    expect(result.data.directive.outcome).toBe("APPROVE_COMMIT");
+    expect(result.data.directive.commitAllowList).toEqual([]);
   }
 });
 
@@ -279,19 +282,16 @@ test("fingerprint correct does not cause false drift (still produces expected di
   });
 
   const parsed = guardRevalidation(env as any);
-  assert.equal(parsed.ok, true);
+  expect(parsed.ok).toBeTruthy();
   if (!parsed.ok) return;
 
   const result = postGuardRevalidation({ data: parsed.data } as any);
 
-  assert.equal(result.ok, true);
+  expect(result.ok).toBeTruthy();
   if (result.ok) {
-    assert.equal(result.data.directive.outcome, "PARTIAL_COMMIT");
-    assert.deepEqual(result.data.directive.commitAllowList, ["note_1"]);
+    expect(result.data.directive.outcome).toBe("PARTIAL_COMMIT");
+    expect(result.data.directive.commitAllowList).toEqual(["note_1"]);
     // importantly: no drift rule applied
-    assert.equal(
-      result.data.directive.rulesApplied.includes("DRIFT_DETECTED"),
-      false,
-    );
+    expect(result.data.directive.rulesApplied).not.toContain("DRIFT_DETECTED");
   }
 });

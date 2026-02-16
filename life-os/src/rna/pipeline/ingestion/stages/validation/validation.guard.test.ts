@@ -1,5 +1,4 @@
-import test from "node:test";
-import assert from "node:assert/strict";
+import { test, describe, it, expect } from "vitest";
 
 import {
   guardValidation,
@@ -15,15 +14,15 @@ function lastError(env: IngestionPipelineEnvelope) {
 test("guardValidation returns ok:false INVALID_VALIDATION_INPUT when input shape is wrong", () => {
   const result = guardValidation({ nope: true } as any);
 
-  assert.equal(result.ok, false);
+  expect(result.ok).toBeFalsy();
   if (!result.ok) {
-    assert.equal(result.code, "INVALID_VALIDATION_INPUT");
-    assert.equal(result.stage, "VALIDATION");
-    assert.equal(typeof result.message, "string");
-    assert.ok(result.trace);
-    assert.equal(result.trace.mode, "UNKNOWN");
-    assert.ok(Array.isArray(result.trace.rulesApplied));
-    assert.ok(result.trace.rulesApplied.includes("PARSE_FAILED"));
+    expect(result.code).toBe("INVALID_VALIDATION_INPUT");
+    expect(result.stage).toBe("VALIDATION");
+    expect(typeof result.message).toBe("string");
+    expect(result.trace).toBeTruthy();
+    expect(result.trace.mode).toBe("UNKNOWN");
+    expect(result.trace.rulesApplied).toBeInstanceOf(Array);
+    expect(result.trace.rulesApplied).toContain("PARSE_FAILED");
   }
 });
 
@@ -35,12 +34,12 @@ test("guardValidation returns ok:false INVALID_VALIDATION_INPUT when ids/stages/
 
   const result = guardValidation(env);
 
-  assert.equal(result.ok, false);
+  expect(result.ok).toBeFalsy();
   if (!result.ok) {
-    assert.equal(result.code, "INVALID_VALIDATION_INPUT");
-    assert.equal(result.stage, "VALIDATION");
-    assert.equal(result.trace.mode, "UNKNOWN");
-    assert.ok(result.trace.rulesApplied.includes("PARSE_FAILED"));
+    expect(result.code).toBe("INVALID_VALIDATION_INPUT");
+    expect(result.stage).toBe("VALIDATION");
+    expect(result.trace.mode).toBe("UNKNOWN");
+    expect(result.trace.rulesApplied).toContain("PARSE_FAILED");
   }
 });
 
@@ -55,16 +54,16 @@ test("guardValidation is pure: does not append envelope errors or mutate env on 
 
   const result = guardValidation(env as any);
 
-  assert.equal(result.ok, false);
+  expect(result.ok).toBeFalsy();
 
   // 🔒 guard must not mutate env (no error append, no stage writeback)
-  assert.equal(env.errors.length, beforeErrorsLen);
-  assert.equal((env.stages.validation as any)?.hasRun, beforeValidationHasRun);
-  assert.equal(env.ids.validationId, beforeValidationId);
+  expect(env.errors.length).toBe(beforeErrorsLen);
+  expect((env.stages.validation as any)?.hasRun).toBe(beforeValidationHasRun);
+  expect(env.ids.validationId).toBe(beforeValidationId);
 
   if (!result.ok) {
-    assert.equal(result.code, "INVALID_VALIDATION_INPUT");
-    assert.ok(result.trace.rulesApplied.includes("PARSE_FAILED"));
+    expect(result.code).toBe("INVALID_VALIDATION_INPUT");
+    expect(result.trace.rulesApplied).toContain("PARSE_FAILED");
   }
 });
 
@@ -72,11 +71,11 @@ test("guardPreValidation returns ok:true when called on a normal envelope (no pr
   const env = makeEnv();
 
   const result = guardPreValidation(env);
-  assert.equal(result.ok, true);
+  expect(result.ok).toBeTruthy();
 
   if (result.ok) {
-    assert.equal(result.env, env);
-    assert.equal(result.env.errors.length, env.errors.length);
+    expect(result.env).toBe(env);
+    expect(result.env.errors.length).toBe(env.errors.length);
   }
 });
 
@@ -86,13 +85,12 @@ test("guardPreValidation does not create side effects (no errors appended) when 
 
   const result = guardPreValidation(env);
 
-  assert.equal(result.ok, true);
+  expect(result.ok).toBeTruthy();
   if (result.ok) {
-    assert.equal(result.env.errors.length, beforeErrorsLen);
-    assert.equal(result.env.ids.validationId, env.ids.validationId);
-    assert.equal(
-      (result.env.stages.validation as any)?.hasRun,
-      (env.stages.validation as any)?.hasRun
+    expect(result.env.errors.length).toBe(beforeErrorsLen);
+    expect(result.env.ids.validationId).toBe(env.ids.validationId);
+    expect((result.env.stages.validation as any)?.hasRun).toBe(
+      (env.stages.validation as any)?.hasRun,
     );
   }
 });
@@ -111,12 +109,12 @@ test("guardPreValidation appends HALT VALIDATION_PREREQ_MISSING when a declared 
   try {
     const result = guardPreValidation(env as any);
     // If it doesn't throw, it must fail closed by appending a HALT error.
-    assert.equal(result.ok, false);
+    expect(result.ok).toBeFalsy();
     if (!result.ok) {
       const err = lastError(result.env) as any;
-      assert.equal(err.stage, "VALIDATION");
-      assert.equal(err.severity, "HALT");
-      assert.equal(err.code, "VALIDATION_PREREQ_MISSING");
+      expect(err.stage).toBe("VALIDATION");
+      expect(err.severity).toBe("HALT");
+      expect(err.code).toBe("VALIDATION_PREREQ_MISSING");
     }
   } catch {
     threw = true;
@@ -124,5 +122,5 @@ test("guardPreValidation appends HALT VALIDATION_PREREQ_MISSING when a declared 
 
   // Accept either "fail-closed error append" OR "throws on malformed envelope",
   // but you should prefer fail-closed for robustness.
-  assert.ok(threw === true || threw === false);
+  expect(threw === true || threw === false).toBeTruthy();
 });

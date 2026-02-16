@@ -1,5 +1,4 @@
-import test from "node:test";
-import assert from "node:assert/strict";
+import { test, describe, it, expect } from "vitest";
 
 import type { OutboxApplier } from "#/platform/outbox/outbox.applier";
 import { applyOutboxEntry } from "#/platform/outbox/outbox.applier";
@@ -48,7 +47,7 @@ test("applyOutboxEntry: no-ops when entry.status !== PENDING", async () => {
   await applyOutboxEntry(applier, makeEntry({ status: "APPLIED" }));
   await applyOutboxEntry(applier, makeEntry({ status: "FAILED" }));
 
-  assert.deepEqual(calls, []);
+  expect(calls).toEqual([]);
 });
 
 test("applyOutboxEntry: marks IN_PROGRESS first, then apply, then markApplied", async () => {
@@ -57,16 +56,16 @@ test("applyOutboxEntry: marks IN_PROGRESS first, then apply, then markApplied", 
   const applier: OutboxApplier = {
     async markInProgress(e) {
       calls.push({ name: "markInProgress", status: e.status });
-      assert.equal(e.status, "IN_PROGRESS");
+      expect(e.status).toBe("IN_PROGRESS");
     },
     async apply(e) {
       calls.push({ name: "apply", status: e.status });
-      assert.equal(e.status, "IN_PROGRESS");
+      expect(e.status).toBe("IN_PROGRESS");
     },
     async markApplied(e) {
       calls.push({ name: "markApplied", status: e.status });
       // note: you pass the same IN_PROGRESS entry to markApplied currently
-      assert.equal(e.status, "IN_PROGRESS");
+      expect(e.status).toBe("IN_PROGRESS");
     },
     async markFailed() {
       calls.push({ name: "markFailed" });
@@ -75,10 +74,11 @@ test("applyOutboxEntry: marks IN_PROGRESS first, then apply, then markApplied", 
 
   await applyOutboxEntry(applier, makeEntry({ status: "PENDING" }));
 
-  assert.deepEqual(
-    calls.map((c) => c.name),
-    ["markInProgress", "apply", "markApplied"],
-  );
+  expect(calls.map((c) => c.name)).toEqual([
+    "markInProgress",
+    "apply",
+    "markApplied",
+  ]);
 });
 
 test("applyOutboxEntry: on apply() throw => markFailed called with OutboxError", async () => {
@@ -97,16 +97,17 @@ test("applyOutboxEntry: on apply() throw => markFailed called with OutboxError",
     },
     async markFailed(_e, error) {
       calls.push({ name: "markFailed", error });
-      assert.equal(typeof error.message, "string");
-      assert.ok(error.message.includes("boom"));
-      assert.equal(typeof error.at, "number");
+      expect(typeof error.message).toBe("string");
+      expect(error.message).toContain("boom");
+      expect(typeof error.at).toBe("number");
     },
   };
 
   await applyOutboxEntry(applier, makeEntry({ status: "PENDING" }));
 
-  assert.deepEqual(
-    calls.map((c) => c.name),
-    ["markInProgress", "apply", "markFailed"],
-  );
+  expect(calls.map((c) => c.name)).toEqual([
+    "markInProgress",
+    "apply",
+    "markFailed",
+  ]);
 });

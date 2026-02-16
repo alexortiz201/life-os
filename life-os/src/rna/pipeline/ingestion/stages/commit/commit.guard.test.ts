@@ -1,5 +1,4 @@
-import test from "node:test";
-import assert from "node:assert/strict";
+import { test, describe, it, expect } from "vitest";
 
 import { guardCommit } from "#/rna/pipeline/ingestion/stages/commit/commit.guard";
 
@@ -11,12 +10,12 @@ const makeEnv = () => resetStagesUpTo("commit", makeEnvUtil());
 test("guardCommit returns ok:false INVALID_COMMIT_INPUT when input shape is wrong", () => {
   const result = guardCommit({ nope: true } as any);
 
-  assert.equal(result.ok, false);
+  expect(result.ok).toBeFalsy();
   if (!result.ok) {
-    assert.equal(result.code, "INVALID_COMMIT_INPUT");
-    assert.equal(typeof result.message, "string");
-    assert.ok(result.trace);
-    assert.ok(result.trace?.rulesApplied?.includes("PARSE_FAILED"));
+    expect(result.code).toBe("INVALID_COMMIT_INPUT");
+    expect(typeof result.message).toBe("string");
+    expect(result.trace).toBeTruthy();
+    expect(result.trace.rulesApplied).toContain("PARSE_FAILED");
   }
 });
 
@@ -28,10 +27,10 @@ test("guardCommit returns ok:false when required plucked fields are missing (par
 
   const result = guardCommit(env as any);
 
-  assert.equal(result.ok, false);
+  expect(result.ok).toBeFalsy();
   if (!result.ok) {
-    assert.equal(result.code, "INVALID_COMMIT_INPUT");
-    assert.ok(result.trace?.rulesApplied?.includes("PARSE_FAILED"));
+    expect(result.code).toBe("INVALID_COMMIT_INPUT");
+    expect(result.trace.rulesApplied).toContain("PARSE_FAILED");
   }
 });
 
@@ -46,10 +45,10 @@ test("guardCommit returns ok:false when execution.effectsLog is missing (parse f
 
   const result = guardCommit(env as any);
 
-  assert.equal(result.ok, false);
+  expect(result.ok).toBeFalsy();
   if (!result.ok) {
-    assert.equal(result.code, "INVALID_COMMIT_INPUT");
-    assert.ok(result.trace?.rulesApplied?.includes("PARSE_FAILED"));
+    expect(result.code).toBe("INVALID_COMMIT_INPUT");
+    expect(result.trace.rulesApplied).toContain("PARSE_FAILED");
   }
 });
 
@@ -61,10 +60,10 @@ test("guardCommit returns ok:false when revalidation stage is missing (parse fai
 
   const result = guardCommit(env as any);
 
-  assert.equal(result.ok, false);
+  expect(result.ok).toBeFalsy();
   if (!result.ok) {
-    assert.equal(result.code, "INVALID_COMMIT_INPUT");
-    assert.ok(result.trace?.rulesApplied?.includes("PARSE_FAILED"));
+    expect(result.code).toBe("INVALID_COMMIT_INPUT");
+    expect(result.trace.rulesApplied).toContain("PARSE_FAILED");
   }
 });
 
@@ -73,23 +72,20 @@ test("guardCommit returns ok:true and plucks + parses expected fields", () => {
 
   const result = guardCommit(env as any);
 
-  assert.equal(result.ok, true);
+  expect(result.ok).toBeTruthy();
 
   if (result.ok) {
     // proposalId comes from ids
-    assert.equal(result.data.proposalId, env.ids.proposalId);
+    expect(result.data.proposalId).toBe(env.ids.proposalId);
 
     // assert shallowly not deepEqual when stubbing!!!!
     // revalidation is the entire stages.revalidation object (not directive)
-    assert.equal(
-      // TODO FIX
-      result.data.revalidation.revalidationId,
+    expect(result.data.revalidation.revalidationId).toBe(
       (env.stages as any).revalidation.revalidationId,
     );
 
     // effectsLog comes from stages.execution.effectsLog
-    assert.equal(
-      result.data.effectsLog.effectsLogId,
+    expect(result.data.effectsLog.effectsLogId).toBe(
       (env.stages.execution as any).effectsLog.effectsLogId,
     );
   }
@@ -106,10 +102,10 @@ test("guardCommit fail-closed does not mark commit stage as run or create commit
 
   const res = guardCommit(env as any);
 
-  assert.equal(res.ok, false);
+  expect(res.ok).toBeFalsy();
   if (!res.ok) {
     // guard should only return error; it should not write success outputs
-    assert.equal((env.stages.commit as any)?.hasRun, beforeHasRun);
-    assert.equal((env.ids as any).commitId, beforeCommitId);
+    expect((env.stages.commit as any)?.hasRun).toBe(beforeHasRun);
+    expect((env.ids as any).commitId).toBe(beforeCommitId);
   }
 });

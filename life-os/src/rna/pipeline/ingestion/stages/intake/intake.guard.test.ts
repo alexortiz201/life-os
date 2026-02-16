@@ -1,5 +1,4 @@
-import test from "node:test";
-import assert from "node:assert/strict";
+import { test, describe, it, expect } from "vitest";
 
 import { guardIntake } from "#/rna/pipeline/ingestion/stages/intake/intake.guard";
 import { makeEnv, clearDefaultIdsPastStage } from "#/shared/test-utils";
@@ -7,15 +6,15 @@ import { makeEnv, clearDefaultIdsPastStage } from "#/shared/test-utils";
 test("returns ok:false INVALID_INTAKE_INPUT when input shape is wrong", () => {
   const result = guardIntake({ nope: true } as any);
 
-  assert.equal(result.ok, false);
+  expect(result.ok).toBeFalsy();
   if (!result.ok) {
-    assert.equal(result.code, "INVALID_INTAKE_INPUT");
-    assert.equal(result.stage, "INTAKE");
-    assert.equal(typeof result.message, "string");
-    assert.ok(result.trace);
-    assert.equal(result.trace.mode, "UNKNOWN");
-    assert.ok(Array.isArray(result.trace.rulesApplied));
-    assert.ok(result.trace.rulesApplied.includes("PARSE_FAILED"));
+    expect(result.code).toBe("INVALID_INTAKE_INPUT");
+    expect(result.stage).toBe("INTAKE");
+    expect(typeof result.message).toBe("string");
+    expect(result.trace).toBeTruthy();
+    expect(result.trace.mode).toBe("UNKNOWN");
+    expect(result.trace.rulesApplied).toBeInstanceOf(Array);
+    expect(result.trace.rulesApplied).toContain("PARSE_FAILED");
   }
 });
 
@@ -25,11 +24,11 @@ test("returns ok:false INVALID_INTAKE_INPUT when proposalId missing", () => {
 
   const result = guardIntake(env as any);
 
-  assert.equal(result.ok, false);
+  expect(result.ok).toBeFalsy();
   if (!result.ok) {
-    assert.equal(result.code, "INVALID_INTAKE_INPUT");
-    assert.equal(result.stage, "INTAKE");
-    assert.ok(result.trace.rulesApplied.includes("PARSE_FAILED"));
+    expect(result.code).toBe("INVALID_INTAKE_INPUT");
+    expect(result.stage).toBe("INTAKE");
+    expect(result.trace.rulesApplied).toContain("PARSE_FAILED");
   }
 });
 
@@ -45,11 +44,11 @@ test("returns ok:false INVALID_INTAKE_INPUT when RAW_PROPOSAL missing required f
 
   const result = guardIntake(env as any);
 
-  assert.equal(result.ok, false);
+  expect(result.ok).toBeFalsy();
   if (!result.ok) {
-    assert.equal(result.code, "INVALID_INTAKE_INPUT");
-    assert.equal(result.stage, "INTAKE");
-    assert.ok(result.trace.rulesApplied.includes("PARSE_FAILED"));
+    expect(result.code).toBe("INVALID_INTAKE_INPUT");
+    expect(result.stage).toBe("INTAKE");
+    expect(result.trace.rulesApplied).toContain("PARSE_FAILED");
   }
 });
 
@@ -72,13 +71,12 @@ test("returns ok:true when minimal structural RAW_PROPOSAL is present (no semant
 
   const result = guardIntake(env as any);
 
-  assert.equal(result.ok, true);
+  expect(result.ok).toBeTruthy();
 
   if (result.ok) {
     // We don't assert full normalization here; that's stage responsibility.
     // Guard should at least pass through the candidate/projection used by the schema.
-    assert.equal(
-      typeof (result.data as any).rawProposal.actor.actorId,
+    expect(typeof (result.data as any).rawProposal.actor.actorId).toBe(
       "string",
     );
   }

@@ -1,5 +1,4 @@
-import test from "node:test";
-import assert from "node:assert/strict";
+import { test, describe, it, expect } from "vitest";
 
 import { guardPreRevalidation } from "#/rna/pipeline/ingestion/stages/revalidation/revalidation.guard";
 import {
@@ -22,23 +21,21 @@ test("guardPreRevalidation: HALT when execution stage has not run", () => {
 
   const res = guardPreRevalidation(env);
 
-  assert.equal(res.ok, false);
+  expect(res.ok).toBeFalsy();
   if (!res.ok) {
-    assert.ok(res.env.errors.length >= 1);
+    expect(res.env.errors.length >= 1).toBeTruthy();
 
     const err = lastError(res.env) as any;
-    assert.equal(err.stage, "REVALIDATION");
-    assert.equal(err.severity, "HALT");
-    assert.equal(err.code, "REVALIDATION_PREREQ_MISSING");
+    expect(err.stage).toBe("REVALIDATION");
+    expect(err.severity).toBe("HALT");
+    expect(err.code).toBe("REVALIDATION_PREREQ_MISSING");
 
     // trace contract: should explain what failed (shape may vary)
-    assert.ok(err.trace);
-    assert.equal(err.trace.proposalId, env.ids.proposalId);
-    assert.ok(
-      "executionHasRun" in err.trace ||
-        "stageKey" in err.trace ||
-        "dependsOn" in err.trace,
-    );
+    expect(err.trace).toBeTruthy();
+    expect(err.trace.proposalId).toBe(env.ids.proposalId);
+    expect(
+      ["executionHasRun", "stageKey", "dependsOn"].some((k) => k in err.trace),
+    ).toBe(true);
   }
 });
 
@@ -53,21 +50,19 @@ test("guardPreRevalidation: HALT when validation stage has not run", () => {
 
   const res = guardPreRevalidation(env);
 
-  assert.equal(res.ok, false);
+  expect(res.ok).toBeFalsy();
   if (!res.ok) {
     const err = lastError(res.env) as any;
 
-    assert.equal(err.stage, "REVALIDATION");
-    assert.equal(err.severity, "HALT");
-    assert.equal(err.code, "REVALIDATION_PREREQ_MISSING");
+    expect(err.stage).toBe("REVALIDATION");
+    expect(err.severity).toBe("HALT");
+    expect(err.code).toBe("REVALIDATION_PREREQ_MISSING");
 
-    assert.ok(err.trace);
-    assert.equal(err.trace.proposalId, env.ids.proposalId);
-    assert.ok(
-      "validationHasRun" in err.trace ||
-        "stageKey" in err.trace ||
-        "dependsOn" in err.trace,
-    );
+    expect(err.trace).toBeTruthy();
+    expect(err.trace.proposalId).toBe(env.ids.proposalId);
+    expect(
+      ["validationHasRun", "stageKey", "dependsOn"].some((k) => k in err.trace),
+    ).toBe(true);
   }
 });
 
@@ -79,20 +74,20 @@ test("guardPreRevalidation: HALT when snapshotId missing", () => {
 
   const res = guardPreRevalidation(env);
 
-  assert.equal(res.ok, false);
+  expect(res.ok).toBeFalsy();
   if (!res.ok) {
     const err = lastError(res.env) as any;
 
-    assert.equal(err.stage, "REVALIDATION");
-    assert.equal(err.severity, "HALT");
-    assert.equal(err.code, "REVALIDATION_PREREQ_MISSING");
+    expect(err.stage).toBe("REVALIDATION");
+    expect(err.severity).toBe("HALT");
+    expect(err.code).toBe("REVALIDATION_PREREQ_MISSING");
 
-    assert.ok(err.trace);
-    assert.equal(err.trace.proposalId, env.ids.proposalId);
+    expect(err.trace).toBeTruthy();
+    expect(err.trace.proposalId).toBe(env.ids.proposalId);
 
     // many of your preguards use { idKey, value } pattern
     if ("idKey" in err.trace) {
-      assert.equal(err.trace.idKey, "snapshotId");
+      expect(err.trace.idKey).toBe("snapshotId");
     }
   }
 });
@@ -105,19 +100,19 @@ test("guardPreRevalidation: HALT when effectsLogId missing", () => {
 
   const res = guardPreRevalidation(env);
 
-  assert.equal(res.ok, false);
+  expect(res.ok).toBeFalsy();
   if (!res.ok) {
     const err = lastError(res.env) as any;
 
-    assert.equal(err.stage, "REVALIDATION");
-    assert.equal(err.severity, "HALT");
-    assert.equal(err.code, "REVALIDATION_PREREQ_MISSING");
+    expect(err.stage).toBe("REVALIDATION");
+    expect(err.severity).toBe("HALT");
+    expect(err.code).toBe("REVALIDATION_PREREQ_MISSING");
 
-    assert.ok(err.trace);
-    assert.equal(err.trace.proposalId, env.ids.proposalId);
+    expect(err.trace).toBeTruthy();
+    expect(err.trace.proposalId).toBe(env.ids.proposalId);
 
     if ("idKey" in err.trace) {
-      assert.equal(err.trace.idKey, "effectsLogId");
+      expect(err.trace.idKey).toBe("effectsLogId");
     }
   }
 });
@@ -126,10 +121,10 @@ test("guardPreRevalidation: ok:true when prereqs satisfied", () => {
   const env = makeEnv();
   const res = guardPreRevalidation(env);
 
-  assert.equal(res.ok, true);
+  expect(res.ok).toBeTruthy();
   if (res.ok) {
     // should be identity on env
-    assert.equal(res.env, env);
+    expect(res.env).toBe(env);
   }
 });
 
@@ -147,10 +142,10 @@ test("guardPreRevalidation: fail-closed does not mark revalidation as run or cre
 
   const res = guardPreRevalidation(env);
 
-  assert.equal(res.ok, false);
+  expect(res.ok).toBeFalsy();
   if (!res.ok) {
     // prereq guard should only append an error; it should not write success outputs
-    assert.equal((res.env.stages.revalidation as any)?.hasRun, beforeHasRun);
-    assert.equal(res.env.ids.revalidationId, beforeRevalidationId);
+    expect((res.env.stages.revalidation as any)?.hasRun).toBe(beforeHasRun);
+    expect(res.env.ids.revalidationId).toBe(beforeRevalidationId);
   }
 });

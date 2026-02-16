@@ -1,6 +1,5 @@
 // guard-utils.test.ts
-import test from "node:test";
-import assert from "node:assert/strict";
+import { test, describe, it, expect } from "vitest";
 import { z } from "zod";
 
 import { guardFactory } from "#/platform/pipeline/guard/guard.factory";
@@ -31,12 +30,12 @@ test("guardFactory: returns ok:false when env is not an object (parseFailedRule 
 
   const result = guard(null as any);
 
-  assert.equal(result.ok, false);
+  expect(result.ok).toBeFalsy();
   if (!result.ok) {
-    assert.equal(result.code, "INVALID_PLANNING_INPUT");
-    assert.equal(result.stage, "PLANNING");
-    assert.equal(result.trace.mode, "UNKNOWN");
-    assert.ok(result.trace.rulesApplied.includes("PARSE_FAILED"));
+    expect(result.code).toBe("INVALID_PLANNING_INPUT");
+    expect(result.stage).toBe("PLANNING");
+    expect(result.trace.mode).toBe("UNKNOWN");
+    expect(result.trace.rulesApplied).toContain("PARSE_FAILED");
   }
 });
 
@@ -56,12 +55,12 @@ test("guardFactory: returns ok:false when ids/stages/proposalId missing (fail cl
 
   const result = guard(env);
 
-  assert.equal(result.ok, false);
+  expect(result.ok).toBeFalsy();
   if (!result.ok) {
-    assert.equal(result.code, "INVALID_PLANNING_INPUT");
-    assert.equal(result.stage, "PLANNING");
-    assert.equal(result.trace.mode, "UNKNOWN");
-    assert.ok(result.trace.rulesApplied.includes("PARSE_FAILED"));
+    expect(result.code).toBe("INVALID_PLANNING_INPUT");
+    expect(result.stage).toBe("PLANNING");
+    expect(result.trace.mode).toBe("UNKNOWN");
+    expect(result.trace.rulesApplied).toContain("PARSE_FAILED");
   }
 });
 
@@ -84,14 +83,14 @@ test("guardFactory: returns ok:false when prereq stage object is missing (depend
 
   const result = guard(env);
 
-  assert.equal(result.ok, false);
+  expect(result.ok).toBeFalsy();
   if (!result.ok) {
-    assert.equal(result.code, "INVALID_PLANNING_INPUT");
-    assert.equal(result.stage, "PLANNING");
-    assert.equal(result.trace.mode, "UNKNOWN");
-    assert.equal(result.trace.proposalId, env.ids.proposalId);
-    assert.ok(result.trace.rulesApplied.includes("PARSE_FAILED"));
-    assert.ok(typeof result.message === "string");
+    expect(result.code).toBe("INVALID_PLANNING_INPUT");
+    expect(result.stage).toBe("PLANNING");
+    expect(result.trace.mode).toBe("UNKNOWN");
+    expect(result.trace.proposalId).toBe(env.ids.proposalId);
+    expect(result.trace.rulesApplied).toContain("PARSE_FAILED");
+    expect(typeof result.message === "string").toBeTruthy();
   }
 });
 
@@ -110,7 +109,7 @@ test("guardFactory: returns ok:false when schema parsing fails (candidate invali
       ({
         proposalId,
         // snapshotId intentionally missing to fail Zod
-      } as unknown as z.input<typeof InputSchema>),
+      }) as unknown as z.input<typeof InputSchema>,
   });
 
   const env = makeEnv();
@@ -121,13 +120,13 @@ test("guardFactory: returns ok:false when schema parsing fails (candidate invali
 
   const result = guard(env);
 
-  assert.equal(result.ok, false);
+  expect(result.ok).toBeFalsy();
   if (!result.ok) {
-    assert.equal(result.code, "INVALID_PLANNING_INPUT");
-    assert.equal(result.stage, "PLANNING");
-    assert.equal(result.trace.mode, "UNKNOWN");
-    assert.equal(result.trace.ids.proposalId, env.ids.proposalId);
-    assert.ok(result.trace.rulesApplied.includes("PARSE_FAILED"));
+    expect(result.code).toBe("INVALID_PLANNING_INPUT");
+    expect(result.stage).toBe("PLANNING");
+    expect(result.trace.mode).toBe("UNKNOWN");
+    expect(result.trace.ids.proposalId).toBe(env.ids.proposalId);
+    expect(result.trace.rulesApplied).toContain("PARSE_FAILED");
   }
 });
 
@@ -156,9 +155,9 @@ test("guardFactory: returns ok:true with parsed data when candidate passes schem
 
   const result = guard(env);
 
-  assert.equal(result.ok, true);
+  expect(result.ok).toBeTruthy();
   if (result.ok) {
-    assert.deepEqual(result.data, {
+    expect(result.data).toEqual({
       proposalId: env.ids.proposalId,
       snapshotId: env.ids.snapshotId,
     });

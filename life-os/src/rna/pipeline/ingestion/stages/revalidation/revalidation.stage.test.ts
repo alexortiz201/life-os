@@ -1,5 +1,4 @@
-import test from "node:test";
-import assert from "node:assert/strict";
+import { test, describe, it, expect } from "vitest";
 
 import { revalidationStage } from "#/rna/pipeline/ingestion/stages/revalidation/revalidation.stage";
 import {
@@ -20,13 +19,13 @@ test("appends HALT error when execution stage has not run", () => {
   const out = revalidationStage(env);
   const nextEnv = unwrapLeft(out);
 
-  assert.equal(nextEnv.env.stages.revalidation.hasRun, false);
-  assert.ok(nextEnv.env.errors.length >= 1);
+  expect(nextEnv.env.stages.revalidation.hasRun).toBeFalsy();
+  expect(nextEnv.env.errors.length >= 1).toBeTruthy();
 
   const err = lastError(nextEnv.env) as any;
-  assert.equal(err.stage, "REVALIDATION");
-  assert.equal(err.severity, "HALT");
-  assert.equal(err.code, "REVALIDATION_PREREQ_MISSING");
+  expect(err.stage).toBe("REVALIDATION");
+  expect(err.severity).toBe("HALT");
+  expect(err.code).toBe("REVALIDATION_PREREQ_MISSING");
 });
 
 test("appends HALT error when validation stage has not run (commitPolicy missing)", () => {
@@ -36,13 +35,13 @@ test("appends HALT error when validation stage has not run (commitPolicy missing
   const out = revalidationStage(env);
   const nextEnv = unwrapLeft(out);
 
-  assert.equal(nextEnv.env.stages.revalidation.hasRun, false);
-  assert.ok(nextEnv.env.errors.length >= 1);
+  expect(nextEnv.env.stages.revalidation.hasRun).toBeFalsy();
+  expect(nextEnv.env.errors.length >= 1).toBeTruthy();
 
   const err = lastError(nextEnv.env) as any;
-  assert.equal(err.stage, "REVALIDATION");
-  assert.equal(err.severity, "HALT");
-  assert.equal(err.code, "REVALIDATION_PREREQ_MISSING");
+  expect(err.stage).toBe("REVALIDATION");
+  expect(err.severity).toBe("HALT");
+  expect(err.code).toBe("REVALIDATION_PREREQ_MISSING");
 });
 
 test("appends HALT error when snapshotId missing", () => {
@@ -52,13 +51,13 @@ test("appends HALT error when snapshotId missing", () => {
   const out = revalidationStage(env);
   const nextEnv = unwrapLeft(out);
 
-  assert.equal(nextEnv.env.stages.revalidation.hasRun, false);
-  assert.ok(nextEnv.env.errors.length >= 1);
+  expect(nextEnv.env.stages.revalidation.hasRun).toBeFalsy();
+  expect(nextEnv.env.errors.length >= 1).toBeTruthy();
 
   const err = lastError(nextEnv.env) as any;
-  assert.equal(err.stage, "REVALIDATION");
-  assert.equal(err.severity, "HALT");
-  assert.equal(err.code, "REVALIDATION_PREREQ_MISSING");
+  expect(err.stage).toBe("REVALIDATION");
+  expect(err.severity).toBe("HALT");
+  expect(err.code).toBe("REVALIDATION_PREREQ_MISSING");
 });
 
 test("appends HALT error when effectsLogId missing", () => {
@@ -68,13 +67,13 @@ test("appends HALT error when effectsLogId missing", () => {
   const out = revalidationStage(env);
   const nextEnv = unwrapLeft(out);
 
-  assert.equal(nextEnv.env.stages.revalidation.hasRun, false);
-  assert.ok(nextEnv.env.errors.length >= 1);
+  expect(nextEnv.env.stages.revalidation.hasRun).toBeFalsy();
+  expect(nextEnv.env.errors.length >= 1).toBeTruthy();
 
   const err = lastError(nextEnv.env) as any;
-  assert.equal(err.stage, "REVALIDATION");
-  assert.equal(err.severity, "HALT");
-  assert.equal(err.code, "REVALIDATION_PREREQ_MISSING");
+  expect(err.stage).toBe("REVALIDATION");
+  expect(err.severity).toBe("HALT");
+  expect(err.code).toBe("REVALIDATION_PREREQ_MISSING");
 });
 
 test("APPROVE_COMMIT when only ARTIFACT effects are present", () => {
@@ -82,13 +81,13 @@ test("APPROVE_COMMIT when only ARTIFACT effects are present", () => {
   const out = revalidationStage(env);
   const nextEnv = unwrapRight(out);
 
-  assert.equal(nextEnv.errors.length, 0);
-  assert.equal(nextEnv.stages.revalidation.hasRun, true);
+  expect(nextEnv.errors.length).toBe(0);
+  expect(nextEnv.stages.revalidation.hasRun).toBeTruthy();
 
   const r = nextEnv.stages.revalidation as any;
-  assert.equal(r.proposalId, "proposal_1");
-  assert.equal(r.directive.outcome, "APPROVE_COMMIT");
-  assert.deepEqual(r.directive.commitAllowList, []);
+  expect(r.proposalId).toBe("proposal_1");
+  expect(r.directive.outcome).toBe("APPROVE_COMMIT");
+  expect(r.directive.commitAllowList).toEqual([]);
 });
 
 test("REJECT_COMMIT on drift (effectsLog.proposalId mismatch)", () => {
@@ -105,15 +104,13 @@ test("REJECT_COMMIT on drift (effectsLog.proposalId mismatch)", () => {
   const nextEnv = unwrapRight(out);
 
   // drift is a valid output (not an error)
-  assert.equal(nextEnv.errors.length, 0);
-  assert.equal(nextEnv.stages.revalidation.hasRun, true);
+  expect(nextEnv.errors.length).toBe(0);
+  expect(nextEnv.stages.revalidation.hasRun).toBeTruthy();
 
   const r = nextEnv.stages.revalidation as any;
-  assert.equal(r.directive.outcome, "REJECT_COMMIT");
-  assert.ok(
-    Array.isArray(r.directive.rulesApplied) &&
-      r.directive.rulesApplied.includes("DRIFT_DETECTED"),
-  );
+  expect(r.directive.outcome).toBe("REJECT_COMMIT");
+  expect(r.directive.rulesApplied).toBeInstanceOf(Array);
+  expect(r.directive.rulesApplied).toContain("DRIFT_DETECTED");
 });
 
 test("PARTIAL_NOT_ALLOWED when non-artifact effects exist and policy is FULL-only", () => {
@@ -149,13 +146,13 @@ test("PARTIAL_NOT_ALLOWED when non-artifact effects exist and policy is FULL-onl
   const out = revalidationStage(env);
   const nextEnv = unwrapLeft(out);
 
-  assert.equal(nextEnv.env.stages.revalidation.hasRun, false);
-  assert.ok(nextEnv.env.errors.length >= 1);
+  expect(nextEnv.env.stages.revalidation.hasRun).toBeFalsy();
+  expect(nextEnv.env.errors.length >= 1).toBeTruthy();
 
   const err = lastError(nextEnv.env) as any;
-  assert.equal(err.stage, "REVALIDATION");
-  assert.equal(err.severity, "HALT");
-  assert.equal(err.code, "PARTIAL_NOT_ALLOWED");
+  expect(err.stage).toBe("REVALIDATION");
+  expect(err.severity).toBe("HALT");
+  expect(err.code).toBe("PARTIAL_NOT_ALLOWED");
 });
 
 test("PARTIAL_COMMIT when non-artifact effects exist and policy allows PARTIAL", () => {
@@ -197,10 +194,10 @@ test("PARTIAL_COMMIT when non-artifact effects exist and policy allows PARTIAL",
   const out = revalidationStage(env);
   const nextEnv = unwrapRight(out);
 
-  assert.equal(nextEnv.errors.length, 0);
-  assert.equal(nextEnv.stages.revalidation.hasRun, true);
+  expect(nextEnv.errors.length).toBe(0);
+  expect(nextEnv.stages.revalidation.hasRun).toBeTruthy();
 
   const r = nextEnv.stages.revalidation as any;
-  assert.equal(r.directive.outcome, "PARTIAL_COMMIT");
-  assert.deepEqual(r.directive.commitAllowList.sort(), ["note_1"]);
+  expect(r.directive.outcome).toBe("PARTIAL_COMMIT");
+  expect(r.directive.commitAllowList.sort()).toEqual(["note_1"]);
 });

@@ -1,5 +1,4 @@
-import test from "node:test";
-import assert from "node:assert/strict";
+import { test, describe, it, expect } from "vitest";
 
 import { intakeStage } from "#/rna/pipeline/ingestion/stages/intake/intake.stage";
 import {
@@ -21,13 +20,13 @@ test("appends HALT error when rawProposal missing (structural invalidity)", () =
   const out = intakeStage(env as any);
   const left = unwrapLeft(out);
 
-  assert.equal(left.env.stages.intake.hasRun, false);
-  assert.ok(left.env.errors.length >= 1);
+  expect(left.env.stages.intake.hasRun).toBeFalsy();
+  expect(left.env.errors.length >= 1).toBeTruthy();
 
   const err = lastError(left.env) as any;
-  assert.equal(err.stage, "INTAKE");
-  assert.equal(err.severity, "HALT");
-  assert.equal(err.code, "INVALID_INTAKE_INPUT");
+  expect(err.stage).toBe("INTAKE");
+  expect(err.severity).toBe("HALT");
+  expect(err.code).toBe("INVALID_INTAKE_INPUT");
 });
 
 test("does not reject on 'weird' meaning if structurally valid (intake never judges meaning)", () => {
@@ -48,13 +47,13 @@ test("does not reject on 'weird' meaning if structurally valid (intake never jud
   const out = intakeStage(env as any);
   const nextEnv = unwrapRight(out);
 
-  assert.equal(nextEnv.errors.length, 0);
-  assert.equal(nextEnv.stages.intake.hasRun, true);
+  expect(nextEnv.errors.length).toBe(0);
+  expect(nextEnv.stages.intake.hasRun).toBeTruthy();
 
   const s = nextEnv.stages.intake as any;
-  assert.equal(typeof s.ranAt, "number");
-  assert.equal(typeof s.observed.proposalId, "string");
-  assert.equal(s.observed.proposalId, nextEnv.ids.proposalId);
+  expect(typeof s.ranAt).toBe("number");
+  expect(typeof s.observed.proposalId).toBe("string");
+  expect(s.observed.proposalId).toBe(nextEnv.ids.proposalId);
 });
 
 test("writes PROPOSAL_RECORD with id + fingerprint + preserved raw payload", () => {
@@ -77,28 +76,32 @@ test("writes PROPOSAL_RECORD with id + fingerprint + preserved raw payload", () 
   const out = intakeStage(env as any);
   const nextEnv = unwrapRight(out);
 
-  assert.equal(nextEnv.errors.length, 0);
-  assert.equal(nextEnv.stages.intake.hasRun, true);
+  expect(nextEnv.errors.length).toBe(0);
+  expect(nextEnv.stages.intake.hasRun).toBeTruthy();
 
   // stage should create intakeId
-  assert.equal(typeof nextEnv.ids.intakeId, "string");
-  assert.ok(nextEnv.ids.intakeId, "intakeId should be set after intake stage");
-  assert.ok(nextEnv.ids.intakeId.length > 0);
+  expect(nextEnv.ids.intakeId).toBeTruthy();
+  expect(nextEnv.ids.intakeId).toBeTypeOf("string");
+  expect(nextEnv.ids.intakeId).toMatch(/^.+$/);
+  expect(
+    nextEnv.ids.intakeId,
+    "intakeId should be set after intake stage",
+  ).toBeTruthy();
 
   const intake = nextEnv.stages.intake as any;
 
-  assert.equal(intake.observed.proposalId, nextEnv.ids.proposalId);
-  assert.equal(intake.proposal.id, nextEnv.ids.proposalId);
-  assert.equal(intake.proposal.proposalId, nextEnv.ids.proposalId);
+  expect(intake.observed.proposalId).toBe(nextEnv.ids.proposalId);
+  expect(intake.proposal.id).toBe(nextEnv.ids.proposalId);
+  expect(intake.proposal.proposalId).toBe(nextEnv.ids.proposalId);
 
-  assert.deepEqual(intake.proposal.rawProposal, rawProposal);
+  expect(intake.proposal.rawProposal).toEqual(rawProposal);
 
-  assert.equal(typeof intake.proposal.fingerprint, "string");
-  assert.ok(intake.proposal.fingerprint.length > 0);
+  expect(typeof intake.proposal.fingerprint).toBe("string");
+  expect(intake.proposal.fingerprint.length > 0).toBeTruthy();
 
-  assert.equal(typeof intake.ranAt, "number");
-  assert.equal(typeof intake.proposal.intakeTimestamp, "string");
-  assert.equal(typeof intake.proposal.createdAt, "string");
+  expect(typeof intake.ranAt).toBe("number");
+  expect(typeof intake.proposal.intakeTimestamp).toBe("string");
+  expect(typeof intake.proposal.createdAt).toBe("string");
 });
 
 test("determinism: same proposalId + identical rawProposal => identical fingerprints", () => {
@@ -133,15 +136,15 @@ test("determinism: same proposalId + identical rawProposal => identical fingerpr
   const next1 = unwrapRight(out1);
   const next2 = unwrapRight(out2);
 
-  assert.equal(next1.errors.length, 0);
-  assert.equal(next2.errors.length, 0);
+  expect(next1.errors.length).toBe(0);
+  expect(next2.errors.length).toBe(0);
 
   const fp1 = (next1.stages.intake as any).proposal?.fingerprint;
   const fp2 = (next2.stages.intake as any).proposal?.fingerprint;
 
-  assert.equal(typeof fp1, "string");
-  assert.equal(typeof fp2, "string");
-  assert.equal(fp1, fp2);
+  expect(typeof fp1).toBe("string");
+  expect(typeof fp2).toBe("string");
+  expect(fp1).toBe(fp2);
 });
 
 test("immutability: if intake already hasRun, appends HALT and does not overwrite existing record", () => {
@@ -168,16 +171,16 @@ test("immutability: if intake already hasRun, appends HALT and does not overwrit
   const out = intakeStage(env as any);
   const left = unwrapLeft(out);
 
-  assert.ok(left.env.errors.length >= 1);
+  expect(left.env.errors.length >= 1).toBeTruthy();
 
   const err = lastError(left.env) as any;
-  assert.equal(err.stage, "INTAKE");
-  assert.equal(err.severity, "HALT");
-  assert.equal(err.code, "STAGE_ALREADY_RAN");
+  expect(err.stage).toBe("INTAKE");
+  expect(err.severity).toBe("HALT");
+  expect(err.code).toBe("STAGE_ALREADY_RAN");
 
   const intake = left.env.stages.intake as any;
 
-  assert.equal(intake.hasRun, true);
-  assert.equal(intake.proposal.fingerprint, "fp_1");
-  assert.deepEqual(intake.proposal.rawProposal, { a: 1 });
+  expect(intake.hasRun).toBeTruthy();
+  expect(intake.proposal.fingerprint).toBe("fp_1");
+  expect(intake.proposal.rawProposal).toEqual({ a: 1 });
 });

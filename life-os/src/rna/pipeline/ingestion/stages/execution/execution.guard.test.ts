@@ -1,5 +1,4 @@
-import test from "node:test";
-import assert from "node:assert/strict";
+import { test, describe, it, expect } from "vitest";
 
 import {
   guardExecution,
@@ -29,14 +28,14 @@ const makeEnv = () =>
 test("guardExecution returns ok:false INVALID_EXECUTION_INPUT when input shape is wrong", () => {
   const result = guardExecution({ nope: true } as any);
 
-  assert.equal(result.ok, false);
+  expect(result.ok).toBeFalsy();
   if (!result.ok) {
-    assert.equal(result.code, "INVALID_EXECUTION_INPUT");
-    assert.equal(typeof result.message, "string");
-    assert.ok(result.trace);
-    assert.equal(result.trace.mode, "UNKNOWN");
-    assert.ok(Array.isArray(result.trace.rulesApplied));
-    assert.ok(result.trace.rulesApplied.includes("PARSE_FAILED"));
+    expect(result.code).toBe("INVALID_EXECUTION_INPUT");
+    expect(typeof result.message).toBe("string");
+    expect(result.trace).toBeTruthy();
+    expect(result.trace.mode).toBe("UNKNOWN");
+    expect(result.trace.rulesApplied).toBeInstanceOf(Array);
+    expect(result.trace.rulesApplied).toContain("PARSE_FAILED");
   }
 });
 
@@ -49,10 +48,10 @@ test("guardExecution is pure: does not append errors or mutate env", () => {
   const before = clone(env);
   const result = guardExecution(env as any);
 
-  assert.equal(result.ok, false);
+  expect(result.ok).toBeFalsy();
 
   // 🔒 pure: guard must not mutate env at all
-  assert.deepEqual(env, before);
+  expect(env).toEqual(before);
 });
 
 test("guardExecution does not enforce prereqs (missing planning/snapshotId does not append errors)", () => {
@@ -67,11 +66,11 @@ test("guardExecution does not enforce prereqs (missing planning/snapshotId does 
 
   // It may return ok:false depending on schema,
   // but it must not append errors to env.
-  assert.equal(env.errors.length, beforeErrorsLen);
+  expect(env.errors.length).toBe(beforeErrorsLen);
 
   if (!result.ok) {
-    assert.equal(result.code, "INVALID_EXECUTION_INPUT");
-    assert.ok(result.trace?.rulesApplied?.includes("PARSE_FAILED"));
+    expect(result.code).toBe("INVALID_EXECUTION_INPUT");
+    expect(result.trace.rulesApplied).toContain("PARSE_FAILED");
   }
 });
 
@@ -79,36 +78,34 @@ test("guardExecution returns ok:true and plucks canonical inputs when schema pas
   const env = makeEnv();
   const result = guardExecution(env as any);
 
-  assert.equal(result.ok, true);
+  expect(result.ok).toBeTruthy();
   if (result.ok) {
-    assert.equal(result.data.proposalId, env.ids.proposalId);
-    assert.equal(result.data.snapshotId, env.ids.snapshotId);
+    expect(result.data.proposalId).toBe(env.ids.proposalId);
+    expect(result.data.snapshotId).toBe(env.ids.snapshotId);
 
     // pluck: validationDecision should come from validation.validationId per pluckParams
-    assert.equal(
-      result.data.validationDecision,
+    expect(result.data.validationDecision).toBe(
       (env.stages.validation as any).validationId,
     );
 
     // pluck: planningId should come from ids
-    assert.equal(result.data.planningId, env.ids.planningId);
+    expect(result.data.planningId).toBe(env.ids.planningId);
 
     // ✅ critical: plan should come from planning stage, not validation stage
     const plan = result.data.plan;
 
-    assert.equal(plan.length, 2);
+    expect(plan.length).toBe(2);
 
-    assert.equal(plan[0].stepId, "step_1");
-    assert.equal(plan[0].kind, "PRODUCE_ARTIFACT");
-    assert.deepEqual(plan[0].outputs.artifacts, [{ kind: "NOTE" }]);
+    expect(plan[0].stepId).toBe("step_1");
+    expect(plan[0].kind).toBe("PRODUCE_ARTIFACT");
+    expect(plan[0].outputs.artifacts).toEqual([{ kind: "NOTE" }]);
 
-    assert.equal(plan[1].stepId, "step_2");
-    assert.equal(plan[1].kind, "EMIT_EVENT");
-    assert.deepEqual(plan[1].outputs.events, [{ name: "REFLECTION_READY" }]);
+    expect(plan[1].stepId).toBe("step_2");
+    expect(plan[1].kind).toBe("EMIT_EVENT");
+    expect(plan[1].outputs.events).toEqual([{ name: "REFLECTION_READY" }]);
 
     // commitPolicy should come from validation
-    assert.deepEqual(
-      result.data.commitPolicy,
+    expect(result.data.commitPolicy).toEqual(
       (env.stages.validation as any).commitPolicy,
     );
   }
@@ -122,17 +119,17 @@ test("guardPreExecution appends HALT error when planning stage has not run", () 
 
   const res = guardPreExecution(env);
 
-  assert.equal(res.ok, false);
-  assert.ok(res.env.errors.length >= 1);
+  expect(res.ok).toBeFalsy();
+  expect(res.env.errors.length >= 1).toBeTruthy();
 
   const err = lastError(res.env) as any;
-  assert.equal(err.stage, "EXECUTION");
-  assert.equal(err.severity, "HALT");
-  assert.equal(err.code, "EXECUTION_PREREQ_MISSING");
+  expect(err.stage).toBe("EXECUTION");
+  expect(err.severity).toBe("HALT");
+  expect(err.code).toBe("EXECUTION_PREREQ_MISSING");
 
   // Keep trace assertions loose; preGuardFactory may evolve trace shape.
-  assert.ok(err.trace);
-  assert.equal(err.trace?.proposalId, env.ids.proposalId);
+  expect(err.trace).toBeTruthy();
+  expect(err.trace?.proposalId).toBe(env.ids.proposalId);
 });
 
 test("guardPreExecution appends HALT error when snapshotId is missing", () => {
@@ -141,16 +138,16 @@ test("guardPreExecution appends HALT error when snapshotId is missing", () => {
 
   const res = guardPreExecution(env);
 
-  assert.equal(res.ok, false);
-  assert.ok(res.env.errors.length >= 1);
+  expect(res.ok).toBeFalsy();
+  expect(res.env.errors.length >= 1).toBeTruthy();
 
   const err = lastError(res.env) as any;
-  assert.equal(err.stage, "EXECUTION");
-  assert.equal(err.severity, "HALT");
-  assert.equal(err.code, "EXECUTION_PREREQ_MISSING");
+  expect(err.stage).toBe("EXECUTION");
+  expect(err.severity).toBe("HALT");
+  expect(err.code).toBe("EXECUTION_PREREQ_MISSING");
 
-  assert.ok(err.trace);
-  assert.equal(err.trace?.proposalId, env.ids.proposalId);
+  expect(err.trace).toBeTruthy();
+  expect(err.trace?.proposalId).toBe(env.ids.proposalId);
 });
 
 test("guardPreExecution returns ok:true when prereqs are satisfied", () => {
@@ -161,8 +158,8 @@ test("guardPreExecution returns ok:true when prereqs are satisfied", () => {
 
   const res = guardPreExecution(env);
 
-  assert.equal(res.ok, true);
+  expect(res.ok).toBeTruthy();
   if (res.ok) {
-    assert.equal(res.env, env);
+    expect(res.env).toBe(env);
   }
 });

@@ -1,5 +1,4 @@
-import test from "node:test";
-import assert from "node:assert/strict";
+import { test, describe, it, expect } from "vitest";
 
 import {
   guardPlanning,
@@ -12,14 +11,14 @@ import { makeEnv } from "#/shared/test-utils";
 test("returns ok:false INVALID_PLANNING_INPUT when input shape is wrong", () => {
   const result = guardPlanning({ nope: true } as any);
 
-  assert.equal(result.ok, false);
+  expect(result.ok).toBeFalsy();
   if (!result.ok) {
-    assert.equal(result.code, "INVALID_PLANNING_INPUT");
-    assert.equal(typeof result.message, "string");
-    assert.ok(result.trace);
-    assert.equal(result.trace.mode, "UNKNOWN");
-    assert.ok(Array.isArray(result.trace.rulesApplied));
-    assert.ok(result.trace.rulesApplied.includes("PARSE_FAILED"));
+    expect(result.code).toBe("INVALID_PLANNING_INPUT");
+    expect(typeof result.message).toBe("string");
+    expect(result.trace).toBeTruthy();
+    expect(result.trace.mode).toBe("UNKNOWN");
+    expect(result.trace.rulesApplied).toBeInstanceOf(Array);
+    expect(result.trace.rulesApplied).toContain("PARSE_FAILED");
   }
 });
 
@@ -34,12 +33,12 @@ test("guardPlanning does not append envelope errors or mutate env (pure parse gu
 
   const result = guardPlanning(env as any);
 
-  assert.equal(result.ok, false);
+  expect(result.ok).toBeFalsy();
 
   // 🔒 guard is pure: must not mutate env
-  assert.equal(env.errors.length, beforeErrorsLen);
-  assert.equal((env.stages.planning as any)?.hasRun, beforePlanningHasRun);
-  assert.equal(env.ids.planningId, beforePlanningId);
+  expect(env.errors.length).toBe(beforeErrorsLen);
+  expect((env.stages.planning as any)?.hasRun).toBe(beforePlanningHasRun);
+  expect(env.ids.planningId).toBe(beforePlanningId);
 });
 
 test("guardPlanning does not enforce prereqs via side-effects (missing snapshotId does not append errors)", () => {
@@ -52,12 +51,12 @@ test("guardPlanning does not enforce prereqs via side-effects (missing snapshotI
   const result = guardPlanning(env as any);
 
   // The key assertion: it must not append errors to env.
-  assert.equal(env.errors.length, beforeErrorsLen);
+  expect(env.errors.length).toBe(beforeErrorsLen);
 
   // If it fails, it should be a parse/shape failure code
   if (!result.ok) {
-    assert.equal(result.code, "INVALID_PLANNING_INPUT");
-    assert.ok(result.trace?.rulesApplied?.includes("PARSE_FAILED"));
+    expect(result.code).toBe("INVALID_PLANNING_INPUT");
+    expect(result.trace.rulesApplied).toContain("PARSE_FAILED");
   }
 });
 
@@ -78,31 +77,29 @@ test("returns ok:true with parsed planning input when deps satisfied + schema pa
 
   const result = guardPlanning(env as any);
 
-  assert.equal(result.ok, true);
+  expect(result.ok).toBeTruthy();
   if (result.ok) {
     // plucked inputs
-    assert.equal(result.data.proposalId, env.ids.proposalId);
-    assert.equal(result.data.snapshotId, env.ids.snapshotId);
+    expect(result.data.proposalId).toBe(env.ids.proposalId);
+    expect(result.data.snapshotId).toBe(env.ids.snapshotId);
 
     // NOTE: pluckParams currently sets this from validation.validationId
-    assert.equal(
-      result.data.validationDecision,
-      (env.stages.validation as any).validationId
+    expect(result.data.validationDecision).toBe(
+      (env.stages.validation as any).validationId,
     );
 
     // planningId is not created yet at planning time, so pluck defaults it
-    assert.equal(
-      result.data.planningId,
-      env.ids.planningId ?? "planning_unknown"
+    expect(result.data.planningId).toBe(
+      env.ids.planningId ?? "planning_unknown",
     );
 
     // plan is currently plucked from stages.validation (bug/placeholder),
     // so it should fall back to [].
-    assert.ok(Array.isArray(result.data.plan));
-    assert.deepEqual(result.data.plan, []);
+    expect(Array.isArray(result.data.plan)).toBe(true);
+    expect(result.data.plan).toEqual([]);
 
     // commitPolicy should be present if schema requires it
-    assert.ok(result.data.commitPolicy);
+    expect(result.data.commitPolicy).toBeTruthy();
   }
 });
 
@@ -123,15 +120,15 @@ test("returns ok:false INVALID_PLANNING_INPUT when schema parse fails (fail clos
 
   const result = guardPlanning(env as any);
 
-  assert.equal(result.ok, false);
+  expect(result.ok).toBeFalsy();
   if (!result.ok) {
-    assert.equal(result.code, "INVALID_PLANNING_INPUT");
-    assert.equal(result.trace.mode, "UNKNOWN");
-    assert.ok(result.trace.rulesApplied?.includes("PARSE_FAILED"));
+    expect(result.code).toBe("INVALID_PLANNING_INPUT");
+    expect(result.trace.mode).toBe("UNKNOWN");
+    expect(result.trace.rulesApplied).toContain("PARSE_FAILED");
   }
 
   // 🔒 guard is pure: must not append errors
-  assert.equal(env.errors.length, beforeErrorsLen);
+  expect(env.errors.length).toBe(beforeErrorsLen);
 });
 
 ///////////// GuardPrePlanning
@@ -149,14 +146,14 @@ test("appends HALT PLANNING_PREREQ_MISSING when required prior stage has not run
 
   const result = guardPrePlanning(env);
 
-  assert.equal(result.ok, false);
+  expect(result.ok).toBeFalsy();
   if (!result.ok) {
-    assert.ok(result.env.errors.length >= 1);
+    expect(result.env.errors.length >= 1).toBeTruthy();
     const err = lastError(result.env) as any;
 
-    assert.equal(err.stage, "PLANNING");
-    assert.equal(err.severity, "HALT");
-    assert.equal(err.code, "PLANNING_PREREQ_MISSING");
+    expect(err.stage).toBe("PLANNING");
+    expect(err.severity).toBe("HALT");
+    expect(err.code).toBe("PLANNING_PREREQ_MISSING");
   }
 });
 
@@ -168,17 +165,17 @@ test("appends HALT PLANNING_PREREQ_MISSING when required ids are missing (valida
 
   const result = guardPrePlanning(env);
 
-  assert.equal(result.ok, false);
+  expect(result.ok).toBeFalsy();
   if (!result.ok) {
     const err = lastError(result.env) as any;
 
-    assert.equal(err.stage, "PLANNING");
-    assert.equal(err.severity, "HALT");
-    assert.equal(err.code, "PLANNING_PREREQ_MISSING");
+    expect(err.stage).toBe("PLANNING");
+    expect(err.severity).toBe("HALT");
+    expect(err.code).toBe("PLANNING_PREREQ_MISSING");
 
-    assert.equal(err.trace?.proposalId, env.ids.proposalId);
-    assert.equal(err.trace?.idKey, "validationId");
-    assert.equal(err.trace?.value, undefined);
+    expect(err.trace?.proposalId).toBe(env.ids.proposalId);
+    expect(err.trace?.idKey).toBe("validationId");
+    expect(err.trace?.value).toBeUndefined();
   }
 });
 
@@ -189,17 +186,17 @@ test("appends HALT PLANNING_PREREQ_MISSING when required ids are missing (snapsh
 
   const result = guardPrePlanning(env);
 
-  assert.equal(result.ok, false);
+  expect(result.ok).toBeFalsy();
   if (!result.ok) {
     const err = lastError(result.env) as any;
 
-    assert.equal(err.stage, "PLANNING");
-    assert.equal(err.severity, "HALT");
-    assert.equal(err.code, "PLANNING_PREREQ_MISSING");
+    expect(err.stage).toBe("PLANNING");
+    expect(err.severity).toBe("HALT");
+    expect(err.code).toBe("PLANNING_PREREQ_MISSING");
 
-    assert.equal(err.trace?.proposalId, env.ids.proposalId);
-    assert.equal(err.trace?.idKey, "snapshotId");
-    assert.equal(err.trace?.value, undefined);
+    expect(err.trace?.proposalId).toBe(env.ids.proposalId);
+    expect(err.trace?.idKey).toBe("snapshotId");
+    expect(err.trace?.value).toBeUndefined();
   }
 });
 
@@ -216,10 +213,10 @@ test("returns ok:true when dependencies are satisfied (VALIDATION hasRun + ids p
 
   const result = guardPrePlanning(env);
 
-  assert.equal(result.ok, true);
+  expect(result.ok).toBeTruthy();
   if (result.ok) {
-    assert.deepEqual(result.env, env);
-    assert.equal(result.env.errors.length, env.errors.length);
+    expect(result.env).toEqual(env);
+    expect(result.env.errors.length).toBe(env.errors.length);
   }
 });
 
@@ -233,12 +230,11 @@ test("fail-closed: does not mark planning as run and does not create planningId 
 
   const result = guardPrePlanning(env);
 
-  assert.equal(result.ok, false);
+  expect(result.ok).toBeFalsy();
   if (!result.ok) {
-    assert.equal(
-      (result.env.stages.planning as any)?.hasRun,
-      (env.stages.planning as any)?.hasRun
+    expect((result.env.stages.planning as any)?.hasRun).toBe(
+      (env.stages.planning as any)?.hasRun,
     );
-    assert.equal(result.env.ids.planningId, env.ids.planningId);
+    expect(result.env.ids.planningId).toBe(env.ids.planningId);
   }
 });

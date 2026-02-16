@@ -1,5 +1,4 @@
-import test from "node:test";
-import assert from "node:assert/strict";
+import { test, describe, it, expect } from "vitest";
 
 import { z } from "zod";
 
@@ -31,11 +30,11 @@ test("BaseOutboxEntrySchema: rejects FAILED without error", () => {
   const candidate = baseEntry({ status: "FAILED", error: undefined });
   const res = OutboxEntryOpaqueSchema.safeParse(candidate);
 
-  assert.equal(res.success, false);
+  expect(res.success).toBeFalsy();
   if (!res.success) {
     // should point at error
     const paths = res.error.issues.map((i) => i.path.join("."));
-    assert.ok(paths.includes("error"));
+    expect(paths).toContain("error");
   }
 });
 
@@ -46,10 +45,10 @@ test("BaseOutboxEntrySchema: rejects error when status != FAILED", () => {
   });
   const res = OutboxEntryOpaqueSchema.safeParse(candidate);
 
-  assert.equal(res.success, false);
+  expect(res.success).toBeFalsy();
   if (!res.success) {
     const paths = res.error.issues.map((i) => i.path.join("."));
-    assert.ok(paths.includes("error"));
+    expect(paths).toContain("error");
   }
 });
 
@@ -57,7 +56,7 @@ test("BaseOutboxEntrySchema: strict() rejects unknown keys", () => {
   const candidate = { ...baseEntry(), extra: "nope" } as any;
   const res = OutboxEntryOpaqueSchema.safeParse(candidate);
 
-  assert.equal(res.success, false);
+  expect(res.success).toBeFalsy();
 });
 
 test("attempts defaults to 0 when omitted", () => {
@@ -74,9 +73,9 @@ test("attempts defaults to 0 when omitted", () => {
   };
 
   const res = OutboxEntryOpaqueSchema.safeParse(candidate);
-  assert.equal(res.success, true);
+  expect(res.success).toBeTruthy();
   if (res.success) {
-    assert.equal(res.data.attempts, 0);
+    expect(res.data.attempts).toBe(0);
   }
 });
 
@@ -97,7 +96,7 @@ test("makeOutboxEntrySchema: can constrain pipeline/stage to literals", () => {
       effect: { kind: "NOTE" },
     }) as any,
   );
-  assert.equal(ok.success, true);
+  expect(ok.success).toBeTruthy();
 
   // invalid stage
   const bad = Schema.safeParse(
@@ -107,7 +106,7 @@ test("makeOutboxEntrySchema: can constrain pipeline/stage to literals", () => {
       effect: { kind: "NOTE" },
     }) as any,
   );
-  assert.equal(bad.success, false);
+  expect(bad.success).toBeFalsy();
 });
 
 test("makeOutboxEntrySchema: enforces provided effect schema", () => {
@@ -117,5 +116,5 @@ test("makeOutboxEntrySchema: enforces provided effect schema", () => {
   const bad = Schema.safeParse(
     baseEntry({ effect: { kind: "REPORT" } }) as any,
   );
-  assert.equal(bad.success, false);
+  expect(bad.success).toBeFalsy();
 });

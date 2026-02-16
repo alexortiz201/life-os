@@ -1,6 +1,5 @@
 // guard-utils.test.ts
-import test from "node:test";
-import assert from "node:assert/strict";
+import { test, describe, it, expect } from "vitest";
 
 import { preGuardFactory } from "#/platform/pipeline/preguard/preguard.factory";
 
@@ -36,15 +35,15 @@ test("preGuardFactory: for PLANNING, appends HALT when VALIDATION has not run", 
 
   const result = pre(env);
 
-  assert.equal(result.ok, false);
+  expect(result.ok).toBeFalsy();
   if (!result.ok) {
-    assert.ok(result.env.errors.length >= 1);
+    expect(result.env.errors.length >= 1).toBeTruthy();
 
     const err = lastError(result.env) as any;
-    assert.equal(err.stage, "PLANNING");
-    assert.equal(err.severity, "HALT");
-    assert.equal(err.code, "PLANNING_PREREQ_MISSING");
-    assert.equal(err.trace?.proposalId, env.ids.proposalId);
+    expect(err.stage).toBe("PLANNING");
+    expect(err.severity).toBe("HALT");
+    expect(err.code).toBe("PLANNING_PREREQ_MISSING");
+    expect(err.trace?.proposalId).toBe(env.ids.proposalId);
   }
 });
 
@@ -65,15 +64,15 @@ test("preGuardFactory: for PLANNING, appends HALT when required id is missing (v
 
   const result = pre(env);
 
-  assert.equal(result.ok, false);
+  expect(result.ok).toBeFalsy();
   if (!result.ok) {
     const err = lastError(result.env) as any;
-    assert.equal(err.stage, "PLANNING");
-    assert.equal(err.severity, "HALT");
-    assert.equal(err.code, "PLANNING_PREREQ_MISSING");
-    assert.equal(err.trace?.proposalId, env.ids.proposalId);
-    assert.equal(err.trace?.idKey, "validationId");
-    assert.equal(err.trace?.value, undefined);
+    expect(err.stage).toBe("PLANNING");
+    expect(err.severity).toBe("HALT");
+    expect(err.code).toBe("PLANNING_PREREQ_MISSING");
+    expect(err.trace?.proposalId).toBe(env.ids.proposalId);
+    expect(err.trace?.idKey).toBe("validationId");
+    expect(err.trace?.value).toBeUndefined();
   }
 });
 
@@ -98,9 +97,9 @@ test("preGuardFactory: returns ok:true when deps satisfied (PLANNING requires VA
 
   const result = pre(env);
 
-  assert.equal(result.ok, true);
+  expect(result.ok).toBeTruthy();
   if (result.ok) {
-    assert.equal(result.env, env);
-    assert.equal(result.env.errors.length, beforeErrorsLen);
+    expect(result.env).toBe(env);
+    expect(result.env.errors.length).toBe(beforeErrorsLen);
   }
 });

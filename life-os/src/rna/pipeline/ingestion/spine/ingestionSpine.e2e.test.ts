@@ -1,5 +1,4 @@
-import test from "node:test";
-import assert from "node:assert/strict";
+import { test, describe, it, expect } from "vitest";
 
 import { pipe } from "fp-ts/function";
 import * as E from "fp-ts/Either";
@@ -72,42 +71,42 @@ test("E2E: ingestion spine runs end-to-end and produces a commit record", () => 
     E.chainW(planningStage),
     E.chainW(executionStage),
     E.chainW(revalidationStage),
-    E.chainW(commitStage)
+    E.chainW(commitStage),
   );
 
   const finalEnv = unwrapRight(out);
 
   // stage progression
-  assert.equal(finalEnv.stages.intake.hasRun, true);
-  assert.equal(finalEnv.stages.validation.hasRun, true);
-  assert.equal(finalEnv.stages.planning.hasRun, true);
-  assert.equal(finalEnv.stages.execution.hasRun, true);
-  assert.equal(finalEnv.stages.revalidation.hasRun, true);
-  assert.equal(finalEnv.stages.commit.hasRun, true);
+  expect(finalEnv.stages.intake.hasRun).toBeTruthy();
+  expect(finalEnv.stages.validation.hasRun).toBeTruthy();
+  expect(finalEnv.stages.planning.hasRun).toBeTruthy();
+  expect(finalEnv.stages.execution.hasRun).toBeTruthy();
+  expect(finalEnv.stages.revalidation.hasRun).toBeTruthy();
+  expect(finalEnv.stages.commit.hasRun).toBeTruthy();
 
   // ids should exist by the end
-  assert.ok(finalEnv.ids.proposalId);
-  assert.ok(finalEnv.ids.intakeId);
-  assert.ok(finalEnv.ids.validationId);
-  assert.ok(finalEnv.ids.planningId);
-  assert.ok(finalEnv.ids.executionId);
-  assert.ok(finalEnv.ids.effectsLogId);
-  assert.ok(finalEnv.ids.revalidationId);
-  assert.ok(finalEnv.ids.commitId);
+  expect(finalEnv.ids.proposalId).toBeTruthy();
+  expect(finalEnv.ids.intakeId).toBeTruthy();
+  expect(finalEnv.ids.validationId).toBeTruthy();
+  expect(finalEnv.ids.planningId).toBeTruthy();
+  expect(finalEnv.ids.executionId).toBeTruthy();
+  expect(finalEnv.ids.effectsLogId).toBeTruthy();
+  expect(finalEnv.ids.revalidationId).toBeTruthy();
+  expect(finalEnv.ids.commitId).toBeTruthy();
 
   // commit record shape (high-level invariant)
   const c = finalEnv.stages.commit as any;
-  assert.equal(c.commitId, finalEnv.ids.commitId);
-  assert.equal(c.proposalId, finalEnv.ids.proposalId);
+  expect(c.commitId).toBe(finalEnv.ids.commitId);
+  expect(c.proposalId).toBe(finalEnv.ids.proposalId);
 
-  assert.ok(c.effects);
-  assert.ok(Array.isArray(c.effects.approved));
-  assert.ok(Array.isArray(c.effects.rejected));
-  assert.ok(Array.isArray(c.effects.ignored));
+  expect(c.effects).toBeTruthy();
+  expect(c.effects.approved).toBeInstanceOf(Array);
+  expect(c.effects.rejected).toBeInstanceOf(Array);
+  expect(c.effects.ignored).toBeInstanceOf(Array);
 
   // “trust boundary” baseline: commit promotes to COMMITTED (if anything is approved)
   for (const obj of c.effects.approved) {
-    assert.equal(obj.trust, "COMMITTED");
+    expect(obj.trust).toBe("COMMITTED");
   }
 });
 
@@ -126,20 +125,20 @@ test("E2E: validation halts when snapshot permissions allowlist is empty", () =>
   const out = pipe(
     E.right(env),
     E.chainW(intakeStage),
-    E.chainW(validationStage) // should Left here
+    E.chainW(validationStage), // should Left here
   );
 
   const left = unwrapLeft(out);
 
   // the “stage left” wrapper pattern you’re using:
-  assert.ok(left.env.errors.length >= 1);
+  expect(left.env.errors.length >= 1).toBeTruthy();
   const err = left.env.errors[left.env.errors.length - 1] as any;
 
-  assert.equal(err.stage, "VALIDATION");
-  assert.equal(err.severity, "HALT");
-  assert.equal(err.code, "SNAPSHOT_PERMISSION_NOT_ALLOWED");
+  expect(err.stage).toBe("VALIDATION");
+  expect(err.severity).toBe("HALT");
+  expect(err.code).toBe("SNAPSHOT_PERMISSION_NOT_ALLOWED");
 
   // should not advance
-  assert.equal(left.env.stages.planning.hasRun, false);
-  assert.equal(left.env.stages.execution.hasRun, false);
+  expect(left.env.stages.planning.hasRun).toBeFalsy();
+  expect(left.env.stages.execution.hasRun).toBeFalsy();
 });

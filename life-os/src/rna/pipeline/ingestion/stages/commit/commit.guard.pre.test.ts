@@ -1,5 +1,4 @@
-import test from "node:test";
-import assert from "node:assert/strict";
+import { test, describe, it, expect } from "vitest";
 
 import { guardPreCommit } from "#/rna/pipeline/ingestion/stages/commit/commit.guard";
 
@@ -16,7 +15,10 @@ const CODE = "COMMIT_PREREQ_MISSING" as const;
 
 function lastError(env: IngestionPipelineEnvelope) {
   const errs = env.errors ?? [];
-  assert.ok(errs.length > 0, "Expected env.errors to have at least 1 error.");
+  expect(
+    errs.length > 0,
+    "Expected env.errors to have at least 1 error.",
+  ).toBeTruthy();
   return errs[errs.length - 1] as any;
 }
 
@@ -24,7 +26,7 @@ test("guardPreCommit passes when all dependencies are satisfied", () => {
   const env = makeEnv();
   const res = guardPreCommit(env);
 
-  assert.equal(res.ok, true);
+  expect(res.ok).toBeTruthy();
 });
 
 test("guardPreCommit fails when any required dependency stage has not run", () => {
@@ -43,21 +45,21 @@ test("guardPreCommit fails when any required dependency stage has not run", () =
     });
 
     const res = guardPreCommit(env);
+    expect(res.ok).toBe(false);
 
-    assert.equal(res.ok, false, `Expected fail when ${depStage} not run`);
     if (!res.ok) {
       const err = lastError(res.env);
 
-      assert.equal(err.stage, STAGE);
-      assert.equal(err.code, CODE);
-      assert.equal(err.severity, "HALT");
+      expect(err.stage).toBe(STAGE);
+      expect(err.code).toBe(CODE);
+      expect(err.severity).toBe("HALT");
 
       // message is: `${stageKey} stage has not run.`
-      assert.equal(err.message, `${stageKey} stage has not run.`);
+      expect(err.message).toBe(`${stageKey} stage has not run.`);
 
       // trace includes proposalId + `${stageKey}HasRun`: false
-      assert.equal(err.trace?.proposalId, env.ids.proposalId);
-      assert.equal(err.trace?.[`${stageKey}HasRun`], false);
+      expect(err.trace?.proposalId).toBe(env.ids.proposalId);
+      expect(err.trace?.[`${stageKey}HasRun`]).toBeFalsy();
     }
   }
 });
@@ -76,28 +78,26 @@ test("guardPreCommit fails when any required dependency id is missing", () => {
 
     const res = guardPreCommit(env);
 
-    assert.equal(
-      res.ok,
+    expect(res.ok, `Expected fail when id ${String(idKey)} missing`).toBe(
       false,
-      `Expected fail when id ${String(idKey)} missing`,
     );
+
     if (!res.ok) {
       const err = lastError(res.env);
 
-      assert.equal(err.stage, STAGE);
-      assert.equal(err.code, CODE);
-      assert.equal(err.severity, "HALT");
+      expect(err.stage).toBe(STAGE);
+      expect(err.code).toBe(CODE);
+      expect(err.severity).toBe("HALT");
 
       // message comes from assertIdExists call in assertStageDependencies
-      assert.equal(
-        err.message,
+      expect(err.message).toBe(
         `Missing ${String(idKey)} required for ${stageKey}.`,
       );
 
       // trace includes proposalId + idKey + value
-      assert.equal(err.trace?.proposalId, env.ids.proposalId);
-      assert.equal(err.trace?.idKey, idKey);
-      assert.equal(err.trace?.value, ""); // since we set empty string
+      expect(err.trace?.proposalId).toBe(env.ids.proposalId);
+      expect(err.trace?.idKey).toBe(idKey);
+      expect(err.trace?.value).toBe(""); // since we set empty string
     }
   }
 });

@@ -1,5 +1,4 @@
-import test from "node:test";
-import assert from "node:assert/strict";
+import { test, describe, it, expect } from "vitest";
 import { guardTrustPromotion } from "#/domain/trust/trustPromotion.guard";
 
 test("rejects promotion to COMMITTED outside COMMIT stage", () => {
@@ -10,8 +9,8 @@ test("rejects promotion to COMMITTED outside COMMIT stage", () => {
     reason: "attempted commit early",
   });
 
-  assert.equal(result.ok, false);
-  if (!result.ok) assert.equal(result.code, "COMMIT_STAGE_REQUIRED");
+  expect(result.ok).toBeFalsy();
+  if (!result.ok) expect(result.code).toBe("COMMIT_STAGE_REQUIRED");
 });
 
 test("allows promotion to COMMITTED at COMMIT stage", () => {
@@ -22,7 +21,7 @@ test("allows promotion to COMMITTED at COMMIT stage", () => {
     reason: "commit record exists",
   });
 
-  assert.equal(result.ok, true);
+  expect(result.ok).toBeTruthy();
 });
 
 test("rejects trust downgrade", () => {
@@ -33,8 +32,8 @@ test("rejects trust downgrade", () => {
     reason: "should not downgrade via promotion",
   });
 
-  assert.equal(result.ok, false);
-  if (!result.ok) assert.equal(result.code, "TRUST_DOWNGRADE_FORBIDDEN");
+  expect(result.ok).toBeFalsy();
+  if (!result.ok) expect(result.code).toBe("TRUST_DOWNGRADE_FORBIDDEN");
 });
 
 /* test("rejects DERIVED unless source is COMMITTED", () => {
@@ -45,8 +44,8 @@ test("rejects trust downgrade", () => {
     reason: "attempted to derive from provisional",
   });
 
-  assert.equal(result.ok, false);
-  if (!result.ok) assert.equal(result.code, "DERIVATION_REQUIRES_COMMITTED");
+  expect(result.ok).toBeFalsy();
+  if (!result.ok) expect(result.code).toBe("DERIVATION_REQUIRES_COMMITTED");
 });
 
 test("rejects DERIVED unless stage is DERIVATION", () => {
@@ -57,9 +56,9 @@ test("rejects DERIVED unless stage is DERIVATION", () => {
     reason: "attempted to derive from committed",
   });
 
-  assert.equal(result.ok, false);
+  expect(result.ok).toBeFalsy();
   if (!result.ok)
-    assert.equal(result.code, "DERIVATION_REQUIRES_STAGE_DERIVATION");
+    expect(result.code).toBe("DERIVATION_REQUIRES_STAGE_DERIVATION");
 });
 
 test("allows promotion to DERIVED at DERIVATION stage", () => {
@@ -70,7 +69,7 @@ test("allows promotion to DERIVED at DERIVATION stage", () => {
     reason: "attempted to derive from committed",
   });
 
-  assert.equal(result.ok, true);
+  expect(result.ok).toBeTruthy();
 }); */
 
 test("rejects invalid request shape", () => {
@@ -81,6 +80,6 @@ test("rejects invalid request shape", () => {
     reason: "",
   });
 
-  assert.equal(result.ok, false);
-  if (!result.ok) assert.equal(result.code, "INVALID_REQUEST");
+  expect(result.ok).toBeFalsy();
+  if (!result.ok) expect(result.code).toBe("INVALID_REQUEST");
 });
