@@ -44,10 +44,10 @@ jobs:
         id: rules
         run: |
           RULES_PATH="../.github/workflows/aidd/rules.md"
-          echo "rules_path=$RULES_PATH" >> $GITHUB_OUTPUT
-          echo "rules<<'EOF'" >> $GITHUB_OUTPUT
-          cat "$RULES_PATH" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          echo "rules_path=$RULES_PATH" >> "$GITHUB_OUTPUT"
+          echo "rules<<EOF" >> "$GITHUB_OUTPUT"
+          cat "$RULES_PATH" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
 
       - name: Fetch PR diff
         id: prdiff
