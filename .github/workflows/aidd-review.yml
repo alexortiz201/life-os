@@ -67,14 +67,13 @@ jobs:
         run: |
           set -euo pipefail
 
-          RULES="$(cat ../.github/workflows/aidd/rules.md)"
           DIFF="$(cat pr.diff.trimmed)"
 
-          # Build prompt payload
+          # Build prompt payload (avoid --arg for huge strings)
           jq -n \
             --arg model "$AI_MODEL" \
-            --arg rules "$RULES" \
-            --arg diff "$DIFF" \
+            --rawfile rules ../.github/workflows/aidd/rules.md \
+            --rawfile diff pr.diff.trimmed \
             --arg title "${{ github.event.pull_request.title }}" \
             --arg author "${{ github.event.pull_request.user.login }}" \
             --arg base "${{ github.event.pull_request.base.ref }}" \
