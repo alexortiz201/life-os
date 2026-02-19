@@ -71,49 +71,49 @@ jobs:
 
           # Build prompt payload (avoid --arg for huge strings)
           jq -n \
-            --arg model "$AI_MODEL" \
-            --rawfile rules ../.github/workflows/aidd/rules.md \
-            --rawfile diff pr.diff.trimmed \
-            --arg title "${{ github.event.pull_request.title }}" \
-            --arg author "${{ github.event.pull_request.user.login }}" \
-            --arg base "${{ github.event.pull_request.base.ref }}" \
-            --arg head "${{ github.event.pull_request.head.ref }}" \
-            '{
-              model: $model,
-              input: [
-                {
-                  role: "system",
-                  content: [
-                    {
-                      type: "text",
-                      text: (
-                        "You are an expert TypeScript reviewer for the Life-OS project.\n\n" +
-                        "Follow the rules strictly.\n\n" + $rules
-                      )
-                    }
-                  ]
-                },
-                {
-                  role: "user",
-                  content: [
-                    {
-                      type: "text",
-                      text: (
-                        "PR Title: " + $title + "\n" +
-                        "Author: " + $author + "\n" +
-                        "Base -> Head: " + $base + " -> " + $head + "\n\n" +
-                        "Please review the following unified diff. Provide:\n" +
-                        "1) High-risk issues (correctness, determinism, invariants, security)\n" +
-                        "2) Contract/schema issues (Zod, types, fp-ts Either boundaries)\n" +
-                        "3) Testing gaps (what invariant is untested)\n" +
-                        "4) Smallest safe fixes (actionable)\n\n" +
-                        "DIFF:\n" + $diff
-                      )
-                    }
-                  ]
-                }
-              ]
-            }' > payload.json
+          --arg model "$AI_MODEL" \
+          --rawfile rules ../.github/workflows/aidd/rules.md \
+          --rawfile diff pr.diff.trimmed \
+          --arg title "${{ github.event.pull_request.title }}" \
+          --arg author "${{ github.event.pull_request.user.login }}" \
+          --arg base "${{ github.event.pull_request.base.ref }}" \
+          --arg head "${{ github.event.pull_request.head.ref }}" \
+          '{
+            model: $model,
+            input: [
+              {
+                role: "system",
+                content: [
+                  {
+                    type: "input_text",
+                    text: (
+                      "You are an expert TypeScript reviewer for the Life-OS project.\n\n" +
+                      "Follow the rules strictly.\n\n" + $rules
+                    )
+                  }
+                ]
+              },
+              {
+                role: "user",
+                content: [
+                  {
+                    type: "input_text",
+                    text: (
+                      "PR Title: " + $title + "\n" +
+                      "Author: " + $author + "\n" +
+                      "Base -> Head: " + $base + " -> " + $head + "\n\n" +
+                      "Please review the following unified diff. Provide:\n" +
+                      "1) High-risk issues (correctness, determinism, invariants, security)\n" +
+                      "2) Contract/schema issues (Zod, types, fp-ts Either boundaries)\n" +
+                      "3) Testing gaps (what invariant is untested)\n" +
+                      "4) Smallest safe fixes (actionable)\n\n" +
+                      "DIFF:\n" + $diff
+                    )
+                  }
+                ]
+              }
+            ]
+          }' > payload.json
 
           # Call OpenAI
           curl -sS https://api.openai.com/v1/responses \
