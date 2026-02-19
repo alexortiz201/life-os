@@ -18,6 +18,10 @@ jobs:
     if: ${{ github.event.pull_request.draft == false }}
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: life-os
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -28,6 +32,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
+          cache-dependency-path: life-os/package-lock.json
 
       - name: Install tooling deps
         run: |
@@ -37,7 +43,7 @@ jobs:
       - name: Load rules.md
         id: rules
         run: |
-          RULES_PATH=".github/workflows/aidd/rules.md"
+          RULES_PATH="../.github/workflows/aidd/rules.md"
           echo "rules_path=$RULES_PATH" >> $GITHUB_OUTPUT
           echo "rules<<'EOF'" >> $GITHUB_OUTPUT
           cat "$RULES_PATH" >> $GITHUB_OUTPUT
@@ -70,7 +76,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          RULES="$(cat .github/workflows/aidd/rules.md)"
+          RULES="$(cat ../.github/workflows/aidd/rules.md)"
           DIFF="$(cat pr.diff.trimmed)"
 
           # Build prompt payload
