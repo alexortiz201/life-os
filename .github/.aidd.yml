@@ -1,0 +1,27 @@
+# .aidd.yml
+# Minimal config used by our GitHub Action workflow (not an official aidd spec).
+# Keeps “knobs” in one place.
+
+review:
+  # Model used by the workflow (override by setting AI_MODEL env in workflow if you want)
+  model: gpt-4.1-mini
+
+  # Where the review rules live
+  rulesFile: .github/workflows/aidd/rules.md
+
+  # Behavior
+  temperature: 0.2
+  maxOutputTokens: 1200
+
+  # File filters (workflow can optionally use these later)
+  includeGlobs:
+    - "src/**/*.ts"
+    - "src/**/*.tsx"
+    - "tests/**/*.ts"
+    - "package.json"
+    - "tsconfig.json"
+    - "tsconfig.build.json"
+  excludeGlobs:
+    - "dist/**"
+    - "node_modules/**"
+    - "**/*.snap"

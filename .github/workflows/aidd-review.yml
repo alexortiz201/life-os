@@ -1,0 +1,164 @@
+name: AI Review (aidd)
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: aidd-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  aidd_review:
+    # Skip drafts
+    if: ${{ github.event.pull_request.draft == false }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install tooling deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+
+      - name: Load rules.md
+        id: rules
+        run: |
+          RULES_PATH=".github/workflows/aidd/rules.md"
+          echo "rules_path=$RULES_PATH" >> $GITHUB_OUTPUT
+          echo "rules<<'EOF'" >> $GITHUB_OUTPUT
+          cat "$RULES_PATH" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Fetch PR diff
+        id: prdiff
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          REPO="${{ github.repository }}"
+
+          # Raw unified diff (works well for code review prompting)
+          curl -sS -L \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github.v3.diff" \
+            "https://api.github.com/repos/$REPO/pulls/$PR_NUMBER" > pr.diff
+
+          # Trim diff to reduce token blowups (tune as needed)
+          head -c 180000 pr.diff > pr.diff.trimmed
+
+          echo "diff_file=pr.diff.trimmed" >> $GITHUB_OUTPUT
+
+      - name: Generate AI review via OpenAI Responses API
+        id: aireview
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          AI_MODEL: gpt-4.1-mini
+        run: |
+          set -euo pipefail
+
+          RULES="$(cat .github/workflows/aidd/rules.md)"
+          DIFF="$(cat pr.diff.trimmed)"
+
+          # Build prompt payload
+          jq -n \
+            --arg model "$AI_MODEL" \
+            --arg rules "$RULES" \
+            --arg diff "$DIFF" \
+            --arg title "${{ github.event.pull_request.title }}" \
+            --arg author "${{ github.event.pull_request.user.login }}" \
+            --arg base "${{ github.event.pull_request.base.ref }}" \
+            --arg head "${{ github.event.pull_request.head.ref }}" \
+            '{
+              model: $model,
+              input: [
+                {
+                  role: "system",
+                  content: [
+                    {
+                      type: "text",
+                      text: (
+                        "You are an expert TypeScript reviewer for the Life-OS project.\n\n" +
+                        "Follow the rules strictly.\n\n" + $rules
+                      )
+                    }
+                  ]
+                },
+                {
+                  role: "user",
+                  content: [
+                    {
+                      type: "text",
+                      text: (
+                        "PR Title: " + $title + "\n" +
+                        "Author: " + $author + "\n" +
+                        "Base -> Head: " + $base + " -> " + $head + "\n\n" +
+                        "Please review the following unified diff. Provide:\n" +
+                        "1) High-risk issues (correctness, determinism, invariants, security)\n" +
+                        "2) Contract/schema issues (Zod, types, fp-ts Either boundaries)\n" +
+                        "3) Testing gaps (what invariant is untested)\n" +
+                        "4) Smallest safe fixes (actionable)\n\n" +
+                        "DIFF:\n" + $diff
+                      )
+                    }
+                  ]
+                }
+              ]
+            }' > payload.json
+
+          # Call OpenAI
+          curl -sS https://api.openai.com/v1/responses \
+            -H "Authorization: Bearer $OPENAI_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d @payload.json > response.json
+
+          # Extract text (Responses API returns output[] blocks; this is a robust-ish extraction)
+          REVIEW="$(cat response.json | jq -r '
+            [
+              .output[]?
+              | select(.type=="message")
+              | .content[]?
+              | select(.type=="output_text")
+              | .text
+            ] | join("\n")
+          ')"
+
+          if [ -z "$REVIEW" ] || [ "$REVIEW" = "null" ]; then
+            echo "No review text extracted. Full response below:"
+            cat response.json
+            exit 1
+          fi
+
+          # Write to file for next step
+          printf "%s\n" "$REVIEW" > review.md
+
+      - name: Create or update PR comment
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body-path: review.md
+          edit-mode: replace
+          # This marker ensures it updates the same comment instead of spamming
+          body-includes: "<!-- aidd-review -->"
+
+      - name: Ensure marker is present (first run)
+        if: always()
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            <!-- aidd-review -->
+          edit-mode: append
