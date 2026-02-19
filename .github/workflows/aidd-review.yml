@@ -40,15 +40,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y jq
 
-      - name: Load rules.md
-        id: rules
-        run: |
-          RULES_PATH="../.github/workflows/aidd/rules.md"
-          echo "rules_path=$RULES_PATH" >> "$GITHUB_OUTPUT"
-          echo "rules<<EOF" >> "$GITHUB_OUTPUT"
-          cat "$RULES_PATH" >> "$GITHUB_OUTPUT"
-          echo "EOF" >> "$GITHUB_OUTPUT"
-
       - name: Fetch PR diff
         id: prdiff
         env:
@@ -148,8 +139,20 @@ jobs:
             exit 1
           fi
 
-          # Write to file for next step
-          printf "%s\n" "$REVIEW" > review.md
+          # Include marker in the review body so we can reliably "replace" the same comment
+          {
+            echo "<!-- aidd-review -->"
+            echo
+            echo "$REVIEW"
+          } > review.md
+
+      - name: Ensure marker is present (first run)
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            <!-- aidd-review -->
+          edit-mode: append
 
       - name: Create or update PR comment
         uses: peter-evans/create-or-update-comment@v4
@@ -157,14 +160,5 @@ jobs:
           issue-number: ${{ github.event.pull_request.number }}
           body-path: review.md
           edit-mode: replace
-          # This marker ensures it updates the same comment instead of spamming
+          # Update the existing comment that contains the marker
           body-includes: "<!-- aidd-review -->"
-
-      - name: Ensure marker is present (first run)
-        if: always()
-        uses: peter-evans/create-or-update-comment@v4
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          body: |
-            <!-- aidd-review -->
-          edit-mode: append
