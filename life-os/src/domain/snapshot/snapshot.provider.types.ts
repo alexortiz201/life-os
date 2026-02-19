@@ -1,8 +1,9 @@
-import z from "zod";
+import type { z } from "zod";
 
 import { PermissionState } from "#/domain/permissions/permissions.types";
 import { ScopeConfig } from "#/domain/scopes/scopes.types";
 
+// biome-ignore lint/style/useImportType: schemas used in `typeof` for type derivation
 import { IngestionContextSnapshotSchema } from "./snapshot.provider.schemas";
 
 export type ContextSnapshot<

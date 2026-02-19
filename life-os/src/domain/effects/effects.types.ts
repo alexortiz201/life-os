@@ -1,6 +1,7 @@
 import type { z } from "zod";
 
-import type { EffectSchema } from "./effects.schemas";
+// biome-ignore lint/style/useImportType: schemas used in `typeof` for type derivation
+import { EffectSchema } from "./effects.schemas";
 
 export type Effect = z.infer<typeof EffectSchema>;
 export type ArtifactEffect = Extract<Effect, { effectType: "ARTIFACT" }>;

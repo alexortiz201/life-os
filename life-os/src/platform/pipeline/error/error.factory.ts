@@ -1,5 +1,5 @@
-import { EnvelopeStage } from "#/rna/envelope/envelope.types";
-import {
+import type { EnvelopeStage } from "#/rna/envelope/envelope.types";
+import type {
   GuardError,
   GuardTrace,
 } from "#/platform/pipeline/guard/guard.factory.types";
@@ -8,7 +8,7 @@ type FactoryGuardError<
   TStage,
   TCode extends string,
   TRule extends string,
-  TTrace
+  TTrace,
 > = Omit<GuardError<TStage, TCode, TRule, TTrace>, "stage" | "code"> & {
   stage: TStage | EnvelopeStage;
   code: TCode | string;
@@ -16,9 +16,9 @@ type FactoryGuardError<
 
 export type ErrorFn<TStage, TCode extends string> = <
   TTrace extends Record<string, unknown>,
-  TRule extends string
+  TRule extends string,
 >(
-  trace: GuardTrace<TTrace, TRule>
+  trace: GuardTrace<TTrace, TRule>,
 ) => FactoryGuardError<TStage, TCode, TRule, TTrace>;
 
 export const errorResultFactory =

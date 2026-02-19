@@ -1,6 +1,9 @@
+// biome-ignore lint/style/useImportType: const used in `typeof` for type derivation
 import z from "zod";
-import type { PIPELINE_STAGES } from "./pipeline.constants";
 import * as E from "fp-ts/Either";
+
+import type { PIPELINE_STAGES } from "./pipeline.constants";
+
 import {
   EffectDecisionModeSchema,
   EffectDecisionModeOrUnknownSchema,

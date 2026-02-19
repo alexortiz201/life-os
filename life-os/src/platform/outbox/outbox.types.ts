@@ -1,5 +1,6 @@
-import { z } from "zod";
+import type { z } from "zod";
 
+// biome-ignore lint/style/useImportType: schemas used in `typeof` for type derivation
 import {
   OutboxStatusSchema,
   OutboxErrorSchema,

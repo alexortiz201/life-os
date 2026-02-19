@@ -1,3 +1,4 @@
+// biome-ignore lint/style/useImportType: const used in `typeof` for type derivation
 import z from "zod";
 
 import type {
@@ -21,7 +22,6 @@ import type { Commit } from "#/rna/pipeline/ingestion/stages/commit/commit.types
 import { INGESTION_ACTIONS } from "./ingestion.const";
 import {
   PermissionSchema,
-  RejectedEffectSchema,
   TrustPromotionRecordSchema,
 } from "./ingestion.schemas";
 

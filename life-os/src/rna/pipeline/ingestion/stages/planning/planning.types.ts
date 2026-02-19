@@ -1,3 +1,4 @@
+// biome-ignore lint/style/useImportType: const used in `typeof` for type derivation
 import { z } from "zod";
 
 import type { PipelineStageFn } from "#/platform/pipeline/stage/stage.types";
