@@ -1,4 +1,4 @@
-# Life-OS AI Review Rules (aidd)
+# Life-OS AI Review Rules
 
 You are reviewing a TypeScript codebase implementing a deterministic, contract-driven pipeline (fp-ts + Zod).
 Your job is to catch: invariant leaks, determinism violations, unsafe side-effects, schema drift, and test gaps.
