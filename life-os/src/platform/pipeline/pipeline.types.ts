@@ -1,59 +1,60 @@
 // biome-ignore lint/style/useImportType: const used in `typeof` for type derivation
-import z from "zod";
-import * as E from "fp-ts/Either";
 
-import type { PIPELINE_STAGES } from "./pipeline.constants";
+import type * as E from "fp-ts/Either"
+import type z from "zod"
 
-import {
-  EffectDecisionModeSchema,
-  EffectDecisionModeOrUnknownSchema,
-} from "./pipeline.schemas";
+import type { PIPELINE_STAGES } from "./pipeline.constants"
 
-export type Stage<E, A> = (env: A) => E.Either<E, A>;
+import type {
+	EffectDecisionModeOrUnknownSchema,
+	EffectDecisionModeSchema,
+} from "./pipeline.schemas"
 
-export type PipelineStage = (typeof PIPELINE_STAGES)[number];
+export type Stage<E, A> = (env: A) => E.Either<E, A>
+
+export type PipelineStage = (typeof PIPELINE_STAGES)[number]
 
 export type GuardResult<TData, TTrace, TCode extends string = string> =
-  | { ok: true; data: TData }
-  | { ok: false; code: TCode; message: string; trace: TTrace };
+	| { ok: true; data: TData }
+	| { ok: false; code: TCode; message: string; trace: TTrace }
 
 export type StageGuardTrace<
-  TMode extends string = string,
-  TRule extends string = string,
+	TMode extends string = string,
+	TRule extends string = string,
 > = Partial<{
-  mode: TMode;
-  proposalId: string;
-  rulesApplied: TRule[];
-}>;
+	mode: TMode
+	proposalId: string
+	rulesApplied: TRule[]
+}>
 
 export type PipelineStageError<
-  TStageName,
-  TStageErrorSeverity,
-  TCode extends string = string,
+	TStageName,
+	TStageErrorSeverity,
+	TCode extends string = string,
 > = {
-  stage: TStageName;
-  severity: TStageErrorSeverity;
-  code: TCode;
-  message: string;
-  trace?: unknown;
-  at: number;
-};
+	stage: TStageName
+	severity: TStageErrorSeverity
+	code: TCode
+	message: string
+	trace?: unknown
+	at: number
+}
 
 export type PipelineEnvelope<
-  TIds,
-  TContextSnapshot,
-  TStages,
-  TErrors,
-  TMeta = {},
+	TIds,
+	TContextSnapshot,
+	TStages,
+	TErrors,
+	TMeta = {},
 > = {
-  ids: TIds;
-  snapshot: TContextSnapshot;
-  stages: TStages;
-  errors: TErrors[];
-  meta?: TMeta;
-};
+	ids: TIds
+	snapshot: TContextSnapshot
+	stages: TStages
+	errors: TErrors[]
+	meta?: TMeta
+}
 
-export type EffectDecisionMode = z.infer<typeof EffectDecisionModeSchema>;
+export type EffectDecisionMode = z.infer<typeof EffectDecisionModeSchema>
 export type EffectDecisionModeOrUnknown = z.infer<
-  typeof EffectDecisionModeOrUnknownSchema
->;
+	typeof EffectDecisionModeOrUnknownSchema
+>

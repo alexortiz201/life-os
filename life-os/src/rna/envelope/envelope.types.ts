@@ -1,4 +1,4 @@
-import { PipelineStage } from "#/platform/pipeline/pipeline.types";
+import type { PipelineStage } from "#/platform/pipeline/pipeline.types"
 
-export type StageErrorSeverity = "HALT" | "WARN";
-export type EnvelopeStage = PipelineStage | "ENVELOPE";
+export type StageErrorSeverity = "HALT" | "WARN"
+export type EnvelopeStage = PipelineStage | "ENVELOPE"

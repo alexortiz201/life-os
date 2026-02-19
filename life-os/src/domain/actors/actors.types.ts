@@ -1,8 +1,7 @@
 // biome-ignore lint/style/useImportType: const used in `typeof` for type derivation
-import z from "zod";
+import z from "zod"
+import type { ACTOR_TYPES } from "./actors.const"
+import type { ActorSchema } from "./actors.schemas"
 
-import { ActorSchema } from "./actors.schemas";
-import { ACTOR_TYPES } from "./actors.const";
-
-export type Actor = z.infer<typeof ActorSchema>;
-export type ActorType = (typeof ACTOR_TYPES)[number];
+export type Actor = z.infer<typeof ActorSchema>
+export type ActorType = (typeof ACTOR_TYPES)[number]

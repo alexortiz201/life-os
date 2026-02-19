@@ -1,40 +1,40 @@
-import { test, expect } from "vitest";
-import { guardTrustPromotion } from "#/domain/trust/trustPromotion.guard";
+import { expect, test } from "vitest"
+import { guardTrustPromotion } from "#/domain/trust/trustPromotion.guard"
 
 test("rejects promotion to COMMITTED outside COMMIT stage", () => {
-  const result = guardTrustPromotion({
-    from: "PROVISIONAL",
-    to: "COMMITTED",
-    stage: "EXECUTION",
-    reason: "attempted commit early",
-  });
+	const result = guardTrustPromotion({
+		from: "PROVISIONAL",
+		to: "COMMITTED",
+		stage: "EXECUTION",
+		reason: "attempted commit early",
+	})
 
-  expect(result.ok).toBeFalsy();
-  if (!result.ok) expect(result.code).toBe("COMMIT_STAGE_REQUIRED");
-});
+	expect(result.ok).toBeFalsy()
+	if (!result.ok) expect(result.code).toBe("COMMIT_STAGE_REQUIRED")
+})
 
 test("allows promotion to COMMITTED at COMMIT stage", () => {
-  const result = guardTrustPromotion({
-    from: "PROVISIONAL",
-    to: "COMMITTED",
-    stage: "COMMIT",
-    reason: "commit record exists",
-  });
+	const result = guardTrustPromotion({
+		from: "PROVISIONAL",
+		to: "COMMITTED",
+		stage: "COMMIT",
+		reason: "commit record exists",
+	})
 
-  expect(result.ok).toBeTruthy();
-});
+	expect(result.ok).toBeTruthy()
+})
 
 test("rejects trust downgrade", () => {
-  const result = guardTrustPromotion({
-    from: "COMMITTED",
-    to: "PROVISIONAL",
-    stage: "COMMIT",
-    reason: "should not downgrade via promotion",
-  });
+	const result = guardTrustPromotion({
+		from: "COMMITTED",
+		to: "PROVISIONAL",
+		stage: "COMMIT",
+		reason: "should not downgrade via promotion",
+	})
 
-  expect(result.ok).toBeFalsy();
-  if (!result.ok) expect(result.code).toBe("TRUST_DOWNGRADE_FORBIDDEN");
-});
+	expect(result.ok).toBeFalsy()
+	if (!result.ok) expect(result.code).toBe("TRUST_DOWNGRADE_FORBIDDEN")
+})
 
 /* test("rejects DERIVED unless source is COMMITTED", () => {
   const result = guardTrustPromotion({
@@ -73,13 +73,13 @@ test("allows promotion to DERIVED at DERIVATION stage", () => {
 }); */
 
 test("rejects invalid request shape", () => {
-  const result = guardTrustPromotion({
-    from: "PROVISIONAL",
-    to: "COMMITTED",
-    stage: "COMMIT",
-    reason: "",
-  });
+	const result = guardTrustPromotion({
+		from: "PROVISIONAL",
+		to: "COMMITTED",
+		stage: "COMMIT",
+		reason: "",
+	})
 
-  expect(result.ok).toBeFalsy();
-  if (!result.ok) expect(result.code).toBe("INVALID_REQUEST");
-});
+	expect(result.ok).toBeFalsy()
+	if (!result.ok) expect(result.code).toBe("INVALID_REQUEST")
+})

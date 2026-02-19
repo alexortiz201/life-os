@@ -1,13 +1,13 @@
-import type { z } from "zod";
+import type { z } from "zod"
 
 // biome-ignore lint/style/useImportType: schemas used in `typeof` for type derivation
 import {
-  OutboxStatusSchema,
-  OutboxErrorSchema,
-  BaseOutboxEntryCoreSchema,
-  OutboxEntryOpaqueSchema,
-  makeOutboxEntrySchema,
-} from "./outbox.schemas";
+	BaseOutboxEntryCoreSchema,
+	makeOutboxEntrySchema,
+	OutboxEntryOpaqueSchema,
+	OutboxErrorSchema,
+	OutboxStatusSchema,
+} from "./outbox.schemas"
 
 /**
  * Outbox is a platform-level construct.
@@ -18,22 +18,22 @@ import {
  */
 
 /** Canonical status union (source of truth = schema) */
-export type OutboxStatus = z.infer<typeof OutboxStatusSchema>;
+export type OutboxStatus = z.infer<typeof OutboxStatusSchema>
 
 /** Canonical error type (source of truth = schema) */
-export type OutboxError = z.infer<typeof OutboxErrorSchema>;
+export type OutboxError = z.infer<typeof OutboxErrorSchema>
 
 /**
  * Canonical platform-owned entry shape (no effect field).
  * This is the stable contract the platform owns.
  */
-export type BaseOutboxEntry = z.infer<typeof BaseOutboxEntryCoreSchema>;
+export type BaseOutboxEntry = z.infer<typeof BaseOutboxEntryCoreSchema>
 
 /**
  * Convenience type: opaque effect (platform doesn’t interpret the payload).
  * Matches OutboxEntryOpaqueSchema exactly.
  */
-export type OutboxEntryOpaque = z.infer<typeof OutboxEntryOpaqueSchema>;
+export type OutboxEntryOpaque = z.infer<typeof OutboxEntryOpaqueSchema>
 
 /**
  * Typed outbox entry shape for pipeline-specific effects.
@@ -44,16 +44,16 @@ export type OutboxEntryOpaque = z.infer<typeof OutboxEntryOpaqueSchema>;
  * But when you already know the types, this is convenient.
  */
 export type OutboxEntryOf<
-  TEffect,
-  TPipeline extends string = string,
-  TStage extends string = string,
+	TEffect,
+	TPipeline extends string = string,
+	TStage extends string = string,
 > = BaseOutboxEntry & {
-  pipeline: TPipeline;
-  stage: TStage;
-  effect: TEffect;
-};
+	pipeline: TPipeline
+	stage: TStage
+	effect: TEffect
+}
 
 /**
  * Export factory type so callers can reference it in signatures if they want.
  */
-export type MakeOutboxEntrySchema = typeof makeOutboxEntrySchema;
+export type MakeOutboxEntrySchema = typeof makeOutboxEntrySchema

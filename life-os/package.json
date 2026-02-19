@@ -1,35 +1,35 @@
 {
-  "name": "life-os",
-  "version": "1.0.0",
-  "description": "Life-OS is a learning-first AI system built deliberately, phase by phase, to teach how complex AI systems are designed, validated, and evolved in the real world.",
-  "main": "dist/index.js",
-  "scripts": {
-    "clean": "rm -rf dist",
-    "typecheck": "tsc -p tsconfig.json",
-    "build": "tsc -p tsconfig.build.json",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "verify:onlyT": "vitest run",
-    "verify": "npm run typecheck && npm run build && npm run test",
-    "verify:only": "sh -c 'node --require ts-node/register --require tsconfig-paths/register --test \"$@\"' --",
-    "lint": "biome lint .",
-    "format": "biome format . --write",
-    "check": "biome check . --write"
-  },
-  "license": "ISC",
-  "type": "commonjs",
-  "dependencies": {
-    "@epic-web/invariant": "^1.0.0",
-    "fp-ts": "^2.16.11",
-    "zod": "^4.3.4"
-  },
-  "devDependencies": {
-    "@biomejs/biome": "2.3.10",
-    "@types/node": "^25.0.3",
-    "ts-node": "^10.9.2",
-    "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.9.3",
-    "vite-tsconfig-paths": "^6.1.1",
-    "vitest": "^4.0.18"
-  }
+	"name": "life-os",
+	"version": "1.0.0",
+	"description": "Life-OS is a learning-first AI system built deliberately, phase by phase, to teach how complex AI systems are designed, validated, and evolved in the real world.",
+	"main": "dist/index.js",
+	"scripts": {
+		"clean": "rm -rf dist",
+		"typecheck": "tsc -p tsconfig.json",
+		"build": "tsc -p tsconfig.build.json",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"verify:onlyT": "vitest run",
+		"verify": "npm run typecheck && npm run build && npm run test",
+		"verify:only": "sh -c 'node --require ts-node/register --require tsconfig-paths/register --test \"$@\"' --",
+		"lint": "biome lint . --diagnostic-level=error --no-errors-on-unmatched",
+		"format": "biome format . --write",
+		"check": "biome check . --write"
+	},
+	"license": "ISC",
+	"type": "commonjs",
+	"dependencies": {
+		"@epic-web/invariant": "^1.0.0",
+		"fp-ts": "^2.16.11",
+		"zod": "^4.3.4"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "2.3.10",
+		"@types/node": "^25.0.3",
+		"ts-node": "^10.9.2",
+		"tsconfig-paths": "^4.2.0",
+		"typescript": "^5.9.3",
+		"vite-tsconfig-paths": "^6.1.1",
+		"vitest": "^4.0.18"
+	}
 }

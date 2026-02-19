@@ -1,18 +1,18 @@
 type ArtifactIdKind =
-  | "proposal"
-  | "effects"
-  | "snapshot"
-  | "envelope"
-  | "outbox";
+	| "proposal"
+	| "effects"
+	| "snapshot"
+	| "envelope"
+	| "outbox"
 
 type StageRunIdKind =
-  | "intake"
-  | "validation"
-  | "planning"
-  | "execution"
-  | "revalidation"
-  | "commit";
+	| "intake"
+	| "validation"
+	| "planning"
+	| "execution"
+	| "revalidation"
+	| "commit"
 
-type DurableRecordIdKind = "outbox";
+type DurableRecordIdKind = "outbox"
 
-export type IdKind = ArtifactIdKind | StageRunIdKind | DurableRecordIdKind;
+export type IdKind = ArtifactIdKind | StageRunIdKind | DurableRecordIdKind

@@ -1,1 +1,1 @@
-export const KINDS = ["NOTE"] as const;
+export const KINDS = ["NOTE"] as const
