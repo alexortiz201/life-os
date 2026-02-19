@@ -7,6 +7,7 @@ on:
 permissions:
   contents: read
   pull-requests: write
+  issues: write
 
 concurrency:
   group: aidd-review-${{ github.event.pull_request.number }}
@@ -40,15 +41,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y jq
 
-      - name: Load rules.md
-        id: rules
-        run: |
-          RULES_PATH="../.github/workflows/aidd/rules.md"
-          echo "rules_path=$RULES_PATH" >> $GITHUB_OUTPUT
-          echo "rules<<'EOF'" >> $GITHUB_OUTPUT
-          cat "$RULES_PATH" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
       - name: Fetch PR diff
         id: prdiff
         env:
@@ -66,7 +58,7 @@ jobs:
           # Trim diff to reduce token blowups (tune as needed)
           head -c 180000 pr.diff > pr.diff.trimmed
 
-          echo "diff_file=pr.diff.trimmed" >> $GITHUB_OUTPUT
+          echo "diff_file=pr.diff.trimmed" >> "$GITHUB_OUTPUT"
 
       - name: Generate AI review via OpenAI Responses API
         id: aireview
@@ -76,54 +68,51 @@ jobs:
         run: |
           set -euo pipefail
 
-          RULES="$(cat ../.github/workflows/aidd/rules.md)"
-          DIFF="$(cat pr.diff.trimmed)"
-
-          # Build prompt payload
+          # Build prompt payload (avoid --arg for huge strings)
           jq -n \
-            --arg model "$AI_MODEL" \
-            --arg rules "$RULES" \
-            --arg diff "$DIFF" \
-            --arg title "${{ github.event.pull_request.title }}" \
-            --arg author "${{ github.event.pull_request.user.login }}" \
-            --arg base "${{ github.event.pull_request.base.ref }}" \
-            --arg head "${{ github.event.pull_request.head.ref }}" \
-            '{
-              model: $model,
-              input: [
-                {
-                  role: "system",
-                  content: [
-                    {
-                      type: "text",
-                      text: (
-                        "You are an expert TypeScript reviewer for the Life-OS project.\n\n" +
-                        "Follow the rules strictly.\n\n" + $rules
-                      )
-                    }
-                  ]
-                },
-                {
-                  role: "user",
-                  content: [
-                    {
-                      type: "text",
-                      text: (
-                        "PR Title: " + $title + "\n" +
-                        "Author: " + $author + "\n" +
-                        "Base -> Head: " + $base + " -> " + $head + "\n\n" +
-                        "Please review the following unified diff. Provide:\n" +
-                        "1) High-risk issues (correctness, determinism, invariants, security)\n" +
-                        "2) Contract/schema issues (Zod, types, fp-ts Either boundaries)\n" +
-                        "3) Testing gaps (what invariant is untested)\n" +
-                        "4) Smallest safe fixes (actionable)\n\n" +
-                        "DIFF:\n" + $diff
-                      )
-                    }
-                  ]
-                }
-              ]
-            }' > payload.json
+          --arg model "$AI_MODEL" \
+          --rawfile rules ../.github/workflows/aidd/rules.md \
+          --rawfile diff pr.diff.trimmed \
+          --arg title "${{ github.event.pull_request.title }}" \
+          --arg author "${{ github.event.pull_request.user.login }}" \
+          --arg base "${{ github.event.pull_request.base.ref }}" \
+          --arg head "${{ github.event.pull_request.head.ref }}" \
+          '{
+            model: $model,
+            input: [
+              {
+                role: "system",
+                content: [
+                  {
+                    type: "input_text",
+                    text: (
+                      "You are an expert TypeScript reviewer for the Life-OS project.\n\n" +
+                      "Follow the rules strictly.\n\n" + $rules
+                    )
+                  }
+                ]
+              },
+              {
+                role: "user",
+                content: [
+                  {
+                    type: "input_text",
+                    text: (
+                      "PR Title: " + $title + "\n" +
+                      "Author: " + $author + "\n" +
+                      "Base -> Head: " + $base + " -> " + $head + "\n\n" +
+                      "Please review the following unified diff. Provide:\n" +
+                      "1) High-risk issues (correctness, determinism, invariants, security)\n" +
+                      "2) Contract/schema issues (Zod, types, fp-ts Either boundaries)\n" +
+                      "3) Testing gaps (what invariant is untested)\n" +
+                      "4) Smallest safe fixes (actionable)\n\n" +
+                      "DIFF:\n" + $diff
+                    )
+                  }
+                ]
+              }
+            ]
+          }' > payload.json
 
           # Call OpenAI
           curl -sS https://api.openai.com/v1/responses \
@@ -131,7 +120,7 @@ jobs:
             -H "Content-Type: application/json" \
             -d @payload.json > response.json
 
-          # Extract text (Responses API returns output[] blocks; this is a robust-ish extraction)
+          # Extract text (Responses API returns output[] blocks; this extraction is robust-ish)
           REVIEW="$(cat response.json | jq -r '
             [
               .output[]?
@@ -148,23 +137,34 @@ jobs:
             exit 1
           fi
 
-          # Write to file for next step
-          printf "%s\n" "$REVIEW" > review.md
+          # Include marker in the body so we can find & update the same comment later
+          {
+            echo "<!-- aidd-review -->"
+            echo
+            echo "$REVIEW"
+          } > review.md
+
+      - name: Find existing AI review comment
+        id: find_comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const marker = '<!-- aidd-review -->';
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+
+            const comments = await github.paginate(
+              github.rest.issues.listComments,
+              { owner, repo, issue_number, per_page: 100 }
+            );
+
+            const existing = comments.find(c => (c.body || '').includes(marker));
+            core.setOutput('comment_id', existing ? String(existing.id) : '');
 
       - name: Create or update PR comment
         uses: peter-evans/create-or-update-comment@v4
         with:
           issue-number: ${{ github.event.pull_request.number }}
-          body-path: review.md
+          comment-id: ${{ steps.find_comment.outputs.comment_id }}
+          body-path: life-os/review.md
           edit-mode: replace
-          # This marker ensures it updates the same comment instead of spamming
-          body-includes: "<!-- aidd-review -->"
-
-      - name: Ensure marker is present (first run)
-        if: always()
-        uses: peter-evans/create-or-update-comment@v4
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          body: |
-            <!-- aidd-review -->
-          edit-mode: append
