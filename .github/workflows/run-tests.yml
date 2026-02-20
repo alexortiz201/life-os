@@ -17,7 +17,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build Docker image (same as Devcontainer)
-        run: docker build -t life-os-ci .
+        run: docker build -f .devcontainer/Dockerfile -t life-os-ci .
 
       - name: Verify (typecheck + build + test)
         run: docker run --rm life-os-ci npm run verify
