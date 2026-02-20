@@ -12,33 +12,16 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: life-os
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: life-os/package-lock.json
+      - name: Build Docker image (same as Devcontainer)
+        run: docker build -t life-os-ci .
 
-      - name: Install
-        run: npm ci
+      - name: Verify (typecheck + build + test)
+        run: docker run --rm life-os-ci npm run verify
 
-      - name: Typecheck
-        run: npm run typecheck
-
-      - name: Build
-        run: npm run build
-
-      - name: Test
-        run: npm run test
-
-      # Optional, but recommended if you want CI to enforce formatting/lint
+      # Optional: if you want lint enforced in CI too
       - name: Lint
-        run: npm run lint
+        run: docker run --rm life-os-ci npm run lint
