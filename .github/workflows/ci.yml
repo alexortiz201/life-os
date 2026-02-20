@@ -1,6 +1,8 @@
-name: AI Review (aidd)
+name: CI
 
 on:
+  push:
+    branches: [main]
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
 
@@ -10,40 +12,33 @@ permissions:
   issues: write
 
 concurrency:
-  group: aidd-review-${{ github.event.pull_request.number }}
+  group: ci-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || format('push-{0}', github.ref) }}
   cancel-in-progress: true
 
 jobs:
   test:
-    # Skip drafts
-    if: ${{ github.event.pull_request.draft == false }}
+    # Run on push always; on PR skip drafts
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}
     runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        working-directory: life-os
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: life-os/package-lock.json
+      # Build from REPO ROOT (because .devcontainer is at root)
+      - name: Build Docker image (same as Devcontainer)
+        run: docker build -f .devcontainer/Dockerfile -t life-os-ci .
 
-      - name: Install
-        run: npm ci
+      - name: Verify (typecheck + build + test)
+        run: docker run --rm life-os-ci npm run verify
 
-      - name: Verify
-        run: npm run verify
+      - name: Lint
+        run: docker run --rm life-os-ci npm run lint
 
   aidd_review:
-    # Only run if tests succeeded, and PR is not draft
     needs: [test]
-    if: ${{ github.event.pull_request.draft == false && needs.test.result == 'success' }}
+    # Only run on PRs, not drafts, and only if tests succeeded
+    if: ${{ github.event_name == 'pull_request' && github.event.pull_request.draft == false && needs.test.result == 'success' }}
     runs-on: ubuntu-latest
 
     defaults:
@@ -74,7 +69,6 @@ jobs:
             -H "Accept: application/vnd.github.v3.diff" \
             "https://api.github.com/repos/$REPO/pulls/$PR_NUMBER" > pr.diff
 
-          # Trim diff to reduce token blowups (tune as needed)
           head -c 180000 pr.diff > pr.diff.trimmed
 
       - name: Generate AI review via OpenAI Responses API
@@ -84,7 +78,6 @@ jobs:
         run: |
           set -euo pipefail
 
-          # Build payload without stuffing huge strings into argv
           jq -n \
             --arg model "$AI_MODEL" \
             --rawfile rules ../.github/workflows/aidd/rules.md \
@@ -151,7 +144,7 @@ jobs:
             exit 1
           fi
 
-          # Write review at repo root so comment action can read it reliably
+          # Write to REPO ROOT so comment steps can read it easily
           {
             echo "<!-- aidd-review -->"
             echo
