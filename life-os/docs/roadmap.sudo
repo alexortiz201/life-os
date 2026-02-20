@@ -574,3 +574,22 @@ Immediate next steps:
 
 After that:
 - **PHASE_3A.4 (Temporal)** — durability/replay semantics + real retries (activities for execution/apply)
+
+
+# Interim step todo's
+
+### Milestone 1 — Dockerize the repo
+	•	Pin Node version
+	•	Install deps
+	•	Run npm test inside container
+	•	Make a docker compose file that runs the app and (later) a worker
+
+### Milestone 2 — sqlite persistence
+	•	tables: envelopes, outbox_entries
+	•	store commit outputs and outbox entries durably
+	•	make apply loop read pending outbox entries from sqlite
+
+### Milestone 3 — apply worker (still single process)
+	•	a worker.ts that polls outbox
+	•	marks IN_PROGRESS → APPLIED/FAILED
+	•	uses your OutboxApplier boundary

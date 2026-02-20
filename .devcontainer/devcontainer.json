@@ -1,0 +1,43 @@
+{
+  "name": "life-os",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installOhMyZsh": true,
+      "configureZshAsDefaultShell": true
+    }
+  },
+
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
+  "workspaceFolder": "/workspace",
+
+  "mounts": [
+    "source=life-os-node-modules,target=/workspace/life-os/node_modules,type=volume"
+  ],
+
+  "postCreateCommand": "cd /workspace/life-os && npm ci",
+
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.cwd": "/workspace/life-os",
+        "editor.formatOnSave": true,
+        "editor.detectIndentation": false,
+        "editor.tabSize": 2,
+        "editor.insertSpaces": false,
+        "files.eol": "\n"
+      },
+      "extensions": [
+        "biomejs.biome",
+        "ms-vscode.vscode-typescript-next"
+      ]
+    }
+  },
+
+  "forwardPorts": [3000],
+  "remoteUser": "node"
+}

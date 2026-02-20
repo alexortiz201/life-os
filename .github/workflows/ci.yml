@@ -1,0 +1,167 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: ci-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || format('push-{0}', github.ref) }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    # Run on push always; on PR skip drafts
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Build from REPO ROOT (because .devcontainer is at root)
+      - name: Build Docker image (same as Devcontainer)
+        run: docker build -f .devcontainer/Dockerfile -t life-os-ci .
+
+      - name: Verify (typecheck + build + test)
+        run: docker run --rm life-os-ci npm run verify
+
+      - name: Lint
+        run: docker run --rm life-os-ci npm run lint
+
+  aidd_review:
+    needs: [test]
+    # Only run on PRs, not drafts, and only if tests succeeded
+    if: ${{ github.event_name == 'pull_request' && github.event.pull_request.draft == false && needs.test.result == 'success' }}
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: life-os
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install tooling deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+
+      - name: Fetch PR diff
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          REPO="${{ github.repository }}"
+
+          curl -sS -L \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github.v3.diff" \
+            "https://api.github.com/repos/$REPO/pulls/$PR_NUMBER" > pr.diff
+
+          head -c 180000 pr.diff > pr.diff.trimmed
+
+      - name: Generate AI review via OpenAI Responses API
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          AI_MODEL: gpt-4.1-mini
+        run: |
+          set -euo pipefail
+
+          jq -n \
+            --arg model "$AI_MODEL" \
+            --rawfile rules ../.github/workflows/aidd/rules.md \
+            --rawfile diff pr.diff.trimmed \
+            --arg title "${{ github.event.pull_request.title }}" \
+            --arg author "${{ github.event.pull_request.user.login }}" \
+            --arg base "${{ github.event.pull_request.base.ref }}" \
+            --arg head "${{ github.event.pull_request.head.ref }}" \
+            '{
+              model: $model,
+              input: [
+                {
+                  role: "system",
+                  content: [
+                    {
+                      type: "input_text",
+                      text: (
+                        "You are an expert TypeScript reviewer for the Life-OS project.\n\n" +
+                        "Follow the rules strictly.\n\n" + $rules
+                      )
+                    }
+                  ]
+                },
+                {
+                  role: "user",
+                  content: [
+                    {
+                      type: "input_text",
+                      text: (
+                        "PR Title: " + $title + "\n" +
+                        "Author: " + $author + "\n" +
+                        "Base -> Head: " + $base + " -> " + $head + "\n\n" +
+                        "Please review the following unified diff. Provide:\n" +
+                        "1) High-risk issues (correctness, determinism, invariants, security)\n" +
+                        "2) Contract/schema issues (Zod, types, fp-ts Either boundaries)\n" +
+                        "3) Testing gaps (what invariant is untested)\n" +
+                        "4) Smallest safe fixes (actionable)\n\n" +
+                        "DIFF:\n" + $diff
+                      )
+                    }
+                  ]
+                }
+              ]
+            }' > payload.json
+
+          curl -sS https://api.openai.com/v1/responses \
+            -H "Authorization: Bearer $OPENAI_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d @payload.json > response.json
+
+          REVIEW="$(jq -r '
+            [
+              .output[]?
+              | select(.type=="message")
+              | .content[]?
+              | select(.type=="output_text")
+              | .text
+            ] | join("\n")
+          ' response.json)"
+
+          if [ -z "$REVIEW" ] || [ "$REVIEW" = "null" ]; then
+            echo "No review text extracted. Full response below:"
+            cat response.json
+            exit 1
+          fi
+
+          # Write to REPO ROOT so comment steps can read it easily
+          {
+            echo "<!-- aidd-review -->"
+            echo
+            echo "$REVIEW"
+          } > ../review.md
+
+      - name: Find existing aidd review comment
+        id: find_comment
+        uses: peter-evans/find-comment@v3
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body-includes: "<!-- aidd-review -->"
+
+      - name: Create or update PR comment
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-id: ${{ steps.find_comment.outputs.comment-id }}
+          body-path: review.md
+          edit-mode: replace
