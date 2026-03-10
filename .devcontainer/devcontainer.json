@@ -5,6 +5,8 @@
     "context": ".."
   },
 
+	"runArgs": ["--name", "life-os-dev"],
+
   "features": {
     "ghcr.io/devcontainers/features/common-utils:2": {
       "installOhMyZsh": true,
@@ -19,7 +21,7 @@
     "source=life-os-node-modules,target=/workspace/life-os/node_modules,type=volume"
   ],
 
-  "postCreateCommand": "cd /workspace/life-os && npm ci",
+  "postCreateCommand": "cd /workspace/life-os && [ -d node_modules ] || npm ci",
 
   "customizations": {
     "vscode": {
