@@ -14,7 +14,8 @@
 		"verify:only": "sh -c 'node --require ts-node/register --require tsconfig-paths/register --test \"$@\"' --",
 		"lint": "biome lint . --diagnostic-level=error --no-errors-on-unmatched",
 		"format": "biome format . --write",
-		"check": "biome check . --write"
+		"check": "biome check . --write",
+		"lifeos:intro": "npx tsx src/platform/adapters/intake/intro.cli.run.ts"
 	},
 	"license": "ISC",
 	"type": "commonjs",

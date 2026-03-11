@@ -593,3 +593,67 @@ After that:
 	•	a worker.ts that polls outbox
 	•	marks IN_PROGRESS → APPLIED/FAILED
 	•	uses your OutboxApplier boundary
+
+--------------------------------
+# CURRENT PIVOT: Mar, 11 2026: "build the Intro Intake runtime"
+
+```
+user / CLI / MCP AI
+→ intro intake runtime
+→ structured intro intake output
+→ provisional intake artifacts
+→ intake proposal
+→ ingestion pipeline
+```
+
+# Life-OS — Immediate Intake Plan
+
+## Goal
+Build a concrete intro intake flow that can accept input from:
+- user / CLI
+- AI
+- later MCP
+
+…and turn that into something the ingestion pipeline can consume.
+
+## High-level steps
+
+1. **Define input interfaces**
+   - canonical intro input/output shapes
+   - provider/AI response shape
+   - provisional artifact shape
+
+2. **Build a local CLI intake path**
+   - enter user message
+   - optionally load mocked AI extraction
+   - print normalized result
+
+3. **Build the normalizer**
+   - take raw/AI output
+   - validate shape
+   - produce canonical provisional intake output
+
+4. **Convert intake output into a proposal**
+   - wrap normalized intake into a `rawProposal`
+   - feed it into `intakeStage`
+
+5. **Run it through ingestion**
+   - confirm the intake proposal enters the pipeline correctly
+   - inspect what the pipeline sees downstream
+
+6. **Add real AI integration**
+   - replace mocked extraction with actual AI-generated structured output
+   - keep AI provisional only
+
+7. **Later: add MCP**
+   - support user-provided models/providers
+   - preserve the same contract
+
+## Immediate next move
+Start with:
+
+- `intro input/output interfaces`
+- then `CLI intake`
+- then `normalizer`
+
+That gives us a concrete, testable entrypoint fast.
