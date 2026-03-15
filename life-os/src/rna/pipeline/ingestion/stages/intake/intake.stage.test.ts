@@ -6,6 +6,7 @@ import {
 	makeEnv as makeEnvUtil,
 	resetStagesUpTo,
 	unwrapLeft,
+	unwrapLeftWithLog,
 	unwrapRight,
 } from "#/shared/test-utils"
 
@@ -42,9 +43,24 @@ test("does not reject on 'weird' meaning if structurally valid (intake never jud
 		dependencies: [],
 		impact: "HIGH",
 		reversibilityClaim: "REVERSIBLE",
+		payload: {
+			message: 'test message',
+			extraction: {
+				summary: 'test message',
+				goals: ["improve mornings"],
+				constraints: ["works weekdays"],
+				preferences: ["direct accountability"],
+				missingInfo: ["sleep schedule"],
+				suggestedNextQuestions: ["What time do you usually wake up?"],
+				status: "CONTINUE",
+			},
+		}
 	}
 
 	const out = intakeStage(env as any)
+
+	// unwrapLeftWithLog(out)
+
 	const nextEnv = unwrapRight(out)
 
 	expect(nextEnv.errors.length).toBe(0)
@@ -69,6 +85,18 @@ test("writes PROPOSAL_RECORD with id + fingerprint + preserved raw payload", () 
 		dependencies: [],
 		impact: "LOW",
 		reversibilityClaim: "REVERSIBLE",
+		payload: {
+			message: 'test message',
+			extraction: {
+				summary: 'test message',
+				goals: ["improve mornings"],
+				constraints: ["works weekdays"],
+				preferences: ["direct accountability"],
+				missingInfo: ["sleep schedule"],
+				suggestedNextQuestions: ["What time do you usually wake up?"],
+				status: "CONTINUE",
+			},
+		}
 	}
 
 	;(env as any).rawProposal = rawProposal
@@ -121,6 +149,18 @@ test("determinism: same proposalId + identical rawProposal => identical fingerpr
 		dependencies: [],
 		impact: "LOW",
 		reversibilityClaim: "REVERSIBLE",
+		payload: {
+			message: 'test message',
+			extraction: {
+				summary: 'test message',
+				goals: ["improve mornings"],
+				constraints: ["works weekdays"],
+				preferences: ["direct accountability"],
+				missingInfo: ["sleep schedule"],
+				suggestedNextQuestions: ["What time do you usually wake up?"],
+				status: "CONTINUE",
+			},
+		}
 	}
 
 	;(env1 as any).rawProposal = raw
@@ -166,6 +206,18 @@ test("immutability: if intake already hasRun, appends HALT and does not overwrit
 		dependencies: [],
 		impact: "LOW",
 		reversibilityClaim: "REVERSIBLE",
+		payload: {
+			message: 'test message',
+			extraction: {
+				summary: 'test message',
+				goals: ["improve mornings"],
+				constraints: ["works weekdays"],
+				preferences: ["direct accountability"],
+				missingInfo: ["sleep schedule"],
+				suggestedNextQuestions: ["What time do you usually wake up?"],
+				status: "CONTINUE",
+			},
+		}
 	}
 
 	const out = intakeStage(env as any)

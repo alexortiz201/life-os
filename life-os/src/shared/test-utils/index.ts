@@ -321,6 +321,18 @@ export function makeRawProposalSchema() {
 		dependencies: ["calendar"],
 		impact: "LOW",
 		reversibilityClaim: "REVERSIBLE",
+		payload: {
+			message: 'test message',
+			extraction: {
+				summary: 'test message',
+				goals: ["improve mornings"],
+				constraints: ["works weekdays"],
+				preferences: ["direct accountability"],
+				missingInfo: ["sleep schedule"],
+				suggestedNextQuestions: ["What time do you usually wake up?"],
+				status: "CONTINUE",
+			},
+		}
 	} satisfies IntakeRawProposal
 }
 
@@ -335,6 +347,17 @@ export function unwrapRight<L, R>(either: E.Either<L, R>): R {
 
 export function unwrapLeft<L, R>(either: E.Either<L, R>): L {
 	assert.ok(E.isLeft(either), "expected Left")
+	return either.left
+}
+
+export function unwrapLeftWithLog<L, R>(either: E.Either<L, R>): L {
+	assert.ok(E.isLeft(either), "expected Left")
+
+	if (either.left) {
+		console.log('---------------')
+		console.log(JSON.stringify(either.left, null, 2))
+	}
+
 	return either.left
 }
 

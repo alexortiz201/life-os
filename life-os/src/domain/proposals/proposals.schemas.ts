@@ -12,6 +12,7 @@ import {
 	REVERSIBILITY_CLAIM,
 } from "#/domain/proposals/proposals.const"
 import { makeScopeSchema } from "#/domain/scopes/scopes.schemas"
+import { IntroExtractionSchema } from "#/platform/intake/intro/intro-extraction.schemas"
 
 export const ReversibilityClaimSchema = z.enum(REVERSIBILITY_CLAIM)
 export const ImpactClaimSchema = z.enum(IMPACT)
@@ -27,20 +28,10 @@ export const makeRawProposalSchema = <T extends z.ZodTypeAny>(KindSchema: T) =>
 		dependencies: z.array(z.string()).optional().default([]),
 		impact: ImpactClaimSchema,
 		reversibilityClaim: ReversibilityClaimSchema,
-	})
-
-export const makeProposalSchema = <T extends z.ZodTypeAny>(KindSchema: T) =>
-	z.object({
-		intent: z.string().min(1),
-		actor: ActorSchema,
-		target: z.object({
-			entity: z.string().min(1),
-			scope: makeScopeSchema(KindSchema),
-			selector: z.string().min(1).optional(),
-		}),
-		dependencies: z.array(z.string()).optional().default([]),
-		impact: ImpactClaimSchema,
-		reversibilityClaim: ReversibilityClaimSchema,
+		payload: z.object({
+			message: z.string().min(1),
+			extraction: IntroExtractionSchema,
+		})
 	})
 
 const ProposalIdSchema = z.string().min(1)

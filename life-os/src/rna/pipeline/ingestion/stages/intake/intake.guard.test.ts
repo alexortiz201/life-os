@@ -67,6 +67,18 @@ test("returns ok:true when minimal structural RAW_PROPOSAL is present (no semant
 		dependencies: [],
 		impact: "LOW",
 		reversibilityClaim: "REVERSIBLE",
+		payload: {
+			message: 'test message',
+			extraction: {
+				summary: 'test message',
+				goals: ["improve mornings"],
+				constraints: ["works weekdays"],
+				preferences: ["direct accountability"],
+				missingInfo: ["sleep schedule"],
+				suggestedNextQuestions: ["What time do you usually wake up?"],
+				status: "CONTINUE",
+			},
+		}
 	}
 
 	const result = guardIntake(env as any)

@@ -9,13 +9,12 @@
 		"build": "tsc -p tsconfig.build.json",
 		"test": "vitest run",
 		"test:watch": "vitest",
-		"verify:onlyT": "vitest run",
 		"verify": "npm run typecheck && npm run build && npm run test",
-		"verify:only": "sh -c 'node --require ts-node/register --require tsconfig-paths/register --test \"$@\"' --",
 		"lint": "biome lint . --diagnostic-level=error --no-errors-on-unmatched",
 		"format": "biome format . --write",
 		"check": "biome check . --write",
-		"lifeos:intro": "npx tsx src/platform/adapters/intake/intro.cli.run.ts"
+		"lifeos:intro:cli": "npx tsx src/platform/intake/intro/cli/intro.cli.run.ts",
+		"lifeos:intro": "npx tsx src/platform/intake/intro/cli/intro.run.ts \"I want to improve my mornings but I work weekdays and prefer direct accountability\""
 	},
 	"license": "ISC",
 	"type": "commonjs",

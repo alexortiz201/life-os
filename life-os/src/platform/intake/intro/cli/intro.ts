@@ -1,21 +1,12 @@
-/**
- * Example Usage:
- *  lifeos-intro \
- *  --intent "intro.intake" \
- *  --actor-id "alex" \
- *  --entity "intro" \
- *  --impact LOW \
- *  --reversibility REVERSIBLE
- *
- *  Optional:
- *    •	--selector
- *    •	--role
- */
 import { IntakeRawProposalSchema } from "#/rna/pipeline/ingestion/stages/intake/intake.schemas"
 import type { IntakeRawProposal } from "#/rna/pipeline/ingestion/stages/intake/intake.types"
 
+import { mockExtractIntro } from "../intro.mock-ai"
+import { introExtractionToRawProposal } from "../intro.to-proposal"
+
 type CliArgs = {
   intent: string
+  message: string
   actorId: string
   entity: string
   impact: "LOW" | "MED" | "HIGH"
@@ -24,13 +15,14 @@ type CliArgs = {
   role?: string
 }
 
-const parseArgs = (argv: string[]): CliArgs => {
+export const parseCliArgs = (argv: string[]): CliArgs => {
   const get = (flag: string) => {
     const i = argv.indexOf(flag)
     return i >= 0 ? argv[i + 1] : undefined
   }
 
   const intent = get("--intent")
+  const message = get("--message")
   const actorId = get("--actor-id")
   const entity = get("--entity")
   const impact = get("--impact")
@@ -39,6 +31,7 @@ const parseArgs = (argv: string[]): CliArgs => {
   const role = get("--role")
 
   if (!intent) throw new Error("Missing --intent")
+  if (!message) throw new Error("Missing --message")
   if (!actorId) throw new Error("Missing --actor-id")
   if (!entity) throw new Error("Missing --entity")
   if (!impact) throw new Error("Missing --impact")
@@ -46,6 +39,7 @@ const parseArgs = (argv: string[]): CliArgs => {
 
   return {
     intent,
+    message,
     actorId,
     entity,
     impact: impact as CliArgs["impact"],
@@ -55,27 +49,23 @@ const parseArgs = (argv: string[]): CliArgs => {
   }
 }
 
-export const cliArgsToRawProposal = (input: CliArgs): IntakeRawProposal =>
-  IntakeRawProposalSchema.parse({
+export const cliArgsToRawProposal = (input: CliArgs): IntakeRawProposal => {
+  const extraction = mockExtractIntro(input.message)
+
+  return introExtractionToRawProposal({
     intent: input.intent,
-    actor: {
-      actorId: input.actorId,
-      actorType: "USER",
-      role: input.role,
-    },
-    target: {
-      entity: input.entity,
-      scope: {
-        allowedKinds: ["NOTE"],
-      },
-      selector: input.selector,
-    },
-    dependencies: [],
+    message: input.message,
+    extraction,
+    actorId: input.actorId,
+    entity: input.entity,
     impact: input.impact,
     reversibilityClaim: input.reversibilityClaim,
+    role: input.role,
+    selector: input.selector,
   })
+}
 
 export const parseCliRawProposal = (argv: string[]): IntakeRawProposal => {
-  const args = parseArgs(argv)
+  const args = parseCliArgs(argv)
   return cliArgsToRawProposal(args)
 }

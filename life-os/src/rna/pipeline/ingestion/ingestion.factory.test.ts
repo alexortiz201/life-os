@@ -22,6 +22,18 @@ const mockRawProposal: IntakeRawProposal = {
   dependencies: [],
   impact: "LOW",
   reversibilityClaim: "REVERSIBLE",
+  payload: {
+    message: 'test message',
+    extraction: {
+      summary: 'test message',
+      goals: ["improve mornings"],
+      constraints: ["works weekdays"],
+      preferences: ["direct accountability"],
+      missingInfo: ["sleep schedule"],
+      suggestedNextQuestions: ["What time do you usually wake up?"],
+      status: "CONTINUE",
+    },
+  }
 }
 
 describe("ingestion.factory", () => {

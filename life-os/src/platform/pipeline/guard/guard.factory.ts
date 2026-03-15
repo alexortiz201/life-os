@@ -1,4 +1,4 @@
-import type { z } from "zod"
+import { z } from "zod"
 
 import { errorResultFactory } from "#/platform/pipeline/error/error.factory"
 import type {
@@ -219,6 +219,7 @@ export const guardFactory = <
 				ids,
 				message: `${STAGE}: Schema parsing failed, invalid input.`,
 				rulesApplied: [parseFailedRule] as const,
+				error: z.treeifyError(parsed.error),
 			} as any)
 		}
 

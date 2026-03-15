@@ -51,12 +51,24 @@ function makeE2eEnv(): IntakeEnvelope {
 			},
 		},
 		rawProposal: {
-			intent: "weekly reflection",
+			intent: "WEEKLY_REFLECTION",
 			actor: { actorId: "user_1", actorType: "USER" },
 			target: { entity: "self", scope: { allowedKinds: ["NOTE"] as const } },
 			dependencies: [],
 			impact: "LOW",
 			reversibilityClaim: "REVERSIBLE",
+			payload: {
+			message: 'test message',
+			extraction: {
+				summary: 'test message',
+				goals: ["improve mornings"],
+				constraints: ["works weekdays"],
+				preferences: ["direct accountability"],
+				missingInfo: ["sleep schedule"],
+				suggestedNextQuestions: ["What time do you usually wake up?"],
+				status: "CONTINUE",
+			},
+		}
 		},
 	} as IntakeEnvelope
 }
@@ -73,6 +85,10 @@ test("E2E: ingestion spine runs end-to-end and produces a commit record", () => 
 	)
 
 	const finalEnv = unwrapRight(out)
+
+	if (E.isLeft(out)) {
+		console.log(JSON.stringify(out.left, null, 2))
+	}
 
 	// stage progression
 	expect(finalEnv.stages.intake.hasRun).toBeTruthy()
@@ -108,35 +124,33 @@ test("E2E: ingestion spine runs end-to-end and produces a commit record", () => 
 	}
 })
 
-test("E2E: validation halts when snapshot permissions allowlist is empty", () => {
-	const env = makeE2eEnv()
+test("E2E: intake halts when snapshot permissions allowlist is empty", () => {
+  const env = makeE2eEnv();
 
-	// violate validation invariant
-	;(env as any).snapshot = {
-		...(env as any).snapshot,
-		permissions: {
-			actor: { actorId: "user_1", actorType: "USER" },
-			allow: [] as const,
-		},
-	}
+  (env as any).snapshot = {
+    ...(env as any).snapshot,
+    permissions: {
+      actor: { actorId: "user_1", actorType: "USER" },
+      allow: [] as const,
+    },
+  }
 
-	const out = pipe(
-		E.right(env),
-		E.chainW(intakeStage),
-		E.chainW(validationStage) // should Left here
-	)
+  const out = pipe(
+    E.right(env),
+    E.chainW(intakeStage),
+    E.chainW(validationStage)
+  )
 
-	const left = unwrapLeft(out)
+  const left = unwrapLeft(out)
 
-	// the “stage left” wrapper pattern you’re using:
-	expect(left.env.errors.length >= 1).toBeTruthy()
-	const err = left.env.errors[left.env.errors.length - 1] as any
+  expect(left.env.errors.length >= 1).toBeTruthy()
+  const err = left.env.errors[left.env.errors.length - 1] as any
 
-	expect(err.stage).toBe("VALIDATION")
-	expect(err.severity).toBe("HALT")
-	expect(err.code).toBe("SNAPSHOT_PERMISSION_NOT_ALLOWED")
+  expect(err.stage).toBe("VALIDATION")
+  expect(err.severity).toBe("HALT")
+  expect(err.code).toBe("SNAPSHOT_PERMISSION_NOT_ALLOWED")
 
-	// should not advance
-	expect(left.env.stages.planning.hasRun).toBeFalsy()
-	expect(left.env.stages.execution.hasRun).toBeFalsy()
+  expect(left.env.stages.validation.hasRun).toBeFalsy()
+  expect(left.env.stages.planning.hasRun).toBeFalsy()
+  expect(left.env.stages.execution.hasRun).toBeFalsy()
 })

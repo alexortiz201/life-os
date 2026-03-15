@@ -650,10 +650,4 @@ Build a concrete intro intake flow that can accept input from:
    - preserve the same contract
 
 ## Immediate next move
-Start with:
-
-- `intro input/output interfaces`
-- then `CLI intake`
-- then `normalizer`
-
-That gives us a concrete, testable entrypoint fast.
+Ok, so the next goal is to wire "one freeform CLI message, have AI extract structured intro data, validate it, convert it to rawProposal, then reuse the ingestion path you already have." I'm stepping away for now but I'll be back later
