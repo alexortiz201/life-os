@@ -1,5 +1,5 @@
 /* EXAMPLE USAGE:
-  npx tsx intro.cli.run.ts \
+  npx tsx src/platform/intake/intro/cli/intro.cli.run.ts \
     --intent intro.intake \
     --message "I want to improve my mornings but I work weekdays" \
     --actor-id alex \
