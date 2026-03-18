@@ -35,17 +35,26 @@ describe("intro.cli", () => {
       expect(result.dependencies).toEqual([])
       expect(result.impact).toBe("LOW")
       expect(result.reversibilityClaim).toBe("REVERSIBLE")
-
       expect(result.payload.message).toBe(message)
-      expect(result.payload.extraction.summary).toBe(message)
-      expect(result.payload.extraction.goals).toEqual(["improve mornings"])
-      expect(result.payload.extraction.constraints).toEqual(["works weekdays"])
+      expect(result.payload.extraction.summary).toBe("User wants to improve their morning routine with accountability, considering they work on weekdays.")
+      expect(result.payload.extraction.goals).toEqual(["Improve morning routine"])
+      expect(result.payload.extraction.constraints).toEqual(["Work on weekdays"])
       expect(result.payload.extraction.preferences).toEqual([
-        "direct accountability",
+        "Prefer direct accountability",
       ])
-      expect(result.payload.extraction.missingInfo).toEqual(["sleep schedule"])
+      expect(result.payload.extraction.missingInfo).toEqual([
+        "Specific aspects of mornings to improve",
+        "Current morning routine",
+        "Preferred types of accountability",
+        "Wake-up time",
+        "Available morning time",
+      ])
       expect(result.payload.extraction.suggestedNextQuestions).toEqual([
-        "What time do you usually wake up?",
+        "What specific aspects of your morning routine do you want to improve?",
+        "What time do you usually wake up on weekdays?",
+        "What kind of direct accountability do you prefer?",
+        "How much time do you have available in the mornings?",
+        "Do you have any morning activities you want to include or exclude?",
       ])
       expect(result.payload.extraction.status).toBe("CONTINUE")
     })
@@ -128,7 +137,7 @@ describe("intro.cli", () => {
       expect(result.reversibilityClaim).toBe("REVERSIBLE")
 
       expect(result.payload.message).toBe(message)
-      expect(result.payload.extraction.summary).toBe(message)
+      expect(result.payload.extraction.summary).toBe("User wants to improve their morning routine with accountability, considering they work on weekdays.")
       expect(result.payload.extraction.status).toBe("CONTINUE")
     })
 
@@ -174,7 +183,7 @@ describe("intro.cli", () => {
       expect(result.reversibilityClaim).toBe("IRREVERSIBLE")
 
       expect(result.payload.message).toBe(message)
-      expect(result.payload.extraction.summary).toBe(message)
+      expect(result.payload.extraction.summary).toBe("User wants to improve their morning routine with accountability, considering they work on weekdays.")
       expect(result.payload.extraction.status).toBe("CONTINUE")
     })
 

@@ -1,7 +1,7 @@
 import { IntakeRawProposalSchema } from "#/rna/pipeline/ingestion/stages/intake/intake.schemas"
 import type { IntakeRawProposal } from "#/rna/pipeline/ingestion/stages/intake/intake.types"
 
-import { mockExtractIntro } from "../intro.mock-ai"
+import { mockExtractIntro } from "../ai/intro.mock-ai"
 import { introExtractionToRawProposal } from "../intro.to-proposal"
 
 type CliArgs = {
@@ -15,12 +15,13 @@ type CliArgs = {
   role?: string
 }
 
-export const parseCliArgs = (argv: string[]): CliArgs => {
-  const get = (flag: string) => {
-    const i = argv.indexOf(flag)
-    return i >= 0 ? argv[i + 1] : undefined
-  }
+export const createGetCliArg = (argv: string[]) => (flag: string) => {
+  const i = argv.indexOf(flag)
+  return i >= 0 ? argv[i + 1] : undefined
+}
 
+export const parseCliArgs = (argv: string[]): CliArgs => {
+  const get = createGetCliArg(argv)
   const intent = get("--intent")
   const message = get("--message")
   const actorId = get("--actor-id")
@@ -50,7 +51,7 @@ export const parseCliArgs = (argv: string[]): CliArgs => {
 }
 
 export const cliArgsToRawProposal = (input: CliArgs): IntakeRawProposal => {
-  const extraction = mockExtractIntro(input.message)
+  const { data: extraction } = mockExtractIntro(input.message)
 
   return introExtractionToRawProposal({
     intent: input.intent,

@@ -13,14 +13,16 @@
 		"lint": "biome lint . --diagnostic-level=error --no-errors-on-unmatched",
 		"format": "biome format . --write",
 		"check": "biome check . --write",
-		"lifeos:intro:cli": "npx tsx src/platform/intake/intro/cli/intro.cli.run.ts",
-		"lifeos:intro": "npx tsx src/platform/intake/intro/cli/intro.run.ts \"I want to improve my mornings but I work weekdays and prefer direct accountability\""
+		"lifeos:intro": "npx tsx src/platform/intake/intro/cli/intro.run.ts -- --message \"I want to improve my mornings but I work weekdays and prefer direct accountability\"",
+		"lifeos:intro:ai": "npx tsx src/platform/intake/intro/cli/intro.run.ts -- --useAi true --message \"I feel like my days are kind of unstructured and I want to get better about that.\""
 	},
 	"license": "ISC",
 	"type": "commonjs",
 	"dependencies": {
 		"@epic-web/invariant": "^1.0.0",
+		"dotenv": "^17.3.1",
 		"fp-ts": "^2.16.11",
+		"openai": "^6.32.0",
 		"xstate": "^5.28.0",
 		"zod": "^4.3.4"
 	},

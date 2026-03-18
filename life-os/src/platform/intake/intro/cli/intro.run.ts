@@ -6,17 +6,22 @@ import * as E from "fp-ts/Either"
 import { makeIngestionEnvelope } from "#/rna/pipeline/ingestion/ingestion.factory"
 import { intakeStage } from "#/rna/pipeline/ingestion/stages/intake/intake.stage"
 
-import { mockExtractIntro } from "../intro.mock-ai"
+import { mockExtractIntro } from "../ai/intro.mock-ai"
+import { extractIntroWithAI } from "../ai/intro.ai"
 import { introExtractionToRawProposal } from "../intro.to-proposal"
+import { createGetCliArg } from "./intro"
 
-const main = () => {
-  const message = process.argv.slice(2).join(" ").trim()
+const main = async () => {
+  const get = createGetCliArg(process.argv.slice(2))
+  const message = get('--message')
+  const useAi = get('--useAi') === 'true'
 
-  if (!message) {
-    throw new Error("Missing intro message")
-  }
+  if (!message) throw new Error("Missing message")
+  if (useAi) console.log("***Through the wire, AI...***")
 
-  const extraction = mockExtractIntro(message)
+  const { ok, data: extraction } = useAi ? await extractIntroWithAI(message) : mockExtractIntro(message)
+
+  if (!ok) throw new Error('Error extracting intro')
 
   const rawProposal = introExtractionToRawProposal({
     intent: "intro.intake",
@@ -36,16 +41,10 @@ const main = () => {
     process.exit(1)
   }
 
-  console.log(
-    JSON.stringify(
-      {
-        extraction,
-        intake: result.right.stages.intake,
-      },
-      null,
-      2
-    )
-  )
+  console.log(JSON.stringify({ extraction, intake: result.right.stages.intake }, null, 2))
 }
 
-main()
+main().catch((err) => {
+  console.error(err)
+  process.exit(1)
+})
