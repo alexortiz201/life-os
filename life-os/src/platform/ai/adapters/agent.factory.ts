@@ -99,7 +99,7 @@ export const unitializedClient: ClientErrorAPI = {
 
 export const createProvider = ({ model }: AgentFactoryParams): iClientAPI | ClientErrorAPI => {
   switch (model) {
-    case "gpt-4.1-mini":
+    case "gpt-4.1-mini": {
       const client = getNewOpenAIProvider()
 
       return {
@@ -112,6 +112,7 @@ export const createProvider = ({ model }: AgentFactoryParams): iClientAPI | Clie
           }
         }
       }
+    }
 
     default:
       console.log(`Model not found: ${model}`)

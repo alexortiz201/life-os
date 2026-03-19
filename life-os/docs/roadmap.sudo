@@ -579,10 +579,7 @@ After that:
 # Interim step todo's
 
 ### Milestone 1 — Dockerize the repo
-	•	Pin Node version
-	•	Install deps
-	•	Run npm test inside container
-	•	Make a docker compose file that runs the app and (later) a worker
+	•	DONE
 
 ### Milestone 2 — sqlite persistence
 	•	tables: envelopes, outbox_entries
@@ -596,14 +593,33 @@ After that:
 
 --------------------------------
 # CURRENT PIVOT: Mar, 11 2026: "build the Intro Intake runtime"
+# ⚠️ CURRENT PARALLEL TRACK: INTRO INTAKE RUNTIME (AI INTEGRATION)
+
+STATUS: IN PROGRESS (MAJOR PROGRESS MADE)
+
+RATIONALE:
+We intentionally moved ahead of orchestration layers (XState / Temporal)
+to unlock learning and motivation through real AI interaction.
+
+This is a VALID deviation because:
+- it increases learning velocity
+- it grounds abstract architecture in real systems
+- it validates contracts against real model behavior
+
+---
+
+# INTRO INTAKE — CURRENT SYSTEM STATE
+
+You now have a fully working pipeline:
 
 ```
-user / CLI / MCP AI
-→ intro intake runtime
-→ structured intro intake output
-→ provisional intake artifacts
-→ intake proposal
-→ ingestion pipeline
+CLI message
+→ AI (OpenAI)
+→ extractText (normalize)
+→ JSON.parse
+→ Zod validation (IntroExtractionSchema)
+→ map → rawProposal
+→ ingestion pipeline (intakeStage)
 ```
 
 # Life-OS — Immediate Intake Plan
@@ -616,38 +632,212 @@ Build a concrete intro intake flow that can accept input from:
 
 …and turn that into something the ingestion pipeline can consume.
 
-## High-level steps
+# INTRO INTAKE — COMPLETED
 
-1. **Define input interfaces**
-   - canonical intro input/output shapes
-   - provider/AI response shape
-   - provisional artifact shape
+## Step 1 — Define input interfaces
+- [x] IntroExtraction schema defined
+- [x] rawProposal payload extended to include extraction
+- [x] AI response shape understood and normalized
 
-2. **Build a local CLI intake path**
-   - enter user message
-   - optionally load mocked AI extraction
-   - print normalized result
+---
 
-3. **Build the normalizer**
-   - take raw/AI output
-   - validate shape
-   - produce canonical provisional intake output
+## Step 2 — CLI intake path
+- [x] CLI message input working
+- [x] Argument parsing working
+- [x] Direct message mode implemented
 
-4. **Convert intake output into a proposal**
-   - wrap normalized intake into a `rawProposal`
-   - feed it into `intakeStage`
+---
 
-5. **Run it through ingestion**
-   - confirm the intake proposal enters the pipeline correctly
-   - inspect what the pipeline sees downstream
+## Step 3 — Normalization layer
+- [x] extractText implemented (fence stripping)
+- [x] JSON.parse integrated
+- [x] Zod validation enforced
+- [x] Error handling path defined
+- [x] Tests added for normalization edge cases
 
-6. **Add real AI integration**
-   - replace mocked extraction with actual AI-generated structured output
-   - keep AI provisional only
+---
 
-7. **Later: add MCP**
-   - support user-provided models/providers
-   - preserve the same contract
+## Step 4 — Mapping to proposal
+- [x] introExtractionToRawProposal implemented
+- [x] payload carries message + extraction
+- [x] proposal integrates cleanly into ingestion pipeline
 
-## Immediate next move
-Ok, so the next goal is to wire "one freeform CLI message, have AI extract structured intro data, validate it, convert it to rawProposal, then reuse the ingestion path you already have." I'm stepping away for now but I'll be back later
+---
+
+## Step 5 — Pipeline integration
+- [x] makeIngestionEnvelope wired
+- [x] intakeStage consumes intro proposal
+- [x] end-to-end pipeline verified
+
+---
+
+## Step 6 — Real AI integration
+- [x] OpenAI client wired
+- [x] Prompt builder implemented
+- [x] Response parsing working
+- [x] End-to-end extraction working
+- [x] Tests using real response mocks
+- [x] Provider factory introduced (early abstraction)
+
+---
+
+# 📍 CURRENT POSITION
+
+You are here:
+
+👉 **INTRO INTAKE — POST AI INTEGRATION**
+👉 Transitioning into **RELIABILITY LAYER**
+
+This sits conceptually between:
+
+- PHASE_3A.2 (execution system complete)
+- PHASE_4 (observability)
+
+---
+
+# 🚧 NEXT STEP (ACTIVE)
+
+## Step 7 — Reliability Layer (CRITICAL)
+
+GOAL:
+Make AI interaction deterministic, safe, and debuggable.
+
+FOCUS:
+- Output correctness
+- Failure handling
+- Boundary enforcement
+
+DELIVERABLES:
+- [ ] Prompt enforces JSON-only output (no markdown fences)
+- [ ] Graceful handling of invalid JSON
+- [ ] Schema failure surfaces structured errors
+- [ ] Logging for:
+  - raw response
+  - cleaned text
+  - parse failures
+- [ ] Retry or fallback strategy (optional early)
+
+RULE:
+AI output is ALWAYS untrusted input.
+
+EXIT_CRITERIA:
+You can explain:
+- how malformed output is handled
+- how failures are surfaced
+- why the system fails closed
+
+---
+
+# 🔜 NEXT AFTER RELIABILITY
+
+## Step 8 — Interaction Loop (FIRST REAL UX)
+
+GOAL:
+Move from one-shot extraction → conversational intake
+
+DELIVERABLES:
+- [ ] suggestedNextQuestions displayed to user
+- [ ] user can respond iteratively
+- [ ] loop feeds back into extraction
+- [ ] status-driven flow (CONTINUE vs READY_FOR_PLANNING)
+
+---
+
+## Step 9 — Provider Abstraction (EXPAND CURRENT WORK)
+
+GOAL:
+Make AI pluggable and replaceable
+
+DELIVERABLES:
+- [ ] Provider interface stabilized
+- [ ] OpenAI adapter isolated
+- [ ] Support for:
+  - alternative models
+  - MCP (future)
+
+---
+
+# 🧠 IMPORTANT NOTE
+
+This pivot introduced a new core capability:
+```
+unstructured human input
+→ structured meaning
+→ validated artifact
+→ system pipeline
+```
+
+This is the foundational primitive for:
+
+- agents
+- planning systems
+- learning systems
+- adaptive workflows
+
+---
+
+# CONTINUOUS TRACKS
+
+UNCHANGED
+
+---
+
+# WHERE WE ARE
+
+UPDATED:
+
+You are here:
+
+👉 **PHASE_3A.2 COMPLETE**
+👉 **INTRO INTAKE RUNTIME (ADVANCED PROTOTYPE)**
+👉 **NEXT: RELIABILITY LAYER**
+
+---
+
+# WHAT’S NEXT (UPDATED)
+
+Immediate next steps:
+
+1. Harden AI boundary (Step 7 — reliability)
+2. Introduce interaction loop (Step 8)
+3. Continue provider abstraction (Step 9)
+
+Parallel future path remains:
+
+- PHASE_3A.3 — XState (orchestration ergonomics)
+- PHASE_3A.4 — Temporal (durability + replay)
+
+---
+
+# INTERIM STEP TODO'S
+
+UNCHANGED (still valid)
+
+---
+
+# CURRENT PIVOT: Mar 11 2026 — Intro Intake Runtime
+
+STATUS: ACTIVE (MAJOR PROGRESS COMPLETE)
+
+---
+
+# Life-OS — Immediate Intake Plan (UPDATED)
+
+## Completed
+- [x] Steps 1–6 complete
+- [x] Real AI integrated
+- [x] End-to-end pipeline working
+- [x] Tests in place
+
+## Current focus
+- Step 7 — Reliability layer
+
+## Next
+- Step 8 — Interaction loop
+- Step 9 — Provider abstraction expansion
+
+---
+
+## One-line state
+
+"Intro intake successfully converts human input into structured, validated system meaning using real AI; next step is making it reliable."

@@ -9,7 +9,7 @@
 		"build": "tsc -p tsconfig.build.json",
 		"test": "vitest run",
 		"test:watch": "vitest",
-		"verify": "npm run typecheck && npm run build && npm run test",
+		"verify": "npm run typecheck && npm run lint && npm run build && npm run test",
 		"lint": "biome lint . --diagnostic-level=error --no-errors-on-unmatched",
 		"format": "biome format . --write",
 		"check": "biome check . --write",
