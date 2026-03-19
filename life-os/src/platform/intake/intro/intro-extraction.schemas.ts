@@ -14,6 +14,3 @@ export const IntroExtractionSchema = z.object({
   suggestedNextQuestions: z.array(z.string()).default([]),
   status: IntroStatusSchema,
 })
-
-export type IntroExtraction = z.infer<typeof IntroExtractionSchema>
-export type IntroStatus = z.infer<typeof IntroStatusSchema>

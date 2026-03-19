@@ -1,6 +1,8 @@
-import { extractText } from "./intro.ai"
-import { IntroExtractionSchema, type IntroExtraction } from "../intro-extraction.schemas"
-import { mockIntroResponse } from "./mocks"
+import { mockIntroResponse } from "#/fixtures/fixture.intake.intro.ai"
+import { extractText } from "#/platform/ai/utils/utils"
+
+import { IntroExtractionSchema } from "../intro-extraction.schemas"
+import type { IntroExtraction } from "../intro-extraction.types"
 
 export const mockExtractIntro = (message: string): {
     ok: true,

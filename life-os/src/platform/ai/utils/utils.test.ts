@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest"
 
-import { extractText } from "./intro.ai"
-import { mockIntroResponse, mockPayloadV1, mockPayloadV2 } from "./mocks"
+import { mockIntroResponse, mockPayloadV1, mockPayloadV2 } from "#/fixtures/fixture.intake.intro.ai"
+
+import { extractText } from "./utils"
+
 
 describe("extractText", () => {
   it("strips markdown json fences from a Responses API output_text payload", () => {
