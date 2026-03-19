@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import { introExtractionToRawProposal } from "./intro.to-proposal"
-import type { IntroExtraction } from "./intro-extraction.schemas"
+import type { IntroExtraction } from "./intro-extraction.types"
 
 describe("introExtractionToRawProposal", () => {
   it("preserves the message, extraction, and caller-provided proposal fields", () => {

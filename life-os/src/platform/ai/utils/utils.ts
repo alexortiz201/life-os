@@ -2,7 +2,7 @@ type Response = {
   output_text?: string
 }
 
-export const extractText = (response: Response) => {
+export const extractText = (response: Response | null | undefined) => {
   if (!response?.output_text) {
     throw new Error("Missing response.output_text")
   }

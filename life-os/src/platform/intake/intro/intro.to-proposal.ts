@@ -1,5 +1,5 @@
 import type { IntakeRawProposal } from "#/rna/pipeline/ingestion/stages/intake/intake.types"
-import type { IntroExtraction } from "./intro-extraction.schemas"
+import type { IntroExtraction } from "./intro-extraction.types"
 
 type IntroExtractionToRawProposalInput = {
   intent: string
